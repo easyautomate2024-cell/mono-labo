@@ -274,7 +274,21 @@ footer{
   .nav-links a{font-size:16px;padding:14px 0;border-bottom:1px solid var(--border);color:var(--text)!important}
   .nav-links a:last-child{border-bottom:none}
   .nav-cta{margin-top:12px;text-align:center;justify-content:center;border:none!important;border-bottom:none!important}
+  /* Hero */
+  .hero-content{padding:56px 20px 72px}
+  .hero-sub{font-size:15px}
+  /* Sections */
+  section{padding:64px 20px}
+  .sec-sub{margin-bottom:36px}
+  /* Photo strip */
   .strip-content{padding:0 24px}
+  .strip-content h2{font-size:clamp(24px,6vw,36px)}
+  .strip-content p{font-size:14px}
+  /* Shop subtitle */
+  .shop-sec .sec-sub{font-size:14px}
+  /* About */
+  .about-logo-box{padding:36px}
+  /* Footer */
   footer{padding:32px 24px}
   .footer-inner{flex-direction:column;align-items:center;text-align:center}
   .flinks{flex-wrap:wrap;justify-content:center}
@@ -318,7 +332,7 @@ footer{
       </div>
     </div>
     <h1><span style="white-space:nowrap">「これ、なんでないんだろう」</span><br><span style="font-size:.65em;font-weight:600;color:var(--text)">を作っています。</span></h1>
-    <p class="hero-sub">3Dプリント×アプリ開発で、キャンピングトレーラー・クルマの<br>「隙間」を埋めていきます。</p>
+    <p class="hero-sub">3Dプリント×アプリ開発で、キャンピングトレーラー・クルマの「隙間」を埋めていきます。</p>
     <div class="hero-actions">
       <a href="#shop" class="btn-primary"><i class="ti ti-shopping-bag" aria-hidden="true"></i>ショップを見る</a>
       <a href="#tools" class="btn-ghost"><i class="ti ti-apps" aria-hidden="true"></i>無料ツール</a>
@@ -500,14 +514,4 @@ footer{
 (function(){
   const btn = document.getElementById('navHamburger');
   const menu = document.getElementById('navLinks');
-  btn.addEventListener('click', function(){
-    this.classList.toggle('open');
-    menu.classList.toggle('open');
-    this.setAttribute('aria-expanded', menu.classList.contains('open'));
-  });
-  menu.querySelectorAll('a').forEach(function(a){
-    a.addEventListener('click', function(){
-      btn.classList.remove('open');
-      menu.classList.remove('open');
-      btn.setAttribute('aria-expanded','false');
-    }
+  btn.addEventListener('click', f
