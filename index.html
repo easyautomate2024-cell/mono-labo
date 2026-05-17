@@ -254,20 +254,18 @@ footer{
 .flinks a:hover{color:rgba(255,255,255,0.75)}
 
 /* ===== HAMBURGER ===== */
+#navCheck{display:none}
 .nav-hamburger{
   display:none;
-  position:relative;
   flex-direction:column;justify-content:center;align-items:center;gap:5px;
   background:none;border:none;cursor:pointer;
   min-width:44px;min-height:44px;padding:11px;
-  z-index:1001;
-  touch-action:manipulation;
   -webkit-tap-highlight-color:transparent;
 }
 .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .25s}
-.nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
-.nav-hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
-.nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+#navCheck:checked ~ .nav-hamburger span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+#navCheck:checked ~ .nav-hamburger span:nth-child(2){opacity:0;transform:scaleX(0)}
+#navCheck:checked ~ .nav-hamburger span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 
 /* ===== RESPONSIVE ===== */
 @media(max-width:700px){
@@ -284,7 +282,7 @@ footer{
     flex-direction:column;padding:16px 24px 24px;gap:0;
     border-bottom:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.08);z-index:1000;
   }
-  .nav-links.open{display:flex}
+  #navCheck:checked ~ .nav-links{display:flex}
   .nav-links a{font-size:16px;padding:14px 0;border-bottom:1px solid var(--border);color:var(--text)!important}
   .nav-links a:last-child{border-bottom:none}
   .nav-cta{margin-top:12px;text-align:center;justify-content:center;border:none!important;border-bottom:none!important}
@@ -321,15 +319,16 @@ footer{
         <div class="logo-labo">labo</div>
       </div>
     </a>
-    <button class="nav-hamburger" id="navHamburger" aria-label="メニューを開く" aria-expanded="false" onclick="navToggle(this)">
+    <input type="checkbox" id="navCheck">
+    <label for="navCheck" class="nav-hamburger" aria-label="メニューを開く">
       <span></span><span></span><span></span>
-    </button>
+    </label>
     <div class="nav-links" id="navLinks">
-      <a href="#tools" onclick="navClose()">ツール</a>
-      <a href="#shop" onclick="navClose()">ショップ</a>
-      <a href="#note" onclick="navClose()">Blog</a>
-      <a href="#about" onclick="navClose()">About</a>
-      <a href="https://easyautomate2024-cell.github.io/offgrid-designer/" target="_blank" class="nav-cta" onclick="navClose()">Offgrid Designer を試す</a>
+      <a href="#tools" onclick="document.getElementById('navCheck').checked=false">ツール</a>
+      <a href="#shop" onclick="document.getElementById('navCheck').checked=false">ショップ</a>
+      <a href="#note" onclick="document.getElementById('navCheck').checked=false">Blog</a>
+      <a href="#about" onclick="document.getElementById('navCheck').checked=false">About</a>
+      <a href="https://easyautomate2024-cell.github.io/offgrid-designer/" target="_blank" class="nav-cta" onclick="document.getElementById('navCheck').checked=false">Offgrid Designer を試す</a>
     </div>
   </div>
 </nav>
@@ -513,10 +512,4 @@ footer{
   <div class="footer-inner">
     <div class="fbrand">
       <img src="./logo.png" alt="mono labo">
-      <span class="fbrand-text">mono labo</span>
-    </div>
-    <div class="fcopy">© 2025 mono labo. All rights reserved.</div>
-    <div class="flinks">
-      <a href="#tools">ツール</a>
-      <a href="#shop">ショップ</a>
-      <a h
+      <span class="fbrand-text">mono l
