@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mono labo — ものづくりスモールラボ</title>
+<meta name="description" content="「これ、なんでないんだろう」を作っています。3Dプリント×アプリ開発で、キャンピングトレーラー・クルマの隙間を埋めていきます。">
+<meta property="og:title" content="mono labo — ものづくりスモールラボ">
+<meta property="og:description" content="「これ、なんでないんだろう」を作っています。3Dプリント×アプリ開発で、キャンピングトレーラー・クルマの隙間を埋めていきます。">
+<meta property="og:image" content="https://assets.st-note.com/production/uploads/images/274761319/f6bece0ff54c16127f769d7ad731d3bc.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="mono labo">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{
+  --bg:#f5f5f7;
+  --bg-white:#ffffff;
+  --text:#1d1d1f;
+  --muted:#6e6e73;
+  --accent:#0071e3;
+  --border:rgba(0,0,0,0.08);
+  --border2:rgba(0,0,0,0.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg-white);color:var(--text);line-height:1.6;overflow-x:hidden}
+
+/* ===== NAV ===== */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 48px;
+}
+.nav-inner{max-width:1100px;margin:0 auto;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.nav-logo img{width:32px;height:auto;display:block}
+.logo-wordmark .logo-mono{font-size:15px;font-weight:700;color:var(--text);letter-spacing:2px;line-height:1.1}
+.logo-wordmark .logo-labo{font-size:9px;font-weight:500;color:var(--muted);letter-spacing:5px}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{
+  background:var(--accent);color:#fff!important;
+  font-size:13px;font-weight:600;
+  padding:8px 18px;border-radius:980px;
+  transition:filter .2s;
+}
+.nav-cta:hover{filter:brightness(1.1)}
+
+/* ===== HERO (LIGHT) ===== */
+.hero{
+  position:relative;
+  min-height:88vh;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#ffffff 0%,#f5f5f7 100%);
+  border-bottom:1px solid var(--border);
+}
+.hero-content{
+  text-align:center;
+  padding:80px 24px 100px;
+  max-width:800px;
+}
+.hero-eyebrow{
+  font-size:12px;font-weight:600;
+  color:var(--accent);
+  letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:24px;
+}
+.hero-logo-wrap{
+  display:flex;align-items:center;justify-content:center;gap:20px;
+  margin-bottom:40px;
+}
+.hero-logo-wrap img{width:80px;height:auto}
+.hero-wordmark .hero-mono{font-size:52px;font-weight:800;color:var(--text);letter-spacing:4px;line-height:1}
+.hero-wordmark .hero-labo{font-size:15px;font-weight:400;color:var(--muted);letter-spacing:9px;margin-top:6px}
+.hero h1{
+  font-size:clamp(32px,5vw,64px);
+  font-weight:700;color:var(--text);
+  line-height:1.1;letter-spacing:-.03em;
+  margin-bottom:20px;
+}
+.hero-sub{
+  font-size:clamp(16px,1.8vw,19px);
+  color:var(--muted);
+  margin-bottom:40px;
+  line-height:1.65;
+}
+.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-primary{
+  background:var(--accent);color:#fff;
+  font-size:15px;font-weight:600;
+  padding:14px 30px;border-radius:980px;
+  text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;
+  transition:filter .2s;
+}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-ghost{
+  background:transparent;
+  border:1px solid var(--border2);
+  color:var(--text);font-size:15px;font-weight:500;
+  padding:14px 30px;border-radius:980px;
+  text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;
+  transition:background .2s;
+}
+.btn-ghost:hover{background:var(--bg)}
+
+/* ===== SECTIONS ===== */
+section{padding:96px 24px}
+.inner{max-width:1100px;margin:0 auto}
+.sec-eyebrow{font-size:12px;font-weight:600;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:10px}
+.sec-title{font-size:clamp(24px,3.5vw,40px);font-weight:700;letter-spacing:-.02em;margin-bottom:10px}
+.sec-sub{font-size:16px;color:var(--muted);margin-bottom:56px;line-height:1.6}
+
+/* ===== TOOLS ===== */
+.tools-sec{background:var(--bg-white)}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px}
+.tcard{
+  background:var(--bg);
+  padding:36px 32px;
+  text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;
+  transition:background .2s;
+  border-radius:4px;
+}
+.tcard:hover{background:#ebebed}
+.tcard.ft{background:linear-gradient(135deg,#e8f0fe 0%,#f0f7ff 100%)}
+.tcard.ft:hover{background:linear-gradient(135deg,#dce8fd 0%,#e6f2ff 100%)}
+.tbadge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:600;
+  padding:3px 10px;border-radius:980px;
+  margin-bottom:20px;width:fit-content;
+}
+.bl{background:rgba(0,113,227,0.1);color:#0071e3}
+.bs{background:rgba(110,110,115,0.1);color:#6e6e73}
+.bw{background:rgba(255,159,10,0.12);color:#b96800}
+.ticon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:24px}
+.ic-b{background:rgba(0,113,227,0.1)}
+.ic-g{background:rgba(52,199,89,0.1)}
+.ic-a{background:rgba(255,159,10,0.1)}
+.tname{font-size:21px;font-weight:700;margin-bottom:8px;letter-spacing:-.01em}
+.tdesc{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:24px;flex:1}
+.tfeats{display:flex;flex-direction:column;gap:6px;margin-bottom:24px}
+.tfeat{display:flex;align-items:center;gap:7px;font-size:13px;color:#444}
+.tfeat i{color:var(--accent);font-size:14px}
+.tlink{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;margin-top:auto}
+.tlink-m{color:var(--muted)}
+
+/* ===== PHOTO STRIP (OFFGRID) ===== */
+.photo-strip{
+  position:relative;height:480px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.strip-photo{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  object-position:center 95%;
+}
+.strip-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(10,15,30,0.88) 0%,rgba(10,15,30,0.60) 50%,rgba(10,15,30,0.25) 100%);
+}
+.strip-content{
+  position:relative;z-index:1;
+  max-width:1100px;width:100%;padding:0 48px;
+}
+.strip-content .sec-eyebrow{color:rgba(255,255,255,0.55)}
+.strip-content h2{font-size:clamp(28px,4vw,46px);font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:14px;max-width:520px}
+.strip-content p{font-size:16px;color:rgba(255,255,255,0.65);margin-bottom:28px;max-width:440px;line-height:1.6}
+.strip-cta{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#fff;color:var(--text);
+  font-size:14px;font-weight:600;
+  padding:13px 26px;border-radius:980px;
+  text-decoration:none;transition:filter .2s;
+}
+.strip-cta:hover{filter:brightness(.94)}
+
+/* ===== SHOP ===== */
+.shop-sec{background:var(--bg)}
+.shops-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.scard{
+  background:var(--bg-white);border-radius:18px;
+  padding:28px 24px;
+  display:flex;align-items:center;gap:16px;
+  text-decoration:none;color:inherit;
+  border:1px solid var(--border);
+  transition:box-shadow .2s,transform .2s;
+}
+.scard:hover{box-shadow:0 8px 32px rgba(0,0,0,0.08);transform:translateY(-2px)}
+.sicon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.sname{font-size:16px;font-weight:700;margin-bottom:4px}
+.ssub{font-size:12px;color:var(--muted)}
+
+/* ===== NOTE ARTICLES ===== */
+.note-sec{background:var(--bg-white)}
+.articles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
+.acard{
+  background:var(--bg);border-radius:18px;overflow:hidden;
+  border:1px solid var(--border);
+  text-decoration:none;color:inherit;
+  transition:box-shadow .2s,transform .2s;
+  display:flex;flex-direction:column;
+}
+.acard:hover{box-shadow:0 8px 32px rgba(0,0,0,0.09);transform:translateY(-2px)}
+.acard-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.acard-body{padding:20px 22px 24px;display:flex;flex-direction:column;flex:1}
+.acard-tag{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.acard-title{font-size:16px;font-weight:700;line-height:1.55;color:var(--text);margin-bottom:16px;flex:1}
+.acard-link{font-size:13px;font-weight:600;color:var(--accent);display:inline-flex;align-items:center;gap:5px;margin-top:auto}
+.note-more{text-align:center;margin-top:40px}
+
+/* ===== ABOUT ===== */
+.about-sec{background:var(--bg-white)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+@media(max-width:760px){.about-grid{grid-template-columns:1fr}}
+.about-logo-box{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;padding:56px;
+  background:var(--bg);border-radius:24px;
+}
+.about-logo-box img{width:96px;height:auto}
+.awm{text-align:center}
+.awm .mono{font-size:30px;font-weight:700;color:var(--text);letter-spacing:5px}
+.awm .labo{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:8px;margin-top:4px}
+.about-text h2{font-size:clamp(22px,3vw,32px);font-weight:700;letter-spacing:-.02em;margin-bottom:16px}
+.about-text p{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:12px}
+.vals{display:flex;flex-direction:column;gap:14px;margin-top:24px}
+.val{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#444}
+.val i{color:var(--accent);font-size:18px;flex-shrink:0;margin-top:1px}
+
+/* ===== FOOTER ===== */
+footer{
+  background:#1d1d1f;padding:40px 48px;
+}
+.footer-inner{
+  max-width:1100px;margin:0 auto;
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:20px;
+}
+.fbrand{display:flex;align-items:center;gap:10px}
+.fbrand img{width:24px;height:auto;border-radius:3px}
+.fbrand-text{font-size:13px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px}
+.fcopy{font-size:12px;color:rgba(255,255,255,0.3)}
+.flinks{display:flex;gap:24px}
+.flinks a{font-size:13px;color:rgba(255,255,255,0.4);text-decoration:none;transition:color .2s}
+.flinks a:hover{color:rgba(255,255,255,0.75)}
+
+/* ===== HAMBURGER ===== */
+.nav-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px;z-index:1001}
+.nav-hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .25s}
+.nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:700px){
+  nav{padding:0 20px}
+  .nav-hamburger{display:flex}
+  .nav-links{
+    display:none;position:fixed;top:56px;left:0;right:0;
+    background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    flex-direction:column;padding:16px 24px 24px;gap:0;
+    border-bottom:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.08);z-index:1000;
+  }
+  .nav-links.open{display:flex}
+  .nav-links a{font-size:16px;padding:14px 0;border-bottom:1px solid var(--border);color:var(--text)!important}
+  .nav-links a:last-child{border-bottom:none}
+  .nav-cta{margin-top:12px;text-align:center;justify-content:center;border:none!important;border-bottom:none!important}
+  .strip-content{padding:0 24px}
+  footer{padding:32px 24px}
+  .footer-inner{flex-direction:column;align-items:center;text-align:center}
+  .flinks{flex-wrap:wrap;justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <img src="./logo.png" alt="mono labo logo">
+      <div class="logo-wordmark">
+        <div class="logo-mono">mono</div>
+        <div class="logo-labo">labo</div>
+      </div>
+    </a>
+    <button class="nav-hamburger" id="navHamburger" aria-label="メニューを開く" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="#tools">ツール</a>
+      <a href="#shop">ショップ</a>
+      <a href="#note">Blog</a>
+      <a href="#about">About</a>
+      <a href="https://easyautomate2024-cell.github.io/offgrid-designer/" target="_blank" class="nav-cta">Offgrid Designer を試す</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">ものづくりスモールラボ</div>
+    <div class="hero-logo-wrap">
+      <img src="./logo.png" alt="mono labo">
+      <div class="hero-wordmark">
+        <div class="hero-mono">mono</div>
+        <div class="hero-labo">labo</div>
+      </div>
+    </div>
+    <h1>「これ、なんでないんだろう」<br><span style="font-size:.65em;font-weight:600;color:var(--text)">を作っています。</span></h1>
+    <p class="hero-sub">3Dプリント×アプリ開発で、キャンピングトレーラー・クルマの<br>「隙間」を埋めていきます。</p>
+    <div class="hero-actions">
+      <a href="#shop" class="btn-primary"><i class="ti ti-shopping-bag" aria-hidden="true"></i>ショップを見る</a>
+      <a href="#tools" class="btn-ghost"><i class="ti ti-apps" aria-hidden="true"></i>無料ツール</a>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLS -->
+<section id="tools" class="tools-sec">
+  <div class="inner">
+    <div class="sec-eyebrow">Tools</div>
+    <h2 class="sec-title">無料ツール・アプリ</h2>
+    <p class="sec-sub">ブラウザで動く、インストール不要のWebアプリ。</p>
+    <div class="tools-grid">
+      <div class="tcard ft">
+        <span class="tbadge bl"><i class="ti ti-circle-check" style="font-size:11px" aria-hidden="true"></i> 公開中</span>
+        <div class="ticon ic-b">⚡</div>
+        <div class="tname">Offgrid Designer</div>
+        <p class="tdesc">ソーラーパネル・バッテリー・インバーターをドラッグ＆ドロップで回路設計。電線サイズを自動計算し、Amazon部品表で即注文できます。</p>
+        <div class="tfeats">
+          <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>電線サイズ自動計算（JIS規格準拠）</div>
+          <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>電気チェックで配線ミスを事前検出</div>
+          <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>Amazon部品表からワンクリック注文</div>
+          <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>完全無料・インストール不要</div>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:auto">
+          <a href="./offgrid-designer.html" class="tlink">詳しく見る <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+          <a href="https://easyautomate2024-cell.github.io/offgrid-designer/" target="_blank" class="tlink" style="color:var(--muted)">アプリを開く <i class="ti ti-external-link" aria-hidden="true"></i></a>
+        </div>
+      </div>
+      <div class="tcard">
+        <span class="tbadge bs">開発予定</span>
+        <div class="ticon ic-g">🏕</div>
+        <div class="tname">Camp Planner</div>
+        <p class="tdesc">キャンプ・車中泊の持ち物リストや消費電力を管理するプランニングツール。近日公開予定。</p>
+        <span class="tlink tlink-m">近日公開 <i class="ti ti-clock" aria-hidden="true"></i></span>
+      </div>
+      <div class="tcard">
+        <span class="tbadge bw">制作中</span>
+        <div class="ticon ic-a">🔧</div>
+        <div class="tname">DIY Calculator</div>
+        <p class="tdesc">木材・金属加工のカット計算、材料費の見積もりなど、DIYの設計をサポートするツール。</p>
+        <span class="tlink tlink-m">制作中 <i class="ti ti-tool" aria-hidden="true"></i></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PHOTO STRIP — OFFGRID DESIGNER -->
+<div class="photo-strip">
+  <img src="./trailer.jpg" alt="" class="strip-photo">
+  <div class="strip-overlay"></div>
+  <div class="strip-content">
+    <div class="sec-eyebrow">Featured Tool</div>
+    <h2>配線を設計してから、<br>そのまま注文。</h2>
+    <p>ソーラー・バッテリー・インバーターをドラッグ＆ドロップで回路設計。電線サイズを自動計算し、JIS規格に準拠した安全な設計をサポートします。</p>
+    <a href="https://easyautomate2024-cell.github.io/offgrid-designer/" class="strip-cta" target="_blank" rel="noopener">
+      <i class="ti ti-external-link" aria-hidden="true"></i>無料で今すぐ使う
+    </a>
+  </div>
+</div>
+
+<!-- SHOP -->
+<section id="shop" class="shop-sec">
+  <div class="inner">
+    <div class="sec-eyebrow">Shop</div>
+    <h2 class="sec-title">ショップ</h2>
+    <p class="sec-sub">キャンピングトレーラー・クルマ向けの3Dプリント部品をメルカリで、DIYノウハウをnoteで販売�
