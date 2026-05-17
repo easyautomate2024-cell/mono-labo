@@ -254,7 +254,16 @@ footer{
 .flinks a:hover{color:rgba(255,255,255,0.75)}
 
 /* ===== HAMBURGER ===== */
-.nav-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:6px;z-index:1001}
+.nav-hamburger{
+  display:none;
+  position:relative;
+  flex-direction:column;justify-content:center;align-items:center;gap:5px;
+  background:none;border:none;cursor:pointer;
+  min-width:44px;min-height:44px;padding:11px;
+  z-index:1001;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
 .nav-hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s,opacity .25s}
 .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
 .nav-hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
@@ -262,7 +271,12 @@ footer{
 
 /* ===== RESPONSIVE ===== */
 @media(max-width:700px){
-  nav{padding:0 20px}
+  nav{
+    padding:0 20px;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+    background:rgba(255,255,255,0.97);
+  }
   .nav-hamburger{display:flex}
   .nav-links{
     display:none;position:fixed;top:56px;left:0;right:0;
@@ -506,6 +520,4 @@ footer{
       <a href="#tools">ツール</a>
       <a href="#shop">ショップ</a>
       <a href="#note">Blog</a>
-      <a href="https://www.instagram.com/trailerjourney.style" target="_blank" rel="noopener" aria-label="Instagram"><i class="ti ti-brand-instagram"></i></a>
-      <a href="https://youtube.com/channel/UCLctiN6yyYiJ3t8_0QG0RGQ" target="_blank" rel="noopener" aria-label="YouTube"><i class="ti ti-brand-youtube"></i></a>
-      <a href="https://note.com/mono_laborarory" target="_blank" rel="noopener" ar
+      <a href="https://www.instagram.com/trailerjourney.style" target="_blank" rel="noopener" aria-label="Inst
