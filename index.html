@@ -321,15 +321,15 @@ footer{
         <div class="logo-labo">labo</div>
       </div>
     </a>
-    <button class="nav-hamburger" id="navHamburger" aria-label="メニューを開く" aria-expanded="false">
+    <button class="nav-hamburger" id="navHamburger" aria-label="メニューを開く" aria-expanded="false" onclick="navToggle(this)">
       <span></span><span></span><span></span>
     </button>
     <div class="nav-links" id="navLinks">
-      <a href="#tools">ツール</a>
-      <a href="#shop">ショップ</a>
-      <a href="#note">Blog</a>
-      <a href="#about">About</a>
-      <a href="https://easyautomate2024-cell.github.io/offgrid-designer/" target="_blank" class="nav-cta">Offgrid Designer を試す</a>
+      <a href="#tools" onclick="navClose()">ツール</a>
+      <a href="#shop" onclick="navClose()">ショップ</a>
+      <a href="#note" onclick="navClose()">Blog</a>
+      <a href="#about" onclick="navClose()">About</a>
+      <a href="https://easyautomate2024-cell.github.io/offgrid-designer/" target="_blank" class="nav-cta" onclick="navClose()">Offgrid Designer を試す</a>
     </div>
   </div>
 </nav>
@@ -519,5 +519,4 @@ footer{
     <div class="flinks">
       <a href="#tools">ツール</a>
       <a href="#shop">ショップ</a>
-      <a href="#note">Blog</a>
-      <a href="https://www.instagram.com/trailerjourney.style" target="_blank" rel="noopener" aria-label="Inst
+      <a h
