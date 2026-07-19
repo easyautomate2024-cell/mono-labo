@@ -466,7 +466,8 @@ footer{
     <div class="sec-eyebrow">Blog</div>
     <h2 class="sec-title">ものづくりの記録</h2>
     <p class="sec-sub">作った理由、困った点、解決策をnoteに書いています。</p>
-    <div class="articles-grid">
+    <div class="articles-grid" id="articlesGrid">
+      <!-- Fallback content (visible if JS/fetch fails). JS replaces this on success. -->
       <a href="https://note.com/mono_laborarory/n/n8d6df8641ff6" target="_blank" rel="noopener" class="acard">
         <img src="https://assets.st-note.com/production/uploads/images/294744734/rectangle_large_type_2_648ddbc91a988991cd1c6072df26ab42.jpg?width=800" alt="トレーラー水平モニター自作" class="acard-thumb">
         <div class="acard-body">
@@ -475,7 +476,7 @@ footer{
           <span class="acard-link"><i class="ti ti-arrow-up-right" aria-hidden="true"></i>noteで読む</span>
         </div>
       </a>
-      <a href="https://note.com/mono_laborarory/n/nba9507eaae2a" target="_blank" rel="noopener" class="acard">
+      <a href="https://note.com/mono_laborarory/n/n215257480329" target="_blank" rel="noopener" class="acard">
         <img src="./ss_circuit.png" alt="Offgrid Designer 回路設計画面" class="acard-thumb">
         <div class="acard-body">
           <div class="acard-tag">Webツール × オフグリッド</div>
@@ -500,6 +501,50 @@ footer{
         </div>
       </a>
     </div>
+    <script>
+    // note.com RSS 由来の記事一覧を articles.json から読み込み描画。
+    // 画像/タグが RSS に載らない場合の補完テーブル。noteの記事IDでキー化。
+    (function(){
+      const IMAGE_OVERRIDES = {
+        'n8d6df8641ff6': 'https://assets.st-note.com/production/uploads/images/294744734/rectangle_large_type_2_648ddbc91a988991cd1c6072df26ab42.jpg?width=800',
+        'n215257480329': './ss_circuit.png',
+      };
+      const TAG_OVERRIDES = {
+        'n8d6df8641ff6': '電子工作 × トレーラー',
+        'n215257480329': 'Webツール × オフグリッド',
+        'n0b53c0bc552a': '3D Print × トレーラー',
+        'n308d4132d713': '3D Print × クルマ',
+      };
+      const DEFAULT_IMG = './logo.png';
+      const MAX = 4;
+
+      function idOf(url){ const m=(url||'').match(/\/n\/([a-z0-9]+)/i); return m?m[1]:''; }
+      function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+      fetch('./articles.json', {cache:'no-cache'})
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+          const items = (data.items||[]).slice(0, MAX);
+          if (!items.length) return;
+          const grid = document.getElementById('articlesGrid');
+          if (!grid) return;
+          grid.innerHTML = items.map(it => {
+            const id = idOf(it.url);
+            const img = IMAGE_OVERRIDES[id] || it.image || DEFAULT_IMG;
+            const tag = TAG_OVERRIDES[id] || '';
+            return `<a href="${esc(it.url)}" target="_blank" rel="noopener" class="acard">
+              <img src="${esc(img)}" alt="${esc(it.title)}" class="acard-thumb" loading="lazy">
+              <div class="acard-body">
+                ${tag ? `<div class="acard-tag">${esc(tag)}</div>` : ''}
+                <div class="acard-title">${esc(it.title)}</div>
+                <span class="acard-link"><i class="ti ti-arrow-up-right" aria-hidden="true"></i>noteで読む</span>
+              </div>
+            </a>`;
+          }).join('');
+        })
+        .catch(err => { /* 失敗時は静的フォールバックのまま */ console.warn('articles.json load failed:', err); });
+    })();
+    </script>
     <div class="note-more">
       <a href="https://note.com/mono_laborarory" target="_blank" rel="noopener" class="btn-ghost">
         <i class="ti ti-brand-medium" aria-hidden="true"></i>noteをもっと見る

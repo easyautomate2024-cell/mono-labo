@@ -1,0 +1,38 @@
+name: Update articles from note.com
+
+on:
+  schedule:
+    - cron: '0 3 * * *'    # daily at 03:00 UTC (12:00 JST)
+  workflow_dispatch: {}
+
+concurrency:
+  group: update-articles
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch note.com RSS
+        run: python .github/scripts/fetch_articles.py
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet articles.json; then
+            echo "no changes"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add articles.json
+            git commit -m "chore: sync latest note articles"
+            git push
+          fi
