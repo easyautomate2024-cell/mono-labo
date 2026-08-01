@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrailerLevel — 後付けの水平モニター | mono labo</title>
+<meta name="description" content="キャンピングトレーラー・キャンピングカーの後付け水平モニター。本体のWiFiにスマホをつなぐと、ブラウザがそのまま0.1°単位の水準器に。アプリ不要・圏外OK。現在開発中。">
+<meta property="og:title" content="TrailerLevel — 後付けの水平モニター">
+<meta property="og:description" content="スマホのブラウザがそのまま水準器に。アプリ不要・圏外OKの後付け水平モニター。開発中。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="mono labo">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CT3HK859TJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-CT3HK859TJ');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{
+  --bg:#f5f5f7;--bg-white:#ffffff;
+  --text:#1d1d1f;--muted:#6e6e73;
+  --accent:#0071e3;--green:#34c759;--amber:#b96800;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --dk:#0b1220;--dk-card:#111a2e;--dk-border:#263248;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg-white);color:var(--text);line-height:1.6;overflow-x:hidden}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 48px}
+.nav-inner{max-width:1100px;margin:0 auto;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--muted);font-size:14px}
+.nav-logo img{width:24px;height:auto}
+.nav-logo .sep{margin:0 6px;opacity:.4}
+.nav-logo strong{color:var(--text)}
+.nav-links{display:flex;align-items:center;gap:20px}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;transition:color .2s;white-space:nowrap}
+.nav-logo{white-space:nowrap}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{background:var(--accent);color:#fff!important;font-size:13px;font-weight:600;padding:8px 18px;border-radius:980px;transition:filter .2s}
+.nav-cta:hover{filter:brightness(1.1)}
+
+/* HERO */
+.hero{
+  background:linear-gradient(180deg,#fff 0%,#f0f4ff 100%);
+  border-bottom:1px solid var(--border);
+  padding:80px 24px 64px;
+  text-align:center;
+}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,159,10,0.1);border:1px solid rgba(255,159,10,0.3);color:var(--amber);font-size:12px;font-weight:600;padding:5px 14px;border-radius:980px;margin-bottom:24px;letter-spacing:.4px}
+.hero h1{font-size:clamp(28px,5vw,58px);font-weight:700;letter-spacing:-.03em;line-height:1.2;margin-bottom:16px}
+.hero h1 span{color:var(--accent)}
+.hero-sub{font-size:clamp(15px,1.8vw,19px);color:var(--muted);max-width:620px;margin:0 auto 36px;line-height:1.7}
+.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:48px}
+.btn-p{background:var(--accent);color:#fff;font-size:15px;font-weight:600;padding:14px 32px;border-radius:980px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:filter .2s}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-s{background:transparent;border:1px solid var(--border2);color:var(--text);font-size:15px;font-weight:500;padding:14px 32px;border-radius:980px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .2s}
+.btn-s:hover{background:var(--bg)}
+.hero-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tag{font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:4px 12px;border-radius:980px}
+
+/* DEVICE MOCK (共通) */
+.tl-phone{
+  background:var(--dk);color:#e5e7eb;
+  border:1px solid var(--dk-border);border-radius:36px;
+  padding:30px 24px 26px;
+  width:min(100%,320px);
+  box-shadow:0 24px 64px rgba(11,18,32,0.35);
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  font-family:-apple-system,system-ui,sans-serif;
+}
+.tl-phone.sm{width:min(100%,260px);padding:22px 18px 20px;border-radius:28px;gap:10px}
+.tl-title{font-size:14px;font-weight:600;opacity:.85}
+.tl-phone.sm .tl-title{font-size:13px}
+.tl-status{font-size:13px;font-weight:600;padding:5px 14px;border-radius:20px;background:#1f2937;transition:background .3s}
+.tl-gauge{position:relative;width:78%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 50%,#111a2e,#0a1120);border:2px solid var(--dk-border)}
+.tl-ring{position:absolute;border:2px dashed #2b3a55;border-radius:50%}
+.tl-ring.r1{inset:33%}
+.tl-ring.r2{inset:16%}
+.tl-ch{position:absolute;left:0;right:0;height:2px;top:50%;transform:translateY(-1px);background:var(--dk-border)}
+.tl-cv{position:absolute;top:0;bottom:0;width:2px;left:50%;transform:translateX(-1px);background:var(--dk-border)}
+.tl-fwd{position:absolute;top:6%;left:50%;transform:translateX(-50%);text-align:center;color:#7d9bd1;font-size:10px;line-height:1.2;letter-spacing:1px}
+.tl-bubble{
+  position:absolute;width:22%;aspect-ratio:1;border-radius:50%;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  background:#ef4444;box-shadow:0 0 18px rgba(239,68,68,.6);
+  transition:background .3s,box-shadow .3s;
+}
+.tl-cards{display:flex;gap:10px;width:100%}
+.tl-card{flex:1;background:var(--dk-card);border:1px solid var(--dk-border);border-radius:12px;padding:10px;text-align:center}
+.tl-card .l{font-size:11px;opacity:.7}
+.tl-card .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.tl-card .v span{font-size:13px;opacity:.6}
+.mock-wrap{display:flex;justify-content:center;padding:0 24px 72px;background:linear-gradient(180deg,#f0f4ff 0%,#fff 40%)}
+.mock-cap{text-align:center;font-size:13px;color:var(--muted);margin-top:16px}
+
+/* SCROLL SCRUB (トレーラーが水平になる) */
+.scrub{height:280vh;position:relative;background:var(--dk)}
+.scrub-sticky{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;overflow:hidden;padding:24px}
+.scrub-cap{position:relative;height:2.4em;width:100%;max-width:640px;text-align:center}
+.scrub-cap span{position:absolute;inset:0;font-size:clamp(18px,3vw,28px);font-weight:700;color:#e5e7eb;opacity:0;transition:opacity .4s;line-height:1.4}
+.scrub-svg{width:min(86vw,560px);height:auto}
+.scrub-read{display:flex;align-items:center;gap:14px}
+.scrub-pill{font-size:14px;font-weight:600;padding:6px 16px;border-radius:20px;background:#1f2937;color:#e5e7eb;transition:background .3s}
+.scrub-val{background:var(--dk-card);border:1px solid var(--dk-border);border-radius:12px;padding:8px 18px;text-align:center;color:#e5e7eb}
+.scrub-val .l{font-size:11px;opacity:.7}
+.scrub-val .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.scrub-val .v span{font-size:14px;opacity:.6}
+.scrub-hint{font-size:12px;color:rgba(229,231,235,.45);letter-spacing:1px}
+
+/* SECTIONS */
+section{padding:88px 24px}
+.inner{max-width:1100px;margin:0 auto}
+.sec-eyebrow{font-size:12px;font-weight:600;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:10px}
+.sec-title{font-size:clamp(22px,3vw,38px);font-weight:700;letter-spacing:-.02em;margin-bottom:10px}
+.sec-sub{font-size:16px;color:var(--muted);margin-bottom:48px;line-height:1.6}
+
+/* FOR WHO */
+.who-sec{background:var(--bg)}
+.who-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.who-card{background:var(--bg-white);border:1px solid var(--border);border-radius:16px;padding:24px;display:flex;align-items:flex-start;gap:14px}
+.who-icon{font-size:28px;flex-shrink:0}
+.who-title{font-size:15px;font-weight:700;margin-bottom:4px}
+.who-desc{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* FEATURES */
+.feat-sec{background:var(--bg-white)}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.fcard{background:var(--bg);border-radius:16px;padding:28px}
+.fcard-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px}
+.ic-b{background:rgba(0,113,227,0.1)}
+.ic-g{background:rgba(52,199,89,0.1)}
+.ic-o{background:rgba(255,159,10,0.1)}
+.ic-p{background:rgba(175,82,222,0.1)}
+.fcard-title{font-size:17px;font-weight:700;margin-bottom:6px}
+.fcard-desc{font-size:13.5px;color:var(--muted);line-height:1.65}
+
+/* SCREEN MOCKS ROW */
+.screens{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:32px;margin-top:56px;justify-items:center}
+.screen-item{width:100%;max-width:280px}
+.screen-label{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px;text-align:center}
+.mini{background:var(--dk);border:1px solid var(--dk-border);border-radius:24px;padding:20px 16px;color:#e5e7eb;font-family:-apple-system,system-ui,sans-serif;font-size:12px;box-shadow:0 16px 40px rgba(11,18,32,0.25)}
+.mini h4{font-size:13px;font-weight:600;opacity:.85;text-align:center;margin-bottom:12px}
+.mini .mcard{background:var(--dk-card);border:1px solid var(--dk-border);border-radius:12px;padding:12px;margin-bottom:10px}
+.mini .lbl{font-size:10px;opacity:.6}
+.mini .ok{color:#22c55e;font-size:11px;margin-top:3px}
+.mini .am{color:#f59e0b;font-size:11px;margin-top:3px}
+.mini .rec{font-size:10px;opacity:.75;line-height:1.7;margin-top:4px}
+.mini .mbtn{background:#2563eb;border-radius:10px;padding:9px;text-align:center;font-size:12px;font-weight:600;margin-top:4px}
+.mini .mbtn.ghost{background:#1f2937;color:#9aa7bd}
+.mini .devbox{width:56px;height:38px;border:2px solid #7d9bd1;border-radius:5px;margin:10px auto 6px;position:relative}
+.mini .devbox::before{content:'';position:absolute;left:14px;right:14px;top:-3px;height:5px;background:#7d9bd1;border-radius:3px 3px 0 0}
+.mini .cent{text-align:center;opacity:.8}
+.mini .row{display:flex;align-items:center;gap:10px}
+.mini .mgauge{width:44px;height:44px;border-radius:50%;background:#0a1120;border:1.5px solid var(--dk-border);position:relative;flex-shrink:0}
+.mini .mgauge::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--dk-border)}
+.mini .mgauge::after{content:'';position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--dk-border)}
+.mini .mdot{position:absolute;width:13px;height:13px;border-radius:50%;background:#22c55e;left:50%;top:50%;transform:translate(-50%,-50%)}
+.mini .big{font-size:16px;font-weight:700}
+.mini .bar{height:6px;background:#0a1120;border-radius:3px;overflow:hidden;margin:6px 0 3px}
+.mini .bar i{display:block;height:100%;width:72%;background:#22c55e}
+.mini .ghost2{display:flex;gap:6px}
+.mini .ghost2 div{flex:1;background:#0d1526;border:1px dashed var(--dk-border);border-radius:9px;padding:7px;text-align:center;font-size:9px;opacity:.45}
+.mini .arr{margin-left:auto;opacity:.4}
+
+/* ROADMAP (ガス残量計・構想) */
+.road-sec{background:var(--dk);color:#e5e7eb}
+.road-sec .sec-eyebrow{color:#7d9bd1}
+.road-sec .sec-title{color:#fff}
+.road-sec .sec-sub{color:rgba(229,231,235,.65)}
+.road-grid{display:grid;grid-template-columns:5fr 6fr;gap:64px;align-items:center}
+@media(max-width:860px){.road-grid{grid-template-columns:1fr;gap:40px}}
+.road-feats{display:flex;flex-direction:column;gap:14px;margin-bottom:28px}
+.road-feat{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:rgba(229,231,235,.85)}
+.road-feat i{color:#22c55e;font-size:16px;flex-shrink:0;margin-top:2px}
+.road-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,159,10,0.14);border:1px solid rgba(255,159,10,0.35);color:#f59e0b;font-size:12px;font-weight:600;padding:5px 14px;border-radius:980px;margin-bottom:18px}
+.road-note{font-size:13px;color:rgba(229,231,235,.5);line-height:1.7}
+
+/* HOW TO USE */
+.how-sec{background:var(--bg)}
+.steps3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.stepc{background:var(--bg-white);border:1px solid var(--border);border-radius:18px;padding:28px;text-align:center}
+.step-visual{height:170px;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.step-visual svg{width:210px;height:auto}
+.stepc .n{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;margin-bottom:12px}
+.stepc .t{font-size:16px;font-weight:700;margin-bottom:8px}
+.stepc .d{font-size:13px;color:var(--muted);line-height:1.7;text-align:left}
+.mini.stepm{width:180px;padding:16px 14px;border-radius:20px;box-shadow:0 12px 28px rgba(11,18,32,0.22)}
+.wrow{display:flex;align-items:center;gap:8px;background:var(--dk-card);border:1px solid var(--dk-border);border-radius:10px;padding:9px 10px;font-size:12px;margin-bottom:7px;color:#cbd5e1}
+.wrow i{color:#7d9bd1}
+.wrow.on{border-color:rgba(34,197,94,.6);color:#fff}
+.wrow .ck{margin-left:auto;color:#22c55e;font-weight:700}
+
+/* FAQ */
+.faq-sec{background:var(--bg-white)}
+.faqs{display:flex;flex-direction:column;max-width:760px}
+.faq{border-bottom:1px solid var(--border);padding:24px 0}
+.faq:last-child{border-bottom:none}
+.faq-q{font-size:16px;font-weight:700;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+.faq-q::before{content:"Q";color:var(--accent);font-size:14px;font-weight:800;background:rgba(0,113,227,0.1);padding:2px 8px;border-radius:6px;flex-shrink:0;margin-top:1px}
+.faq-a{font-size:14px;color:var(--muted);line-height:1.75;padding-left:36px}
+
+/* CTA */
+.cta-sec{background:linear-gradient(135deg,#0b1220 0%,#1c2a44 100%);padding:80px 24px;text-align:center}
+.cta-sec h2{font-size:clamp(24px,3.5vw,42px);font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:12px}
+.cta-sec p{font-size:16px;color:rgba(255,255,255,0.75);margin-bottom:36px;line-height:1.7}
+.btn-white{background:#fff;color:#0b1220;font-size:15px;font-weight:700;padding:16px 36px;border-radius:980px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:filter .2s}
+.btn-white:hover{filter:brightness(.94)}
+.cta-note{font-size:13px;color:rgba(255,255,255,0.5);margin-top:20px}
+.cta-note a{color:rgba(255,255,255,0.65)}
+
+/* FOOTER */
+footer{background:#1d1d1f;padding:36px 48px}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.fbrand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.fbrand img{width:22px;height:auto}
+.fbrand span{font-size:13px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px}
+.fcopy{font-size:12px;color:rgba(255,255,255,0.3)}
+.flinks{display:flex;gap:20px}
+.flinks a{font-size:13px;color:rgba(255,255,255,0.4);text-decoration:none}
+.flinks a:hover{color:rgba(255,255,255,0.75)}
+
+/* SCROLL REVEAL */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+.rv.d1{transition-delay:.08s}
+.rv.d2{transition-delay:.16s}
+.rv.d3{transition-delay:.24s}
+.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  .rv{opacity:1;transform:none;transition:none}
+  .scrub{height:auto}
+  .scrub-sticky{position:relative;height:auto;padding:80px 24px}
+}
+
+@media(max-width:600px){
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  footer{padding:32px 24px}
+  .footer-inner{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="./index.html" class="nav-logo">
+      <img src="./logo.png" alt="mono labo">
+      <span>mono labo</span>
+      <span class="sep">/</span>
+      <strong>TrailerLevel</strong>
+    </a>
+    <div class="nav-links">
+      <a href="#features">機能</a>
+      <a href="#howto">使い方</a>
+      <a href="#roadmap">開発中</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://www.instagram.com/trailerjourney.style" target="_blank" rel="noopener" class="nav-cta tl-follow">Instagramで続報</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge"><i class="ti ti-tool"></i> 開発中</div>
+  <h1>水平出しの<span>「行ったり来たり」</span>を、<br>なくす。</h1>
+  <p class="hero-sub">キャンピングトレーラー・キャンピングカーの後付け水平モニター。本体を車内に置けば、手元のスマホがワイヤレスの水準器に。ジャッキやランプを調整しながら、その場で0.1°単位の傾きを確認できます。</p>
+  <div class="hero-actions">
+    <a href="https://www.instagram.com/trailerjourney.style" target="_blank" rel="noopener" class="btn-p tl-follow"><i class="ti ti-brand-instagram"></i>Instagramで続報を受け取る</a>
+    <a href="#howto" class="btn-s"><i class="ti ti-info-circle"></i>使い方を見る</a>
+  </div>
+  <div class="hero-tags">
+    <span class="tag">#キャンピングトレーラー</span>
+    <span class="tag">#キャンピングカー</span>
+    <span class="tag">#水平出し</span>
+    <span class="tag">#車中泊</span>
+    <span class="tag">#アプリ不要</span>
+  </div>
+</div>
+
+<!-- DEVICE MOCK (傾き→水平のデモ) -->
+<div class="mock-wrap">
+  <div>
+    <div class="tl-phone" aria-label="TrailerLevelの画面イメージ">
+      <div class="tl-title">トレーラー水平モニター</div>
+      <div class="tl-status" id="demo-status">調整してください</div>
+      <div class="tl-gauge">
+        <div class="tl-ring r1"></div>
+        <div class="tl-ring r2"></div>
+        <div class="tl-ch"></div>
+        <div class="tl-cv"></div>
+        <div class="tl-fwd">▲<br>車両前</div>
+        <div class="tl-bubble" id="demo-bubble"></div>
+      </div>
+      <div class="tl-cards">
+        <div class="tl-card"><div class="l">前後 (pitch)</div><div class="v"><span id="demo-pv">3.2</span><span>°</span></div></div>
+        <div class="tl-card"><div class="l">左右 (roll)</div><div class="v"><span id="demo-rv">-1.8</span><span>°</span></div></div>
+      </div>
+    </div>
+    <div class="mock-cap">スマホに表示される実際の画面イメージ（デモ再生中）</div>
+  </div>
+</div>
+
+<!-- SCROLL SCRUB: 傾いたトレーラーが水平になる -->
+<div class="scrub" id="scrub">
+  <div class="scrub-sticky">
+    <div class="scrub-cap">
+      <span id="sc-c1">キャンプ場に着いた。地面は、だいたい傾いている。</span>
+      <span id="sc-c2">スマホを見ながら、ジャッキを回すだけ。</span>
+      <span id="sc-c3">✓ 水平。今夜もぐっすり眠れる。</span>
+    </div>
+    <svg class="scrub-svg" viewBox="0 0 560 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- 地面 -->
+      <line x1="20" y1="210" x2="540" y2="210" stroke="#263248" stroke-width="2"/>
+      <!-- トレーラー本体 (回転グループ) -->
+      <g id="sc-trailer">
+        <!-- ボディ -->
+        <rect x="120" y="70" width="260" height="100" rx="20" fill="#111a2e" stroke="#7d9bd1" stroke-width="2.5"/>
+        <!-- 窓 -->
+        <rect x="150" y="90" width="52" height="34" rx="6" fill="#0a1120" stroke="#7d9bd1" stroke-width="1.5"/>
+        <rect x="218" y="90" width="52" height="34" rx="6" fill="#0a1120" stroke="#7d9bd1" stroke-width="1.5"/>
+        <!-- ドア -->
+        <rect x="300" y="95" width="44" height="75" rx="5" fill="#0a1120" stroke="#7d9bd1" stroke-width="1.5"/>
+        <!-- TrailerLevel本体 (光る点) -->
+        <rect x="176" y="146" width="18" height="12" rx="3" fill="#2563eb"/>
+        <circle cx="185" cy="152" r="14" fill="#2563eb" opacity=".18">
+          <animate attributeName="r" values="10;20;10" dur="2.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values=".3;.05;.3" dur="2.5s" repeatCount="indefinite"/>
+        </circle>
+        <!-- WiFi電波: 本体からスマホ(左)へ -->
+        <g id="sc-wifi" opacity="0">
+          <path d="M168 141 A14 14 0 0 0 168 163" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M158 135 A24 24 0 0 0 158 169" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".6"/>
+        </g>
+        <!-- ドローバー (水平時に水平になる) -->
+        <path d="M380 158 L472 158" stroke="#7d9bd1" stroke-width="4" stroke-linecap="round"/>
+        <!-- カプラー -->
+        <rect x="468" y="151" width="18" height="12" rx="3" fill="#7d9bd1"/>
+        <!-- ジョッキーホイール -->
+        <line id="sc-jstrut" x1="446" y1="160" x2="446" y2="196" stroke="#7d9bd1" stroke-width="3.5" stroke-linecap="round"/>
+        <circle id="sc-jwheel" cx="446" cy="200" r="9" fill="#0a1120" stroke="#7d9bd1" stroke-width="2.5"/>
+        <!-- タイヤ -->
+        <circle cx="230" cy="185" r="25" fill="#0a1120" stroke="#7d9bd1" stroke-width="3"/>
+        <circle cx="230" cy="185" r="8" fill="#263248"/>
+      </g>
+      <!-- スマホを見る人 (シルエット) -->
+      <g id="sc-person">
+        <!-- 頭 (少し前傾してスマホを見る) -->
+        <circle cx="63" cy="113" r="11" fill="#7d9bd1"/>
+        <!-- 胴体 -->
+        <path d="M60 127 Q58 150 58 168" stroke="#7d9bd1" stroke-width="13" stroke-linecap="round" fill="none"/>
+        <!-- 脚 -->
+        <path d="M58 168 Q54 186 50 203" stroke="#7d9bd1" stroke-width="7" stroke-linecap="round" fill="none"/>
+        <path d="M58 168 Q64 186 68 203" stroke="#7d9bd1" stroke-width="7" stroke-linecap="round" fill="none"/>
+        <!-- 足 -->
+        <path d="M50 204 L58 204" stroke="#7d9bd1" stroke-width="5" stroke-linecap="round"/>
+        <path d="M68 204 L76 204" stroke="#7d9bd1" stroke-width="5" stroke-linecap="round"/>
+        <!-- 腕 (スマホを前に持つ) -->
+        <path d="M60 138 Q74 142 84 150" stroke="#7d9bd1" stroke-width="6.5" stroke-linecap="round" fill="none"/>
+        <!-- スマホ -->
+        <rect x="81" y="143" width="14" height="23" rx="3.5" fill="#0a1120" stroke="#7d9bd1" stroke-width="2.2"/>
+        <circle id="sc-pdot" cx="88" cy="154" r="3" fill="#ef4444"/>
+      </g>
+    </svg>
+    <div class="scrub-read">
+      <div class="scrub-pill" id="sc-st">調整してください</div>
+      <div class="scrub-val"><div class="l">前後 (pitch)</div><div class="v"><span id="sc-p">3.2</span><span>°</span></div></div>
+    </div>
+    <div class="scrub-hint">↓ スクロールで水平出し</div>
+  </div>
+</div>
+
+<!-- FOR WHO -->
+<section class="who-sec" id="forwho">
+  <div class="inner">
+    <div class="sec-eyebrow rv">こんな人に</div>
+    <h2 class="sec-title rv">こんな困りごとありませんか？</h2>
+    <p class="sec-sub rv">キャンプ場に着いてからの「水平出し」、意外とストレスです。</p>
+    <div class="who-grid">
+      <div class="who-card rv">
+        <div class="who-icon">🏃</div>
+        <div>
+          <div class="who-title">車内と外を行ったり来たり</div>
+          <div class="who-desc">水準器を床に置いて、外でランプを調整して、また車内に確認しに戻る…。TrailerLevelなら手元のスマホで見ながら調整できます。</div>
+        </div>
+      </div>
+      <div class="who-card rv d1">
+        <div class="who-icon">📱</div>
+        <div>
+          <div class="who-title">スマホの水準器は持ち出せない</div>
+          <div class="who-desc">水準器アプリはスマホを床に置いたら見えません。TrailerLevelは本体を車内に置き、スマホは表示器として持ち歩けます。</div>
+        </div>
+      </div>
+      <div class="who-card rv d2">
+        <div class="who-icon">🧊</div>
+        <div>
+          <div class="who-title">冷蔵庫のために水平が必須</div>
+          <div class="who-desc">3way冷蔵庫は傾きに敏感。就寝の快適さも含めて、0.1°単位で確実に水平を出せます。</div>
+        </div>
+      </div>
+      <div class="who-card rv d3">
+        <div class="who-icon">📶</div>
+        <div>
+          <div class="who-title">圏外のキャンプ場でも</div>
+          <div class="who-desc">本体自身がWiFi親機になるので、携帯の電波が届かない場所でも問題なく使えます。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="feat-sec" id="features">
+  <div class="inner">
+    <div class="sec-eyebrow rv">機能</div>
+    <h2 class="sec-title rv">主な機能</h2>
+    <p class="sec-sub rv">「計器としてちゃんと使えること」にこだわって作っています。</p>
+    <div class="feat-grid">
+      <div class="fcard rv">
+        <div class="fcard-icon ic-b">📱</div>
+        <div class="fcard-title">スマホのブラウザが表示器</div>
+        <div class="fcard-desc">本体のWiFiにつなぐと水準器の画面が自動で開きます。専用アプリのインストールは不要。ホーム画面に追加（PWA）すればアプリのように起動できます。</div>
+      </div>
+      <div class="fcard rv d1">
+        <div class="fcard-icon ic-g">🎯</div>
+        <div class="fcard-title">0.1°表示・色で水平判定</div>
+        <div class="fcard-desc">前後・左右の傾きを0.1°単位で表示。気泡の色が緑になれば水平です。「今の傾きを基準にする」ワンタップ機能も。</div>
+      </div>
+      <div class="fcard rv d2">
+        <div class="fcard-icon ic-o">🌡</div>
+        <div class="fcard-title">温度補正つき校正</div>
+        <div class="fcard-desc">傾きセンサーは温度でわずかにドリフトします。TrailerLevelは気温ごとの校正記録を自動で使い分け、夏でも冬でも正確さを保ちます。</div>
+      </div>
+      <div class="fcard rv">
+        <div class="fcard-icon ic-p">😴</div>
+        <div class="fcard-title">画面スリープ防止</div>
+        <div class="fcard-desc">調整の途中でスマホの画面が消えない、計器として当たり前の配慮。作業に集中できます。</div>
+      </div>
+      <div class="fcard rv d1">
+        <div class="fcard-icon ic-b">🔄</div>
+        <div class="fcard-title">ブラウザから本体を更新</div>
+        <div class="fcard-desc">新しいソフトウェアが出たら、スマホのブラウザからファイルを選ぶだけで本体を更新できます。パソコンもインターネットも不要です。</div>
+      </div>
+      <div class="fcard rv d2">
+        <div class="fcard-icon ic-g">🔋</div>
+        <div class="fcard-title">USB給電でどこでも</div>
+        <div class="fcard-desc">モバイルバッテリーでも、車のUSBポートでも、サブバッテリーでも。電源を選ばず動きます。</div>
+      </div>
+    </div>
+
+    <!-- SCREEN MOCKS -->
+    <div class="screens">
+      <div class="screen-item rv">
+        <div class="screen-label">校正画面 — 2点校正と温度記録</div>
+        <div class="mini">
+          <h4>校正</h4>
+          <div class="mcard">
+            <div class="lbl">センサー校正</div>
+            <div class="ok">✓ 済み（この気温に対応）</div>
+            <div class="rec">センサー温度: 31.2°C</div>
+            <div class="lbl" style="margin-top:8px">校正の記録</div>
+            <div class="rec">18.4°C → 前後0.21° / 左右0.08°<br>31.0°C → 前後0.26° / 左右0.11°</div>
+          </div>
+          <div class="mbtn ghost">センサー校正をやり直す</div>
+        </div>
+      </div>
+      <div class="screen-item rv d1">
+        <div class="screen-label">2点校正 — 置いて、回して、置くだけ</div>
+        <div class="mini">
+          <h4>センサー校正 1/2</h4>
+          <div class="mcard" style="text-align:center">
+            <div class="devbox"></div>
+            <div class="cent">そのまま置いてください</div>
+            <div class="rec cent">(USB差込口が前)</div>
+          </div>
+          <div class="mcard">
+            <div class="lbl">現在値</div>
+            <div class="big">0.32° / -0.15°</div>
+            <div class="ok">● 静止を確認しました</div>
+          </div>
+          <div class="mbtn">この向きで測定</div>
+        </div>
+      </div>
+      <div class="screen-item rv d2">
+        <div class="screen-label">ダッシュボード — フル版（開発中）</div>
+        <div class="mini">
+          <h4>トレーラーモニター</h4>
+          <div class="mcard">
+            <div class="row">
+              <div class="mgauge"><div class="mdot"></div></div>
+              <div>
+                <div class="lbl">水平</div>
+                <div style="font-size:12px;font-weight:600">✓ 水平です</div>
+                <div class="rec">前後 0.1° / 左右 -0.2°</div>
+              </div>
+              <span class="arr">›</span>
+            </div>
+          </div>
+          <div class="mcard">
+            <div class="lbl">LPガス</div>
+            <div class="big">72%　3.6kg</div>
+            <div class="bar"><i></i></div>
+            <div class="rec">今のペースであと約24日</div>
+          </div>
+          <div class="ghost2"><div>バッテリー<br>(構想中)</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP: 水平の、その先へ -->
+<section class="road-sec" id="roadmap">
+  <div class="inner">
+    <div class="road-grid">
+      <div>
+        <div class="sec-eyebrow rv">Roadmap</div>
+        <h2 class="sec-title rv">水平の、その先へ。</h2>
+        <p class="sec-sub rv" style="margin-bottom:24px">TrailerLevelの本体は、傾きだけでなくトレーラーの「見えない状態」を映す計器に育てていきます。水平出しは、その最初の機能です。</p>
+        <div class="road-badge rv"><i class="ti ti-flask"></i> フル版として開発中</div>
+        <div class="road-feats">
+          <div class="road-feat rv"><i class="ti ti-flame"></i><span><b>LPガス残量計</b> — 重量センサーでボンベの残量%と「今のペースであと何日」を表示。ガス切れの不安をなくします。</span></div>
+          <div class="road-feat rv d1"><i class="ti ti-car"></i><span><b>走行中は自動で計測停止</b> — 振動を検知して、走行中の揺れで残量表示が狂うのを防ぎます。</span></div>
+          <div class="road-feat rv d2"><i class="ti ti-battery"></i><span><b>バッテリー残量</b> — 残量をひと目で確認できるダッシュボードを構想中です。</span></div>
+        </div>
+        <p class="road-note rv">※ LPガス残量計は水平モニターとは別の追加機能です。水平モニター単体でもお使いいただけます。</p>
+      </div>
+      <div class="tl-visual rv d1" style="display:flex;justify-content:center">
+        <div class="mini" style="width:min(100%,300px);padding:24px 20px">
+          <h4>トレーラーモニター</h4>
+          <div class="mcard">
+            <div class="row">
+              <div class="mgauge"><div class="mdot"></div></div>
+              <div>
+                <div class="lbl">水平</div>
+                <div style="font-size:13px;font-weight:600">✓ 水平です</div>
+                <div class="rec">前後 0.1° / 左右 -0.2°</div>
+              </div>
+              <span class="arr">›</span>
+            </div>
+          </div>
+          <div class="mcard">
+            <div class="lbl">LPガス</div>
+            <div class="big">72%　3.6kg</div>
+            <div class="bar"><i></i></div>
+            <div class="rec">今のペースであと約24日</div>
+          </div>
+          <div class="ghost2"><div>バッテリー<br>(構想中)</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO USE -->
+<section class="how-sec" id="howto">
+  <div class="inner">
+    <div class="sec-eyebrow rv">使い方</div>
+    <h2 class="sec-title rv">使い方は3ステップ</h2>
+    <p class="sec-sub rv">設置も設定も、難しいことはありません。</p>
+    <div class="steps3">
+      <div class="stepc rv">
+        <div class="step-visual">
+          <svg viewBox="0 0 220 130" fill="none" aria-hidden="true">
+            <line x1="14" y1="112" x2="206" y2="112" stroke="#d5d9e0" stroke-width="2.5"/>
+            <rect x="40" y="28" width="120" height="60" rx="14" fill="#f0f4ff" stroke="#94a3b8" stroke-width="2.5"/>
+            <rect x="55" y="40" width="26" height="17" rx="4" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="88" y="40" width="26" height="17" rx="4" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+            <circle cx="90" cy="98" r="14" fill="#fff" stroke="#94a3b8" stroke-width="2.5"/>
+            <path d="M160 60 L196 68" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+            <line x1="190" y1="68" x2="190" y2="100" stroke="#94a3b8" stroke-width="2.5"/>
+            <circle cx="190" cy="104" r="6" fill="#fff" stroke="#94a3b8" stroke-width="2"/>
+            <!-- 本体 (青・点滅) とUSBケーブル→バッテリー -->
+            <rect x="60" y="73" width="18" height="11" rx="3" fill="#0071e3"/>
+            <circle cx="69" cy="78" r="12" fill="#0071e3" opacity=".15">
+              <animate attributeName="r" values="9;17;9" dur="2.5s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values=".25;.05;.25" dur="2.5s" repeatCount="indefinite"/>
+            </circle>
+            <path d="M78 82 C 96 86 100 80 112 82" stroke="#0071e3" stroke-width="2" fill="none"/>
+            <rect x="112" y="76" width="22" height="12" rx="3" fill="#fff" stroke="#0071e3" stroke-width="2"/>
+            <line x1="117" y1="79" x2="117" y2="85" stroke="#0071e3" stroke-width="2"/>
+            <line x1="122" y1="79" x2="122" y2="85" stroke="#0071e3" stroke-width="2"/>
+          </svg>
+        </div>
+        <div><span class="n">1</span></div>
+        <div class="t">本体を車内に置いて、USBで給電</div>
+        <div class="d">床や棚など、平らな場所に置くだけ。モバイルバッテリーでも車のUSBポートでもOK。最初に一度だけ、2分ほどの校正をすれば準備完了です。</div>
+      </div>
+      <div class="stepc rv d1">
+        <div class="step-visual">
+          <div class="mini stepm" aria-hidden="true">
+            <h4><i class="ti ti-wifi"></i> WiFi設定</h4>
+            <div class="wrow on"><i class="ti ti-wifi"></i>TrailerLevel<span class="ck">✓</span></div>
+            <div class="wrow"><i class="ti ti-wifi"></i>home_wifi_5G</div>
+            <div class="wrow"><i class="ti ti-wifi"></i>free_spot</div>
+          </div>
+        </div>
+        <div><span class="n">2</span></div>
+        <div class="t">スマホのWiFiで本体につなぐ</div>
+        <div class="d">WiFi設定から「TrailerLevel」を選ぶと、水準器の画面が自動で開きます。携帯の電波は不要。圏外のキャンプ場でも使えます。</div>
+      </div>
+      <div class="stepc rv d2">
+        <div class="step-visual">
+          <div class="mini stepm" aria-hidden="true">
+            <h4>水準器</h4>
+            <div class="mcard" style="text-align:center;margin-bottom:0">
+              <div class="mgauge" style="margin:0 auto 8px"><div class="mdot"></div></div>
+              <div class="ok">✓ 水平です</div>
+              <div class="rec">前後 0.0° / 左右 0.0°</div>
+            </div>
+          </div>
+        </div>
+        <div><span class="n">3</span></div>
+        <div class="t">画面を見ながら、ジャッキを調整</div>
+        <div class="d">スマホを持って外へ。気泡が中心に来て緑になったら水平です。前後・左右の角度が数字でわかるので、どちらをどれだけ上げればいいか迷いません。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-sec" id="faq">
+  <div class="inner">
+    <div class="sec-eyebrow rv">FAQ</div>
+    <h2 class="sec-title rv">よくある質問</h2>
+    <p class="sec-sub" style="margin-bottom:32px"></p>
+    <div class="faqs">
+      <div class="faq rv">
+        <div class="faq-q">スマホにアプリのインストールは必要ですか？</div>
+        <div class="faq-a">不要です。本体のWiFiにつなぐとブラウザで画面が開きます。ホーム画面に追加すれば、アプリのようにアイコンから起動することもできます。</div>
+      </div>
+      <div class="faq rv">
+        <div class="faq-q">電波の届かないキャンプ場でも使えますか？</div>
+        <div class="faq-a">使えます。本体自身がWiFiの親機になる仕組みなので、インターネット接続や携帯の電波は一切不要です。</div>
+      </div>
+      <div class="faq rv">
+        <div class="faq-q">精度はどのくらいですか？</div>
+        <div class="faq-a">0.1°単位で表示します。センサーの取り付け誤差を打ち消す2点校正と、気温による誤差を補正する仕組みを備えており、置き場所や季節が変わっても精度を保ちます。</div>
+      </div>
+      <div class="faq rv">
+        <div class="faq-q">電源は何が必要ですか？</div>
+        <div class="faq-a">USB給電です。モバイルバッテリー、車のUSBポート、サブバッテリーのUSB出力などで動きます。</div>
+      </div>
+      <div class="faq rv">
+        <div class="faq-q">いつ入手できますか？</div>
+        <div class="faq-a">現在、製品化に向けて開発中です。続報はInstagram（@trailerjourney.style）とnoteでお知らせします。</div>
+      </div>
+      <div class="faq rv">
+        <div class="faq-q">価格はいくらですか？</div>
+        <div class="faq-a">検討中です。内容と合わせて、決まり次第お知らせします。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-sec">
+  <div style="max-width:600px;margin:0 auto">
+    <h2>開発中です。</h2>
+    <p>実際のキャンプ・車中泊で使いながら、少しずつ育てています。<br>続報はInstagramとnoteでお知らせします。</p>
+    <a href="https://www.instagram.com/trailerjourney.style" target="_blank" rel="noopener" class="btn-white tl-follow">
+      <i class="ti ti-brand-instagram"></i>Instagramをフォローする
+    </a>
+    <div class="cta-note"><a href="https://note.com/mono_laborarory" target="_blank" rel="noopener">noteで開発の記録を読む →</a></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <a href="./index.html" class="fbrand">
+      <img src="./logo.png" alt="mono labo">
+      <span>mono labo</span>
+    </a>
+    <div class="fcopy">© 2026 mono labo. All rights reserved.</div>
+    <div class="flinks">
+      <a href="./index.html">ホーム</a>
+      <a href="https://note.com/mono_laborarory" target="_blank">note</a>
+      <a href="https://jp.mercari.com/user/profile/363820193" target="_blank">メルカリ</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ---- クリック計測 ----
+document.addEventListener('click',function(e){
+  var a=e.target.closest('a[href]');
+  if(!a)return;
+  if(a.classList.contains('tl-follow')&&typeof gtag==='function'){
+    gtag('event','tool_open',{tool_name:'trailerlevel-follow'});
+  }
+});
+
+// ---- ヒーローのデモ: 傾いた状態 → 水平 (数値も連動) ----
+(function(){
+  var bubble=document.getElementById('demo-bubble'),
+      pv=document.getElementById('demo-pv'),
+      rv=document.getElementById('demo-rv'),
+      st=document.getElementById('demo-status');
+  if(!bubble)return;
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var P0=3.2,R0=-1.8,DUR=4200,HOLD=2400;
+  function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+  function col(w){return w<=0.3?'#22c55e':w<=2?'#f59e0b':'#ef4444'}
+  function fmt(v){return (Math.abs(v)<0.05?0:v).toFixed(1)}
+  function apply(p,r){
+    var w=Math.max(Math.abs(p),Math.abs(r));
+    pv.textContent=fmt(p); rv.textContent=fmt(r);
+    var x=Math.max(-1,Math.min(1,r/5))*39, y=Math.max(-1,Math.min(1,p/5))*39;
+    bubble.style.left=(50+x)+'%'; bubble.style.top=(50+y)+'%';
+    var c=col(w);
+    bubble.style.background=c;
+    bubble.style.boxShadow='0 0 18px '+c+'99';
+    if(w<=0.3){st.textContent='✓ 水平です';st.style.background='rgba(34,197,94,.25)';}
+    else{st.textContent='調整してください';st.style.background='#1f2937';}
+  }
+  if(reduce){apply(0,0);return;}
+  var t0=null;
+  function frame(ts){
+    if(t0===null)t0=ts;
+    var el=(ts-t0)%(DUR+HOLD);
+    var t=Math.min(1,el/DUR), e=ease(t);
+    apply(P0*(1-e),R0*(1-e));
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+// ---- スクロールスクラブ: トレーラーが水平になる ----
+(function(){
+  var scrub=document.getElementById('scrub');
+  if(!scrub)return;
+  var trailer=document.getElementById('sc-trailer'),
+      strut=document.getElementById('sc-jstrut'),
+      wheel=document.getElementById('sc-jwheel'),
+      wifi=document.getElementById('sc-wifi'),
+      pdot=document.getElementById('sc-pdot'),
+      sp=document.getElementById('sc-p'),
+      sst=document.getElementById('sc-st'),
+      caps=[document.getElementById('sc-c1'),document.getElementById('sc-c2'),document.getElementById('sc-c3')];
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var A0=3.2;   // 初期傾き(度)。ドローバー側が下がる
+  function col(w){return w<=0.3?'#22c55e':w<=2?'#f59e0b':'#ef4444'}
+  function update(p){
+    // p: 0(傾き) → 1(水平)
+    var a=A0*(1-p);
+    trailer.setAttribute('transform','rotate('+a+' 230 210)');
+    // ジョッキーホイールの脚: 傾き時は短く、水平に近づくほど伸びて接地を保つ
+    var ext=Math.tan(a*Math.PI/180)*216;   // 回転中心(タイヤ接地点)からの距離 446-230=216px
+    strut.setAttribute('y2',196-ext);
+    wheel.setAttribute('cy',200-ext);
+    var w=Math.abs(a);
+    sp.textContent=(w<0.05?0:a).toFixed(1);
+    var c=col(w);
+    pdot.setAttribute('fill',c);
+    if(w<=0.3){sst.textContent='✓ 水平です';sst.style.background='rgba(34,197,94,.25)';}
+    else{sst.textContent='調整してください';sst.style.background='#1f2937';}
+    wifi.setAttribute('opacity',p>0.15?1:0);
+    // キャプション: 3段階
+    caps[0].style.opacity=p<0.3?1:0;
+    caps[1].style.opacity=(p>=0.3&&p<0.85)?1:0;
+    caps[2].style.opacity=p>=0.85?1:0;
+  }
+  if(reduce){update(1);return;}
+  var ticking=false;
+  function onScroll(){
+    if(ticking)return;
+    ticking=true;
+    requestAnimationFrame(function(){
+      var rect=scrub.getBoundingClientRect();
+      var total=scrub.offsetHeight-window.innerHeight;
+      var p=Math.min(1,Math.max(0,-rect.top/total));
+      update(p);
+      ticking=false;
+    });
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  update(0);
+})();
+
+// ---- スクロールで現れる要素 ----
+(function(){
+  var els=document.querySelectorAll('.rv');
+  if(!('IntersectionObserver' in window)){els.forEach(function(el){el.classList.add('in')});return;}
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}
+    });
+  },{threshold:0.12});
+  els.forEach(function(el){io.observe(el)});
+})();
+</script>
+
+</body>
+</html>

@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>mono labo — ものづくりスモールラボ</title>
-<meta name="description" content="「これ、なんでないんだろう」を作っています。3Dプリント×アプリ開発で、キャンピングトレーラー・クルマの隙間を埋めていきます。">
+<meta name="description" content="「これ、なんでないんだろう」を作っています。3Dプリント×アプリ×エレクトロニクスで、暮らしの隙間を埋める道具を作る個人ラボです。">
 <meta property="og:title" content="mono labo — ものづくりスモールラボ">
-<meta property="og:description" content="「これ、なんでないんだろう」を作っています。3Dプリント×アプリ開発で、キャンピングトレーラー・クルマの隙間を埋めていきます。">
+<meta property="og:description" content="「これ、なんでないんだろう」を作っています。3Dプリント×アプリ×エレクトロニクスで、暮らしの隙間を埋める道具を作る個人ラボです。">
 <meta property="og:image" content="https://assets.st-note.com/production/uploads/images/274761319/f6bece0ff54c16127f769d7ad731d3bc.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="mono labo">
@@ -117,6 +117,63 @@ nav{
   transition:background .2s;
 }
 .btn-ghost:hover{background:var(--bg)}
+
+/* ===== TRAILERLEVEL ===== */
+.tl-sec{background:var(--bg)}
+.tl-grid{display:grid;grid-template-columns:5fr 6fr;gap:64px;align-items:center}
+@media(max-width:860px){.tl-grid{grid-template-columns:1fr;gap:40px}}
+.tl-visual{display:flex;justify-content:center}
+.tl-phone{
+  background:#0b1220;color:#e5e7eb;
+  border:1px solid #263248;border-radius:36px;
+  padding:30px 24px 26px;
+  width:min(100%,320px);
+  box-shadow:0 24px 64px rgba(11,18,32,0.35);
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  font-family:-apple-system,system-ui,sans-serif;
+}
+.tl-phone .tl-title{font-size:14px;font-weight:600;opacity:.85}
+.tl-phone .tl-status{
+  font-size:13px;font-weight:600;padding:5px 14px;border-radius:20px;
+  background:rgba(34,197,94,.25);color:#e5e7eb;
+}
+.tl-gauge{
+  position:relative;width:78%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,#111a2e,#0a1120);
+  border:2px solid #263248;
+}
+.tl-ring{position:absolute;border:2px dashed #2b3a55;border-radius:50%}
+.tl-ring.r1{inset:33%}
+.tl-ring.r2{inset:16%}
+.tl-ch{position:absolute;left:0;right:0;height:2px;top:50%;transform:translateY(-1px);background:#263248}
+.tl-cv{position:absolute;top:0;bottom:0;width:2px;left:50%;transform:translateX(-1px);background:#263248}
+.tl-fwd{position:absolute;top:6%;left:50%;transform:translateX(-50%);text-align:center;color:#7d9bd1;font-size:10px;line-height:1.2;letter-spacing:1px}
+.tl-bubble{
+  position:absolute;width:22%;aspect-ratio:1;border-radius:50%;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  background:#22c55e;box-shadow:0 0 18px rgba(34,197,94,.6);
+  animation:tlfloat 5s ease-in-out infinite;
+}
+@keyframes tlfloat{
+  0%{transform:translate(-50%,-50%)}
+  25%{transform:translate(-38%,-58%)}
+  50%{transform:translate(-56%,-44%)}
+  75%{transform:translate(-46%,-54%)}
+  100%{transform:translate(-50%,-50%)}
+}
+.tl-cards{display:flex;gap:10px;width:100%}
+.tl-card{flex:1;background:#111a2e;border:1px solid #263248;border-radius:12px;padding:10px;text-align:center}
+.tl-card .l{font-size:11px;opacity:.7}
+.tl-card .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.tl-card .v span{font-size:13px;opacity:.6}
+.tl-note{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.7}
+
+/* ===== SCROLL REVEAL ===== */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+.rv.d1{transition-delay:.1s}
+.rv.d2{transition-delay:.2s}
+.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}}
 
 /* ===== SECTIONS ===== */
 section{padding:96px 24px}
@@ -332,11 +389,12 @@ footer{
       <span></span><span></span><span></span>
     </label>
     <div class="nav-links" id="navLinks">
+      <a href="#trailerlevel" onclick="document.getElementById('navCheck').checked=false">TrailerLevel</a>
       <a href="#tools" onclick="document.getElementById('navCheck').checked=false">ツール</a>
       <a href="#shop" onclick="document.getElementById('navCheck').checked=false">ショップ</a>
       <a href="#note" onclick="document.getElementById('navCheck').checked=false">Blog</a>
       <a href="#about" onclick="document.getElementById('navCheck').checked=false">About</a>
-      <a href="https://easyautomate2024-cell.github.io/offgrid-designer/" target="_blank" class="nav-cta" onclick="document.getElementById('navCheck').checked=false">Offgrid Designer を試す</a>
+      <a href="./trailerlevel.html" class="nav-cta" onclick="document.getElementById('navCheck').checked=false">TrailerLevel</a>
     </div>
   </div>
 </nav>
@@ -353,13 +411,56 @@ footer{
       </div>
     </div>
     <h1><span style="white-space:nowrap">「これ、なんでないんだろう」</span><br><span style="font-size:.65em;font-weight:600;color:var(--text)">を作っています。</span></h1>
-    <p class="hero-sub">3Dプリント×アプリ開発で、キャンピングトレーラー・クルマの「隙間」を埋めていきます。</p>
+    <p class="hero-sub">3Dプリント×アプリ×エレクトロニクスで、暮らしの「隙間」を埋める道具を作る個人ラボです。</p>
     <div class="hero-actions">
-      <a href="#shop" class="btn-primary"><i class="ti ti-shopping-bag" aria-hidden="true"></i>ショップを見る</a>
+      <a href="#trailerlevel" class="btn-primary"><i class="ti ti-gauge" aria-hidden="true"></i>TrailerLevel を見る</a>
       <a href="#tools" class="btn-ghost"><i class="ti ti-apps" aria-hidden="true"></i>無料ツール</a>
     </div>
   </div>
 </div>
+
+<!-- TRAILERLEVEL -->
+<section id="trailerlevel" class="tl-sec">
+  <div class="inner">
+    <div class="tl-grid">
+      <div class="tl-visual rv">
+        <div class="tl-phone" aria-hidden="true">
+          <div class="tl-title">トレーラー水平モニター</div>
+          <div class="tl-status" id="idx-status">✓ 水平です</div>
+          <div class="tl-gauge">
+            <div class="tl-ring r1"></div>
+            <div class="tl-ring r2"></div>
+            <div class="tl-ch"></div>
+            <div class="tl-cv"></div>
+            <div class="tl-fwd">▲<br>車両前</div>
+            <div class="tl-bubble" id="idx-bubble"></div>
+          </div>
+          <div class="tl-cards">
+            <div class="tl-card"><div class="l">前後 (pitch)</div><div class="v"><span id="idx-pv">0.1</span><span>°</span></div></div>
+            <div class="tl-card"><div class="l">左右 (roll)</div><div class="v"><span id="idx-rv">-0.2</span><span>°</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="rv d1">
+        <div class="sec-eyebrow">Hardware</div>
+        <span class="tbadge bw"><i class="ti ti-tool" aria-hidden="true" style="font-size:11px"></i> 開発中</span>
+        <h2 class="sec-title">TrailerLevel</h2>
+        <p class="sec-sub" style="margin-bottom:24px">トレーラーに置いて使う、後付けの水平モニター。スマホのWiFiを本体につなぐと、ブラウザがそのまま水準器になります。アプリのインストールは不要。外でジャッキやランプを調整しながら、手元のスマホで0.1°単位の傾きを確認できます。</p>
+        <div class="tfeats" style="margin-bottom:28px">
+          <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>スマホのブラウザが表示器 — 専用アプリ不要</div>
+          <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>0.1°表示・温度補正つき校正で置き場所を選ばない</div>
+          <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>画面スリープ防止・ホーム画面追加（PWA）対応</div>
+          <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>LPガス残量計（残量%・残り日数予測）を開発中</div>
+        </div>
+        <div class="hero-actions" style="justify-content:flex-start">
+          <a href="./trailerlevel.html" class="btn-primary"><i class="ti ti-arrow-right" aria-hidden="true"></i>詳しく見る</a>
+          <a href="https://note.com/mono_laborarory" target="_blank" rel="noopener" class="btn-ghost"><i class="ti ti-pencil" aria-hidden="true"></i>開発の記録をnoteで</a>
+        </div>
+        <p class="tl-note">製品化に向けて開発中です。続報はInstagram・noteでお知らせします。</p>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- TOOLS -->
 <section id="tools" class="tools-sec">
@@ -368,8 +469,8 @@ footer{
     <h2 class="sec-title">無料ツール・アプリ</h2>
     <p class="sec-sub">ブラウザで動く、インストール不要のWebアプリ。</p>
     <div class="tools-grid">
-      <div class="tcard ft">
-        <span class="tbadge bl" style="background:#f59e0b;color:#1f1f1f"><i class="ti ti-flask" style="font-size:11px" aria-hidden="true"></i> Beta</span>
+      <div class="tcard ft rv">
+        <span class="tbadge bl"><i class="ti ti-flask" style="font-size:11px" aria-hidden="true"></i> ベータ版公開中</span>
         <div class="ticon ic-b">⚡</div>
         <div class="tname">Offgrid Designer</div>
         <p class="tdesc">ソーラーパネル・バッテリー・インバーターをドラッグ＆ドロップで回路設計。電線サイズを自動計算し、Amazon部品表で即注文できます。</p>
@@ -384,7 +485,7 @@ footer{
           <a href="https://easyautomate2024-cell.github.io/offgrid-designer/" target="_blank" class="tlink" style="color:var(--muted)">アプリを開く <i class="ti ti-external-link" aria-hidden="true"></i></a>
         </div>
       </div>
-      <div class="tcard">
+      <div class="tcard rv d1">
         <span class="tbadge bl"><i class="ti ti-circle-check" style="font-size:11px" aria-hidden="true"></i> 公開中</span>
         <div class="ticon ic-b">🛁</div>
         <div class="tname">Drain Cover Generator</div>
@@ -419,16 +520,16 @@ footer{
   </div>
 </section>
 
-<!-- PHOTO STRIP — OFFGRID DESIGNER -->
+<!-- PHOTO STRIP — BRAND STORY -->
 <div class="photo-strip">
   <img src="./trailer.jpg" alt="" class="strip-photo">
   <div class="strip-overlay"></div>
-  <div class="strip-content">
-    <div class="sec-eyebrow">Featured Tool</div>
-    <h2>配線を設計してから、<br>そのまま注文。</h2>
-    <p>ソーラー・バッテリー・インバーターをドラッグ＆ドロップで回路設計。電線サイズを自動計算し、JIS規格に準拠した安全な設計をサポートします。</p>
-    <a href="https://easyautomate2024-cell.github.io/offgrid-designer/" class="strip-cta" target="_blank" rel="noopener">
-      <i class="ti ti-external-link" aria-hidden="true"></i>無料で今すぐ使う
+  <div class="strip-content rv">
+    <div class="sec-eyebrow">Our Story</div>
+    <h2>フィールドの「困った」が、<br>次の道具になる。</h2>
+    <p>キャンプ場で、車内で、実際に困ったことだけを作っています。TrailerLevelも、Offgrid Designerも、この暮らしの中から生まれました。</p>
+    <a href="#about" class="strip-cta">
+      <i class="ti ti-arrow-down" aria-hidden="true"></i>mono laboについて
     </a>
   </div>
 </div>
@@ -440,7 +541,7 @@ footer{
     <h2 class="sec-title">ショップ</h2>
     <p class="sec-sub">キャンピングトレーラー・クルマ向けの3Dプリント部品をメルカリで、DIYノウハウをnoteで販売中。</p>
     <div class="shops-grid">
-      <a href="https://note.com/mono_laborarory" target="_blank" rel="noopener" class="scard">
+      <a href="https://note.com/mono_laborarory" target="_blank" rel="noopener" class="scard rv">
         <div class="sicon" style="background:rgba(65,169,84,0.1)">📝</div>
         <div>
           <div class="sname">note</div>
@@ -448,7 +549,7 @@ footer{
         </div>
         <i class="ti ti-external-link" style="margin-left:auto;color:var(--muted);font-size:16px" aria-hidden="true"></i>
       </a>
-      <a href="https://jp.mercari.com/user/profile/363820193" target="_blank" rel="noopener" class="scard">
+      <a href="https://jp.mercari.com/user/profile/363820193" target="_blank" rel="noopener" class="scard rv d1">
         <div class="sicon" style="background:rgba(255,60,60,0.08)">🛍</div>
         <div>
           <div class="sname">メルカリ</div>
@@ -557,15 +658,16 @@ footer{
 <section id="about" class="about-sec">
   <div class="inner">
     <div class="about-grid">
-      <div class="about-logo-box">
+      <div class="about-logo-box rv">
         <img src="./logo.png" alt="mono labo">
       </div>
-      <div class="about-text">
+      <div class="about-text rv d1">
         <div class="sec-eyebrow">About</div>
         <h2>mono laboとは</h2>
-        <p>「これ、なんでないんだろう」——そう感じた瞬間から、ものづくりが始まります。3Dプリント×アプリ開発で、キャンピングトレーラー・クルマにまつわる"隙間"を埋めていく個人ラボです。</p>
+        <p>「これ、なんでないんだろう」——そう感じた瞬間から、ものづくりが始まります。3Dプリント×アプリ×エレクトロニクスで、暮らしやアウトドアの"隙間"を埋めていく個人ラボです。</p>
         <p>小さく始めて、本当に困っている人に届ける。それが mono labo のスタイルです。</p>
         <div class="vals">
+          <div class="val"><i class="ti ti-cpu" aria-hidden="true"></i>計器などのハードウェア開発（TrailerLevel）</div>
           <div class="val"><i class="ti ti-cube" aria-hidden="true"></i>3Dプリント部品の設計・販売（メルカリ）</div>
           <div class="val"><i class="ti ti-device-laptop" aria-hidden="true"></i>Webアプリ開発・無料公開</div>
           <div class="val"><i class="ti ti-writing" aria-hidden="true"></i>DIYノウハウをnoteで発信</div>
@@ -611,6 +713,59 @@ footer{
     </div>
   </div>
 </footer>
+
+<script>
+document.addEventListener('click',function(e){
+  var a=e.target.closest('a[href]');
+  if(!a)return;
+  var m=a.href.match(/github\.io\/(offgrid-designer|drain-cover-generator)\//);
+  if(m&&typeof gtag==='function'){
+    gtag('event','tool_open',{tool_name:m[1]});
+  }
+});
+
+// TrailerLevelモック: 傾いた状態から水平になるデモ (数値・色・ステータス連動)
+(function(){
+  var bubble=document.getElementById('idx-bubble'),
+      pv=document.getElementById('idx-pv'),
+      rv=document.getElementById('idx-rv'),
+      st=document.getElementById('idx-status');
+  if(!bubble||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  bubble.style.animation='none';
+  var P0=3.2,R0=-1.8,DUR=4200,HOLD=2400,t0=null;
+  function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+  function col(w){return w<=0.3?'#22c55e':w<=2?'#f59e0b':'#ef4444'}
+  function fmt(v){return (Math.abs(v)<0.05?0:v).toFixed(1)}
+  function frame(ts){
+    if(t0===null)t0=ts;
+    var el=(ts-t0)%(DUR+HOLD);
+    var e=ease(Math.min(1,el/DUR));
+    var p=P0*(1-e),r=R0*(1-e),w=Math.max(Math.abs(p),Math.abs(r));
+    pv.textContent=fmt(p); rv.textContent=fmt(r);
+    bubble.style.left=(50+Math.max(-1,Math.min(1,r/5))*39)+'%';
+    bubble.style.top=(50+Math.max(-1,Math.min(1,p/5))*39)+'%';
+    var c=col(w);
+    bubble.style.background=c;
+    bubble.style.boxShadow='0 0 18px '+c+'99';
+    if(w<=0.3){st.textContent='✓ 水平です';st.style.background='rgba(34,197,94,.25)';}
+    else{st.textContent='調整してください';st.style.background='#1f2937';}
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+// スクロールで現れる要素
+(function(){
+  var els=document.querySelectorAll('.rv');
+  if(!('IntersectionObserver' in window)){els.forEach(function(el){el.classList.add('in')});return;}
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}
+    });
+  },{threshold:0.12});
+  els.forEach(function(el){io.observe(el)});
+})();
+</script>
 
 </body>
 </html>
