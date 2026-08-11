@@ -9,6 +9,8 @@
 <meta property="og:description" content="スマホのブラウザがそのまま水準器に。アプリ不要・圏外OKの後付け水平モニター。開発中。">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="mono labo">
+<meta property="og:image" content="https://easyautomate2024-cell.github.io/mono-labo/photo_tl_hero.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-CT3HK859TJ"></script>
 <script>
@@ -111,6 +113,14 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.85);backdrop
 .scrub-val .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
 .scrub-val .v span{font-size:14px;opacity:.6}
 .scrub-hint{font-size:12px;color:rgba(229,231,235,.45);letter-spacing:1px}
+
+/* GALLERY */
+.gal-sec{background:var(--bg-white)}
+.gal-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.gal-item.wide{grid-column:1/-1}
+.gal-item img{width:100%;border-radius:18px;display:block;box-shadow:0 12px 40px rgba(0,0,0,0.10);border:1px solid var(--border)}
+.gal-cap{font-size:13px;color:var(--muted);margin-top:10px;text-align:center}
+@media(max-width:640px){.gal-grid{grid-template-columns:1fr}}
 
 /* SECTIONS */
 section{padding:88px 24px}
@@ -373,6 +383,37 @@ footer{background:#1d1d1f;padding:36px 48px}
     <div class="scrub-hint">↓ スクロールで水平出し</div>
   </div>
 </div>
+
+<!-- GALLERY -->
+<section class="gal-sec" id="gallery">
+  <div class="inner">
+    <div class="sec-eyebrow rv">Product</div>
+    <h2 class="sec-title rv">手のひらサイズの、黒い計器。</h2>
+    <p class="sec-sub rv">3Dプリントの筐体にセンサーとWiFiを内蔵。電源はUSB-Cひとつです。</p>
+    <div class="gal-grid">
+      <div class="gal-item wide rv">
+        <img src="./photo_tl_hero.jpg" alt="TrailerLevel本体。シボ加工の3Dプリント筐体にTRAILER LEVELのロゴ" loading="lazy">
+        <div class="gal-cap">試作機。シボ加工仕上げの3Dプリント筐体</div>
+      </div>
+      <div class="gal-item rv">
+        <img src="./photo_tl_mounted.jpg" alt="専用マウントでキッチン脇の棚下に常設したTrailerLevel" loading="lazy">
+        <div class="gal-cap">専用マウントでキッチン脇に常設。USB-Cから給電するだけ</div>
+      </div>
+      <div class="gal-item rv d1">
+        <img src="./photo_tl_top.jpg" alt="TrailerLevel上面。車両前方を示すFRONTマーク" loading="lazy">
+        <div class="gal-cap">FRONTマークを進行方向に向けて置くだけで設置完了</div>
+      </div>
+      <div class="gal-item rv">
+        <img src="./photo_tl_angle.jpg" alt="TrailerLevelの斜めからの外観" loading="lazy">
+        <div class="gal-cap">窓辺やテーブルにも馴染むサイズ感</div>
+      </div>
+      <div class="gal-item rv d1">
+        <img src="./photo_tl_usb.jpg" alt="TrailerLevelのUSB-Cポート" loading="lazy">
+        <div class="gal-cap">給電はUSB-C。モバイルバッテリーでも動作</div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- FOR WHO -->
 <section class="who-sec" id="forwho">
