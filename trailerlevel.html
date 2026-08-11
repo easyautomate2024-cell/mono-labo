@@ -205,6 +205,11 @@ section{padding:88px 24px}
 .wrow.on{border-color:rgba(34,197,94,.6);color:#fff}
 .wrow .ck{margin-left:auto;color:#22c55e;font-weight:700}
 
+/* HOW VIDEO */
+.how-video{margin-top:56px}
+.how-video video{width:100%;max-width:860px;display:block;margin:0 auto;border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,0.12);border:1px solid var(--border)}
+.how-video .gal-cap{max-width:860px;margin-left:auto;margin-right:auto}
+
 /* FAQ */
 .faq-sec{background:var(--bg-white)}
 .faqs{display:flex;flex-direction:column;max-width:760px}
@@ -664,6 +669,10 @@ footer{background:#1d1d1f;padding:36px 48px}
         <div class="d">スマホを持って外へ。気泡が中心に来て緑になったら水平です。前後・左右の角度が数字でわかるので、どちらをどれだけ上げればいいか迷いません。</div>
       </div>
     </div>
+    <div class="how-video rv">
+      <video id="usage-video" src="./video_tl_usage.mp4" poster="./video_tl_usage_poster.jpg" muted loop playsinline preload="metadata" aria-label="トレーラーのヒッチ横に置いたスマホの水準器画面を見ながら水平を調整している実際の様子"></video>
+      <div class="gal-cap">実際の水平出し。ヒッチ横にスマホを置いて、画面の気泡と数値を見ながら調整</div>
+    </div>
   </div>
 </section>
 
@@ -830,8 +839,21 @@ document.addEventListener('click',function(e){
 // ---- 動画: モーション低減設定の環境では自動再生しない ----
 (function(){
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){
-    document.querySelectorAll('.gal-item video').forEach(function(v){v.removeAttribute('autoplay');v.pause();});
+    document.querySelectorAll('video').forEach(function(v){v.removeAttribute('autoplay');v.pause();});
   }
+})();
+
+// ---- 使い方の実演動画: 画面に入ったら再生 (通信量の節約) ----
+(function(){
+  var v=document.getElementById('usage-video');
+  if(!v||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  if(!('IntersectionObserver' in window)){v.play();return;}
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if(en.isIntersecting){v.play();}else{v.pause();}
+    });
+  },{threshold:0.3});
+  io.observe(v);
 })();
 
 // ---- スクロールで現れる要素 ----
