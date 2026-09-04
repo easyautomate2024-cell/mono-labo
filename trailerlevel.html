@@ -138,6 +138,18 @@ section{padding:88px 24px}
 .who-title{font-size:15px;font-weight:700;margin-bottom:4px}
 .who-desc{font-size:13px;color:var(--muted);line-height:1.6}
 
+/* VOICE (使っている方の声) */
+.voice-sec{padding:72px 24px;background:var(--bg-white);border-top:1px solid var(--border)}
+.voice-card{max-width:720px;margin:28px auto 0;padding:32px 36px;border-radius:20px;background:var(--bg);border:1px solid var(--border);position:relative}
+.voice-card:before{content:"\201C";position:absolute;top:8px;left:22px;font-size:72px;line-height:1;color:var(--accent);opacity:.25;font-family:Georgia,serif}
+.voice-quote{font-size:1.15rem;line-height:1.9;color:var(--text);margin:0 0 18px}
+.voice-quote strong{font-weight:700;background:linear-gradient(transparent 62%,rgba(52,199,89,.28) 62%)}
+.voice-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:.9rem;color:var(--muted)}
+.voice-meta a{color:var(--accent);text-decoration:none}
+.voice-meta a:hover{text-decoration:underline}
+.voice-note{text-align:center;font-size:.85rem;color:var(--muted);margin-top:18px}
+@media (max-width:600px){.voice-card{padding:26px 22px}.voice-quote{font-size:1.05rem}}
+
 /* FEATURES */
 .feat-sec{background:var(--bg-white)}
 .feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
@@ -461,6 +473,23 @@ footer{background:#1d1d1f;padding:36px 48px}
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- VOICE -->
+<section class="voice-sec" id="voice">
+  <div class="inner">
+    <div class="sec-eyebrow rv">使っている方の声</div>
+    <h2 class="sec-title rv">実際に使っているオーナーさんから</h2>
+    <div class="voice-card rv">
+      <p class="voice-quote">トレーラーの傾きがスマホで確認できるなんて素敵✨<br>
+      <strong>わざわざ室内に確認しに行かなくて手元で見れる</strong>😆<br>
+      最高のアイテムと出会いました😍</p>
+      <div class="voice-meta">
+        <span>キャンピングトレーラーオーナー・神保さん(Instagramの投稿より)</span>
+      </div>
+    </div>
+    <p class="voice-note">ご本人の許可をいただいて掲載しています。</p>
   </div>
 </section>
 
