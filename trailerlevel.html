@@ -148,6 +148,13 @@ section{padding:88px 24px}
 .voice-meta a{color:var(--accent);text-decoration:none}
 .voice-meta a:hover{text-decoration:underline}
 .voice-note{text-align:center;font-size:.85rem;color:var(--muted);margin-top:18px}
+.voice-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1000px;margin:28px auto 0;align-items:stretch}
+.voice-grid .voice-card{margin:0;max-width:none}
+.voice-photo{margin:0;border-radius:20px;overflow:hidden;border:1px solid var(--border);background:#000;display:flex;flex-direction:column}
+.voice-photo img{width:100%;height:100%;object-fit:cover;display:block;min-height:240px}
+.voice-photo figcaption{font-size:.85rem;color:var(--muted);padding:10px 14px;background:var(--bg)}
+.voice-card.voice-second{margin-top:20px;max-width:1000px}
+@media (max-width:700px){.voice-grid{grid-template-columns:1fr}}
 @media (max-width:600px){.voice-card{padding:26px 22px}.voice-quote{font-size:1.05rem}}
 
 /* FEATURES */
@@ -481,12 +488,27 @@ footer{background:#1d1d1f;padding:36px 48px}
   <div class="inner">
     <div class="sec-eyebrow rv">使っている方の声</div>
     <h2 class="sec-title rv">実際に使っているオーナーさんから</h2>
-    <div class="voice-card rv">
+    <div class="voice-grid">
+      <figure class="voice-photo rv">
+        <img src="photo_tl_voice_jin.jpg" alt="キャンピングトレーラーの窓上に取り付けられたTrailerLevel" loading="lazy">
+        <figcaption>神保さんの取り付け例（キッチン窓の上に設置、USBで給電）</figcaption>
+      </figure>
+      <div class="voice-card rv">
+        <p class="voice-quote">現地着いて、電源ONでWi-Fiつながったら自動でモニター画面になる！<br>
+        <strong>トレーラーの足を出す前に、このモニター画面にしてスマホ見ながら調整できる‼</strong><br>
+        わざわざ室内に水平器を見に行かなくても良いんです‼<br>
+        めんどくさい作業が楽になりました😆 時間短縮にもなりました‼</p>
+        <div class="voice-meta">
+          <span>キャンピングトレーラーオーナー・神保さん(Instagramの投稿より抜粋)</span>
+        </div>
+      </div>
+    </div>
+    <div class="voice-card voice-second rv">
       <p class="voice-quote">トレーラーの傾きがスマホで確認できるなんて素敵✨<br>
       <strong>わざわざ室内に確認しに行かなくて手元で見れる</strong>😆<br>
       最高のアイテムと出会いました😍</p>
       <div class="voice-meta">
-        <span>キャンピングトレーラーオーナー・神保さん(Instagramの投稿より)</span>
+        <span>同・神保さん(初回の投稿より)</span>
       </div>
     </div>
     <p class="voice-note">ご本人の許可をいただいて掲載しています。</p>
