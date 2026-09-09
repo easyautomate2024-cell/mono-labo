@@ -167,6 +167,16 @@ nav{
 .tl-card .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
 .tl-card .v span{font-size:13px;opacity:.6}
 .tl-note{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.7}
+/* 製品の束ね見出し・区切り */
+.prod-head{margin-bottom:72px}
+.prod-head .sec-sub{margin-bottom:0}
+.prod-name{font-size:clamp(22px,3vw,32px)}
+.prod-divider{border-top:1px solid var(--border2);margin-bottom:72px}
+/* ツールは製品より控えめに */
+.tools-sec .tcard{padding:28px 28px}
+.tools-sec .tcard .tfeats{display:none}
+.tools-sec .tcard.ft{background:var(--bg)}
+.tools-sec .tcard.ft:hover{background:#ebebed}
 
 /* ===== SCROLL REVEAL ===== */
 .rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
@@ -396,7 +406,7 @@ footer{
       <a href="#shop" onclick="document.getElementById('navCheck').checked=false">ショップ</a>
       <a href="#note" onclick="document.getElementById('navCheck').checked=false">Blog</a>
       <a href="#about" onclick="document.getElementById('navCheck').checked=false">About</a>
-      <a href="./trailerlevel.html" class="nav-cta" onclick="document.getElementById('navCheck').checked=false">TrailerLevel</a>
+      <a href="#products" class="nav-cta" onclick="document.getElementById('navCheck').checked=false">製品を見る</a>
     </div>
   </div>
 </nav>
@@ -415,15 +425,20 @@ footer{
     <h1><span style="white-space:nowrap">「これ、なんでないんだろう」</span><br><span style="font-size:.65em;font-weight:600;color:var(--text)">を作っています。</span></h1>
     <p class="hero-sub">3Dプリント×アプリ×エレクトロニクスで、暮らしの「隙間」を埋める道具を作る個人ラボです。</p>
     <div class="hero-actions">
-      <a href="#trailerlevel" class="btn-primary"><i class="ti ti-gauge" aria-hidden="true"></i>TrailerLevel を見る</a>
+      <a href="#products" class="btn-primary"><i class="ti ti-box" aria-hidden="true"></i>製品を見る</a>
       <a href="#tools" class="btn-ghost"><i class="ti ti-apps" aria-hidden="true"></i>無料ツール</a>
     </div>
   </div>
 </div>
 
 <!-- TRAILERLEVEL -->
-<section id="trailerlevel" class="tl-sec">
+<section id="trailerlevel" class="tl-sec" style="padding-bottom:72px">
   <div class="inner">
+    <div class="prod-head rv" id="products">
+      <div class="sec-eyebrow">Products</div>
+      <h2 class="sec-title">販売中の製品</h2>
+      <p class="sec-sub">キャンプ場や運転席で「実際に困ったこと」から生まれた製品です。1点ずつ受注生産でお届けしています。</p>
+    </div>
     <div class="tl-grid">
       <div class="tl-visual rv">
         <div class="tl-phone" aria-hidden="true">
@@ -444,9 +459,9 @@ footer{
         </div>
       </div>
       <div class="rv d1">
-        <div class="sec-eyebrow">Hardware</div>
+        <div class="sec-eyebrow">キャンピングトレーラー・キャンピングカー向け</div>
         <span class="tbadge bg"><i class="ti ti-shopping-cart" aria-hidden="true" style="font-size:11px"></i> 受注販売中</span>
-        <h2 class="sec-title">TrailerLevel</h2>
+        <h2 class="sec-title prod-name">TrailerLevel</h2>
         <p class="sec-sub" style="margin-bottom:24px">トレーラーに置いて使う、後付けの水平モニター。スマホのWiFiを本体につなぐと、ブラウザがそのまま水準器になります。アプリのインストールは不要。外でジャッキやランプを調整しながら、手元のスマホで0.1°単位の傾きを確認できます。</p>
         <div class="tfeats" style="margin-bottom:28px">
           <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>スマホのブラウザが表示器 — 専用アプリ不要</div>
@@ -466,13 +481,14 @@ footer{
 </section>
 
 <!-- CX-8/CX-5 FOOTREST -->
-<section id="footrest" style="background:var(--bg-white);border-bottom:1px solid var(--border)">
+<section id="footrest" class="tl-sec" style="padding-top:0">
   <div class="inner">
+    <div class="prod-divider"></div>
     <div class="tl-grid">
       <div class="rv">
-        <div class="sec-eyebrow">Hardware</div>
+        <div class="sec-eyebrow">マツダ CX-8 / CX-5 向け</div>
         <span class="tbadge bg"><i class="ti ti-shopping-cart" aria-hidden="true" style="font-size:11px"></i> メルカリで受注販売中</span>
-        <h2 class="sec-title">CX-8/CX-5 右足フットレスト</h2>
+        <h2 class="sec-title prod-name">CX-8/CX-5 右足フットレスト</h2>
         <p class="sec-sub" style="margin-bottom:24px">マツダ CX-8(KG系)/CX-5(KF系)用の右足フットレスト付トリムカバー。純正トリムカバーと交換するだけで、ACC(クルーズコントロール)走行中に宙ぶらりんだった右足を支え、長距離ドライブの太もも・足首の疲労を軽減します。</p>
         <div class="tfeats" style="margin-bottom:28px">
           <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>純正トリムカバーと交換するだけ — 工具不要</div>
