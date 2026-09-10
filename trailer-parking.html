@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>トレーラー駐車ゲーム — バックで区画に入れて、水平を出せ | mono labo</title>
+<meta name="description" content="キャンピングトレーラーをバックで区画に入れる、ブラウザで遊べる駐車ゲーム。最後は水平出しまで。トレーラー乗りの「あるある」をスマホで体験。">
+<meta property="og:title" content="トレーラー駐車ゲーム — バックで区画に入れて、水平を出せ">
+<meta property="og:description" content="ハンドルは逆に切る。トレーラー乗りなら分かる難しさを、ブラウザで。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="mono labo">
+<meta property="og:image" content="https://easyautomate2024-cell.github.io/mono-labo/og_parking.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CT3HK859TJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-CT3HK859TJ');
+</script>
+<style>
+:root{--dk:#0b1220;--card:#111a2e;--bd:#263248;--tx:#e5e7eb;--mut:#9aa7bd;--g:#22c55e;--am:#f59e0b;--rd:#ef4444;--bl:#2563eb}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden;background:var(--dk);color:var(--tx);font-family:-apple-system,system-ui,"Hiragino Sans","Yu Gothic",sans-serif;touch-action:none}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+.hud{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));font-size:12px;color:var(--mut);gap:8px}
+.hud b{color:var(--tx);font-variant-numeric:tabular-nums;font-size:14px}
+.hud .brand{display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--mut)}
+.hud .brand img{width:16px;height:auto}
+.hud .stat{display:flex;gap:12px}
+.hud .stat span{white-space:nowrap}
+.hud .rst{background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:10px;width:34px;height:30px;font-size:16px;line-height:1;flex-shrink:0}
+.toast{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(11,18,32,.88);color:var(--am);padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap;pointer-events:none;border:1px solid var(--bd)}
+#stage{flex:1;position:relative;min-height:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ctl{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;padding:10px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));background:var(--dk)}
+.pad{background:var(--card);border:1px solid var(--bd);border-radius:16px;height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--tx);gap:2px}
+.pad .ic{font-size:24px;line-height:1}
+.pad.on{background:#1e3a8a;border-color:var(--bl)}
+.pad.rev.on{background:#7c2d12;border-color:#ea580c}
+.pad small{font-size:10px;color:var(--mut);font-weight:500}
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(11,18,32,.72);backdrop-filter:blur(6px)}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:22px 20px;width:min(100%,380px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.panel h1{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
+.panel h2{font-size:18px;font-weight:700;margin-bottom:6px}
+.panel p{font-size:13px;color:var(--mut);line-height:1.7}
+.panel .big{font-size:15px;color:var(--tx);line-height:1.8;margin:10px 0 14px}
+.btn{display:block;width:100%;background:var(--bl);color:#fff;border:0;border-radius:14px;padding:14px;font-size:15px;font-weight:700;margin-top:10px;text-decoration:none;text-align:center}
+.btn.ghost{background:transparent;border:1px solid var(--bd);color:var(--tx);font-weight:600}
+.btn.green{background:var(--g);color:#052e16}
+.tips{text-align:left;font-size:13px;color:var(--mut);line-height:1.8;margin:12px 0 4px}
+.tips b{color:var(--tx)}
+.res{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.res div{background:var(--dk);border:1px solid var(--bd);border-radius:12px;padding:10px 6px}
+.res .l{font-size:11px;color:var(--mut)}
+.res .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.rank{font-size:56px;font-weight:800;line-height:1;color:var(--g);margin:4px 0}
+/* 水平出しパネル (TrailerLevelの画面を模す) */
+.lv{display:flex;flex-direction:column;align-items:center;gap:10px}
+.lv .st{font-size:13px;font-weight:600;padding:5px 14px;border-radius:20px;background:#1f2937}
+.lv .st.ok{background:rgba(34,197,94,.25)}
+.gauge{position:relative;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#111a2e,#0a1120);border:2px solid var(--bd)}
+.gauge .r{position:absolute;border:2px dashed #2b3a55;border-radius:50%}
+.gauge .r1{inset:33%}.gauge .r2{inset:16%}
+.gauge .ch{position:absolute;left:0;right:0;top:50%;height:2px;background:var(--bd)}
+.gauge .cv{position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--bd)}
+.gauge .fw{position:absolute;top:6%;left:50%;transform:translateX(-50%);font-size:9px;color:#7d9bd1;text-align:center;line-height:1.2}
+.bub{position:absolute;width:22%;height:22%;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--rd);box-shadow:0 0 18px rgba(239,68,68,.6);transition:left .25s,top .25s,background .25s}
+.vals{display:flex;gap:8px;width:100%}
+.vals div{flex:1;background:var(--dk);border:1px solid var(--bd);border-radius:12px;padding:8px;text-align:center}
+.vals .l{font-size:10px;color:var(--mut)}.vals .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.jk{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.jk button{background:var(--dk);border:1px solid var(--bd);color:var(--tx);border-radius:12px;padding:12px 6px;font-size:13px;font-weight:600}
+.jk button:active{background:#1e3a8a}
+.small{font-size:11px;color:var(--mut);margin-top:8px}
+.seg{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:4px;font-size:12px;color:var(--mut)}
+.seg button{background:var(--dk);border:1px solid var(--bd);color:var(--mut);border-radius:10px;padding:8px 10px;font-size:12px;font-weight:600}
+.seg button.on{background:#1e3a8a;border-color:var(--bl);color:#fff}
+.hud .steer{font-variant-numeric:tabular-nums}
+@media(min-width:700px){.ctl{max-width:560px;margin:0 auto;width:100%}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hud">
+    <a class="brand" href="./index.html"><img src="./logo.png" alt="">mono labo</a>
+    <div class="stat"><span>⏱ <b id="hT">0.0</b>s</span><span>切り返し <b id="hS">0</b></span><span>接触 <b id="hC">0</b></span><span class="steer">舵 <b id="hW">0</b>°</span></div>
+    <button class="rst" id="bReset" title="やり直す">↺</button>
+  </div>
+  <div id="stage"><canvas id="cv"></canvas>
+    <div class="toast" id="hM" hidden></div>
+    <!-- タイトル -->
+    <div class="ov" id="ovTitle">
+      <div class="panel">
+        <h1>トレーラー駐車ゲーム</h1>
+        <p>キャンプ場に着いた。区画にトレーラーをバックで入れて、最後に水平を出そう。</p>
+        <div class="tips">
+          <div><b>▲ 前進 / ▼ 後退</b>: 押している間だけ動く</div>
+          <div><b>◀ ▶ ハンドル</b>: 押している間だけ切れる(離すと戻る)</div>
+          <div><b>コツ</b>: バックでは、トレーラーを向けたい方向と<b>逆</b>にハンドルを切る</div>
+          <div>隣のトレーラーや木に当たると赤く光って「接触」に数えられる(止まりはしない)</div>
+          <div>折れ角が90°を超えると後退できなくなる。前進して立て直そう</div>
+        </div>
+        <div class="seg" id="segSteer">
+          <span>ハンドル</span>
+          <button data-m="0" class="on">離すと戻る</button>
+          <button data-m="1">切ったまま保持</button>
+        </div>
+        <button class="btn" id="bStart">スタート</button>
+        <div class="small">PCならキーボードの矢印キーでも操作できます</div>
+      </div>
+    </div>
+    <!-- 水平出し -->
+    <div class="ov" id="ovLevel" hidden>
+      <div class="panel">
+        <h2>駐車OK！ 次は水平出し</h2>
+        <p>区画の地面は傾いている。ジョッキーホイールとスタビライザーで気泡を真ん中に。</p>
+        <div class="lv" style="margin-top:12px">
+          <div class="st" id="lvSt">調整してください</div>
+          <div class="gauge"><div class="r r1"></div><div class="r r2"></div><div class="ch"></div><div class="cv"></div><div class="fw">▲<br>車両前</div><div class="bub" id="bub"></div></div>
+          <div class="vals"><div><div class="l">前後 (pitch)</div><div class="v"><span id="lvP">0.0</span>°</div></div><div><div class="l">左右 (roll)</div><div class="v"><span id="lvR">0.0</span>°</div></div></div>
+          <div class="jk">
+            <button data-p="-0.4">▲ 前を上げる<br><small>ジョッキーホイール</small></button>
+            <button data-p="0.4">▼ 前を下げる<br><small>ジョッキーホイール</small></button>
+            <button data-r="-0.4">◀ 左を上げる<br><small>スタビライザー</small></button>
+            <button data-r="0.4">▶ 右を上げる<br><small>スタビライザー</small></button>
+          </div>
+        </div>
+        <div class="small">この画面は、実際のTrailerLevelの水準器とほぼ同じです</div>
+      </div>
+    </div>
+    <!-- 結果 -->
+    <div class="ov" id="ovResult" hidden>
+      <div class="panel">
+        <h2>✓ 水平です。今夜はぐっすり。</h2>
+        <div class="rank" id="rRank">A</div>
+        <div class="res">
+          <div><div class="l">タイム</div><div class="v" id="rT">--</div></div>
+          <div><div class="l">切り返し</div><div class="v" id="rS">--</div></div>
+          <div><div class="l">接触</div><div class="v" id="rC">--</div></div>
+        </div>
+        <p id="rMsg"></p>
+        <button class="btn" id="bAgain">もう一度</button>
+        <button class="btn ghost" id="bShare">結果をシェア</button>
+        <a class="btn green" href="./trailerlevel.html">この水準器、本物があります →</a>
+      </div>
+    </div>
+  </div>
+  <div class="ctl">
+    <div class="pad" id="pL"><span class="ic">◀</span>ハンドル<small>左</small></div>
+    <div class="pad" id="pR"><span class="ic">▶</span>ハンドル<small>右</small></div>
+    <div class="pad rev" id="pB"><span class="ic">▼</span>後退</div>
+    <div class="pad" id="pF"><span class="ic">▲</span>前進</div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+// ---------- ワールド (単位: m、x右・y下、角度はラジアンで0=右向き・時計回り正) ----------
+var W=28, H=44;
+var LANE={x:0,y:16,w:W,h:9};                 // 通路(画面中央)
+var SLOT={x:12.2,y:27.5,w:3.6,h:8.2};        // 目標区画(縦長、通路から下へバックで入れる)
+var SITES=[{x:6.5,y:27.5,w:3.6,h:8.2},{x:17.9,y:27.5,w:3.6,h:8.2},   // 隣の区画(下)
+           {x:3.5,y:6.3,w:3.6,h:8.2},{x:9.5,y:6.3,w:3.6,h:8.2},{x:15.5,y:6.3,w:3.6,h:8.2},{x:21.5,y:6.3,w:3.6,h:8.2}]; // 向かいの区画(上)
+var OBST=[  // 障害物: 駐車中のトレーラー(矩形)と木(円)、区画のポール
+  {t:'tr',x:7.1,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
+  {t:'tr',x:18.5,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
+  {t:'tr',x:4.1,y:7.0,w:2.3,h:6.0,a:Math.PI/2},
+  {t:'tr',x:16.1,y:7.0,w:2.3,h:6.0,a:Math.PI/2},
+  {t:'tr',x:22.1,y:7.0,w:2.3,h:6.0,a:Math.PI/2},
+  {t:'tree',x:1.6,y:2.2,r:1.3},{t:'tree',x:26.6,y:2.4,r:1.4},{t:'tree',x:13.5,y:2.0,r:1.2},
+  {t:'tree',x:3.5,y:29,r:1.5},{t:'tree',x:24.5,y:29,r:1.6},
+  {t:'tree',x:5,y:40,r:1.7},{t:'tree',x:14,y:40.5,r:1.4},{t:'tree',x:23,y:40,r:1.6}
+];
+// 車(牽引車)とトレーラーの寸法
+var CAR={L:2.9,a:1.1,len:4.9,wid:1.9,front:3.9,rear:1.0,maxSteer:35*Math.PI/180};
+var TR={Lt:4.3,len:5.8,wid:2.3,bodyFront:1.2};   // 連結点→車軸4.3m、車体は連結点の1.2m後ろから5.8m
+// 状態
+var S={};
+function reset(){
+  S={x:13,y:20.5,th:0,st:0,v:0,psi:0,t:0,run:false,phase:'title',sw:0,col:0,lastDir:0,contact:false,jack:false,
+     stopT:0,pitch:0,roll:0};
+  S.psi=S.th;   // 真っ直ぐ連結した状態から
+  hud();
+}
+// ---------- 入力 ----------
+var IN={l:false,r:false,f:false,b:false};
+var STEER_HOLD=false;
+try{STEER_HOLD=localStorage.getItem('tpg_steer')==='1';}catch(e){}
+document.querySelectorAll('#segSteer button').forEach(function(b){
+  if((b.dataset.m==='1')===STEER_HOLD)b.classList.add('on'); else b.classList.remove('on');
+  b.addEventListener('click',function(){STEER_HOLD=b.dataset.m==='1';
+    document.querySelectorAll('#segSteer button').forEach(function(x){x.classList.toggle('on',x===b);});
+    try{localStorage.setItem('tpg_steer',STEER_HOLD?'1':'0');}catch(e){}});
+});
+function bind(id,key){
+  var el=document.getElementById(id);
+  var on=function(e){e.preventDefault();IN[key]=true;el.classList.add('on');};
+  var off=function(e){e.preventDefault();IN[key]=false;el.classList.remove('on');};
+  el.addEventListener('touchstart',on,{passive:false});el.addEventListener('touchend',off);el.addEventListener('touchcancel',off);
+  el.addEventListener('mousedown',on);el.addEventListener('mouseup',off);el.addEventListener('mouseleave',off);
+}
+bind('pL','l');bind('pR','r');bind('pF','f');bind('pB','b');
+var KM={ArrowLeft:'l',ArrowRight:'r',ArrowUp:'f',ArrowDown:'b'};
+document.addEventListener('keydown',function(e){if(KM[e.key]){IN[KM[e.key]]=true;e.preventDefault();}});
+document.addEventListener('keyup',function(e){if(KM[e.key]){IN[KM[e.key]]=false;}});
+
+// ---------- 物理 ----------
+function norm(a){while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a;}
+function hitch(s){return {x:s.x-CAR.a*Math.cos(s.th),y:s.y-CAR.a*Math.sin(s.th)};}
+function step(dt){
+  if(S.phase!=='drive')return;
+  S.t+=dt;
+  // ハンドル: 押している間だけ切れる。戻り方はモード次第 (0=離すと戻る, 1=切ったまま保持)
+  var dirS=(IN.l?-1:0)+(IN.r?1:0);
+  var rate=1.6*dt; // rad/s
+  if(STEER_HOLD){ if(dirS){S.st=Math.max(-CAR.maxSteer,Math.min(CAR.maxSteer,S.st+dirS*rate));} }
+  else{ var tgt=dirS*CAR.maxSteer; if(S.st<tgt)S.st=Math.min(tgt,S.st+rate); else if(S.st>tgt)S.st=Math.max(tgt,S.st-rate); }
+  // 速度: 前進2.2m/s、後退1.3m/s
+  var vt=(IN.f?2.2:0)+(IN.b?-1.3:0);
+  if(S.jack&&vt<0)vt=0;             // 折れすぎたら後退できない
+  var acc=4*dt;
+  if(S.v<vt)S.v=Math.min(vt,S.v+acc); else if(S.v>vt)S.v=Math.max(vt,S.v-acc);
+  var dir=S.v>0.05?1:(S.v<-0.05?-1:0);
+  if(dir&&S.lastDir&&dir!==S.lastDir)S.sw++;
+  if(dir)S.lastDir=dir;
+  if(Math.abs(S.v)<0.01){checkGoal(dt);return;}   // 停止中もゴール判定(止まって0.8秒で成立)
+  var prev={x:S.x,y:S.y,th:S.th,psi:S.psi};
+  var h0=hitch(S);
+  S.x+=S.v*dt*Math.cos(S.th); S.y+=S.v*dt*Math.sin(S.th);
+  S.th+=S.v/CAR.L*Math.tan(S.st)*dt;
+  var h1=hitch(S);
+  var dx=h1.x-h0.x, dy=h1.y-h0.y;
+  // トレーラー: 連結点の横方向の動きで向きが変わる(車軸は横滑りしない)
+  S.psi+=(-dx*Math.sin(S.psi)+dy*Math.cos(S.psi))/TR.Lt;
+  var g=norm(S.psi-S.th);
+  S.jack=Math.abs(g)>Math.PI/2;
+  // 接触: 止めずに通す(引っかかってイライラしない)。新たに触れた瞬間だけ1回カウント
+  var hit=collide();
+  if(hit){ if(!S.contact){S.col++;S.contact=true;S.hitMs=S.t;} }
+  else S.contact=false;
+  // 場外
+  var pts=carPoly().concat(trPoly());
+  for(var i=0;i<pts.length;i++){if(pts[i].x<0||pts[i].x>W||pts[i].y<0||pts[i].y>H){S.x=prev.x;S.y=prev.y;S.th=prev.th;S.psi=prev.psi;S.v=0;break;}}
+  checkGoal(dt);
+}
+function rectPoly(cx,cy,len,wid,a){
+  var c=Math.cos(a),s=Math.sin(a),hl=len/2,hw=wid/2;
+  return [{x:cx+c*hl-s*hw,y:cy+s*hl+c*hw},{x:cx+c*hl+s*hw,y:cy+s*hl-c*hw},{x:cx-c*hl+s*hw,y:cy-s*hl-c*hw},{x:cx-c*hl-s*hw,y:cy-s*hl+c*hw}];
+}
+function carPoly(){var cx=S.x+(CAR.front-CAR.rear)/2*Math.cos(S.th),cy=S.y+(CAR.front-CAR.rear)/2*Math.sin(S.th);return rectPoly(cx,cy,CAR.len,CAR.wid,S.th);}
+function trPoly(){var h=hitch(S);var d=TR.bodyFront+TR.len/2;var cx=h.x-d*Math.cos(S.psi),cy=h.y-d*Math.sin(S.psi);return rectPoly(cx,cy,TR.len,TR.wid,S.psi);}
+function polyHit(A,B){ // 分離軸(凸四角形)
+  var ps=[A,B];
+  for(var k=0;k<2;k++){var P=ps[k];for(var i=0;i<P.length;i++){var p1=P[i],p2=P[(i+1)%P.length];var nx=p2.y-p1.y,ny=p1.x-p2.x;
+    var a=proj(A,nx,ny),b=proj(B,nx,ny);if(a.max<b.min||b.max<a.min)return false;}}
+  return true;
+}
+function proj(P,nx,ny){var mn=1e9,mx=-1e9;for(var i=0;i<P.length;i++){var d=P[i].x*nx+P[i].y*ny;if(d<mn)mn=d;if(d>mx)mx=d;}return {min:mn,max:mx};}
+function circHit(P,cx,cy,r){ // 円と凸多角形
+  var inside=true;
+  for(var i=0;i<P.length;i++){var p1=P[i],p2=P[(i+1)%P.length];
+    var ex=p2.x-p1.x,ey=p2.y-p1.y,fx=cx-p1.x,fy=cy-p1.y;var L2=ex*ex+ey*ey;var t=Math.max(0,Math.min(1,(fx*ex+fy*ey)/L2));
+    var qx=p1.x+t*ex-cx,qy=p1.y+t*ey-cy;if(qx*qx+qy*qy<r*r)return true;
+    if(ex*fy-ey*fx<0)inside=false;}
+  return inside;
+}
+function collide(){
+  var C=carPoly(),T=trPoly();
+  for(var i=0;i<OBST.length;i++){var o=OBST[i];
+    if(o.t==='tr'){var P=rectPoly(o.x+o.w/2,o.y+o.h/2,o.h,o.w,o.a);if(polyHit(C,P)||polyHit(T,P))return true;}
+    else{if(circHit(C,o.x,o.y,o.r)||circHit(T,o.x,o.y,o.r))return true;}
+  }
+  return false;
+}
+function checkGoal(dt){
+  var T=trPoly();var ok=true;var m=0.15;
+  for(var i=0;i<4;i++){var p=T[i];if(p.x<SLOT.x+m||p.x>SLOT.x+SLOT.w-m||p.y<SLOT.y+m||p.y>SLOT.y+SLOT.h-m){ok=false;break;}}
+  // 向き: 区画は縦、トレーラーの向き(車軸→連結点)が上向き(-90°)に近いこと
+  var ang=Math.abs(norm(S.psi+Math.PI/2));
+  if(ang>12*Math.PI/180)ok=false;
+  if(ok&&Math.abs(S.v)<0.05){S.stopT+=dt;if(S.stopT>0.8)startLevel();} else S.stopT=0;
+  toast(S.jack?'折れすぎ！前進して立て直そう':S.contact?'接触！':(ok?'区画に入った！止まって…':''));
+}
+function toast(t){var el=document.getElementById('hM');el.textContent=t;el.hidden=!t;}
+
+// ---------- 描画 ----------
+var cv=document.getElementById('cv'),cx=cv.getContext('2d'),SC=10,OX=0,OY=0,DPR=1;
+function resize(){
+  var st=document.getElementById('stage');DPR=window.devicePixelRatio||1;
+  cv.width=st.clientWidth*DPR;cv.height=st.clientHeight*DPR;
+  SC=Math.min(cv.width/W,cv.height/H);OX=(cv.width-W*SC)/2;OY=(cv.height-H*SC)/2;
+}
+window.addEventListener('resize',resize);resize();
+function P(x,y){return [OX+x*SC,OY+y*SC];}
+function draw(){
+  cx.setTransform(1,0,0,1,0,0);cx.fillStyle='#0b1220';cx.fillRect(0,0,cv.width,cv.height);
+  cx.setTransform(SC,0,0,SC,OX,OY);
+  // 芝
+  cx.fillStyle='#2f7d3a';cx.fillRect(0,0,W,H);
+  // 通路(砂利)
+  cx.fillStyle='#8a8f8a';cx.fillRect(LANE.x,LANE.y,LANE.w,LANE.h);
+  cx.fillStyle='#7d827d';for(var i=0;i<60;i++){cx.fillRect((i*7.3)%W,LANE.y+((i*3.1)%LANE.h),.25,.25);}
+  // 区画
+  SITES.concat([SLOT]).forEach(function(s,idx){cx.fillStyle=(s===SLOT)?'#a3a798':'#9a9e92';cx.fillRect(s.x,s.y,s.w,s.h);});
+  // 目標区画の枠
+  cx.setLineDash([.5,.35]);cx.lineWidth=.14;cx.strokeStyle='#fff';cx.strokeRect(SLOT.x,SLOT.y,SLOT.w,SLOT.h);cx.setLineDash([]);
+  cx.fillStyle='rgba(255,255,255,.85)';cx.font='bold 1.1px sans-serif';cx.textAlign='center';cx.fillText('ここ',SLOT.x+SLOT.w/2,SLOT.y+SLOT.h/2+.4);
+  // 障害物
+  OBST.forEach(function(o){
+    if(o.t==='tree'){cx.fillStyle='rgba(0,0,0,.25)';cx.beginPath();cx.arc(o.x+.3,o.y+.35,o.r,0,7);cx.fill();
+      cx.fillStyle='#1f5f2a';cx.beginPath();cx.arc(o.x,o.y,o.r,0,7);cx.fill();cx.fillStyle='#2c7a37';cx.beginPath();cx.arc(o.x-.3,o.y-.3,o.r*.6,0,7);cx.fill();}
+    else if(o.t==='post'){cx.fillStyle='#e5e7eb';cx.beginPath();cx.arc(o.x,o.y,o.r,0,7);cx.fill();}
+    else{drawTrailerBody(o.x+o.w/2,o.y+o.h/2,o.h,o.w,o.a,'#d9dde3',true);}
+  });
+  // 自分のトレーラーと車
+  var h=hitch(S);
+  var d=TR.bodyFront+TR.len/2;
+  drawDrawbar(h,S.psi);
+  // 車輪(トレーラー)
+  wheelPair(h.x-TR.Lt*Math.cos(S.psi),h.y-TR.Lt*Math.sin(S.psi),S.psi,TR.wid+.1,0);
+  drawTrailerBody(h.x-d*Math.cos(S.psi),h.y-d*Math.sin(S.psi),TR.len,TR.wid,S.psi,'#f3f4f6',false);
+  // 車
+  wheelPair(S.x,S.y,S.th,CAR.wid-.2,0);
+  wheelPair(S.x+CAR.L*Math.cos(S.th),S.y+CAR.L*Math.sin(S.th),S.th,CAR.wid-.2,S.st);
+  drawCar();
+  // 接触中は赤い枠で知らせる
+  if(S.contact){
+    cx.strokeStyle='rgba(239,68,68,.9)';cx.lineWidth=.16;
+    [carPoly(),trPoly()].forEach(function(P){cx.beginPath();P.forEach(function(p,i){i?cx.lineTo(p.x,p.y):cx.moveTo(p.x,p.y)});cx.closePath();cx.stroke();});
+  }
+}
+function wheelPair(x,y,a,track,steer){
+  var c=Math.cos(a),s=Math.sin(a);
+  [[-1],[1]].forEach(function(k){var wx=x-s*track/2*k[0],wy=y+c*track/2*k[0];
+    cx.save();cx.translate(wx,wy);cx.rotate(a+steer);cx.fillStyle='#111827';cx.fillRect(-.35,-.13,.7,.26);cx.restore();});
+}
+// Hobby 495 UL 風: 白いボディ、グラファイトの帯、Hekiルーフウィンドウ2つ、前にガスボックス+A型ドローバー
+function drawTrailerBody(x,y,len,wid,a,color,ghost){
+  cx.save();cx.translate(x,y);cx.rotate(a);
+  var L2=len/2,W2=wid/2;
+  cx.fillStyle='rgba(0,0,0,.28)';rr(-L2+.25,-W2+.3,len,wid,.4);cx.fill();
+  cx.fillStyle=color;rr(-L2,-W2,len,wid,.4);cx.fill();
+  cx.strokeStyle=ghost?'#b0b5bd':'#9ca3af';cx.lineWidth=.07;rr(-L2,-W2,len,wid,.4);cx.stroke();
+  // 側面のグラファイトの帯 (両側)
+  cx.fillStyle=ghost?'#a9aeb6':'#4b5563';cx.fillRect(-L2+.5,-W2+.02,len-1.0,.16);cx.fillRect(-L2+.5,W2-.18,len-1.0,.16);
+  // 屋根: 中央のわずかに濃い帯と、Hekiウィンドウ(前に大・後ろに小)、ルーフベント
+  cx.fillStyle=ghost?'#d3d7dc':'#eceef1';rr(-L2+.35,-W2+.35,len-.7,wid-.7,.3);cx.fill();
+  cx.fillStyle=ghost?'#9fb3c8':'#7dafe8';rr(L2-2.3,-.65,1.4,1.3,.14);cx.fill();rr(-L2+.7,-.5,1.0,1.0,.12);cx.fill();
+  cx.strokeStyle='rgba(255,255,255,.7)';cx.lineWidth=.06;rr(L2-2.3,-.65,1.4,1.3,.14);cx.stroke();rr(-L2+.7,-.5,1.0,1.0,.12);cx.stroke();
+  cx.fillStyle=ghost?'#c0c5cc':'#cbd5e1';rr(-.3,-.25,.5,.5,.08);cx.fill();  // ベント
+  // 前面: ガスボックス(ドローバー上)は drawbar 側で描く。後面: 窓
+  cx.fillStyle=ghost?'#9fb3c8':'#93c5fd';cx.fillRect(-L2+.05,-.7,.12,1.4);
+  cx.restore();
+}
+function drawDrawbar(h,psi){
+  // 連結点から車体前面へ: A型の2本 + 先端のカプラー + ガスボックス
+  var f=TR.bodyFront;
+  cx.save();cx.translate(h.x,h.y);cx.rotate(psi);
+  cx.strokeStyle='#4b5563';cx.lineWidth=.14;cx.lineCap='round';
+  cx.beginPath();cx.moveTo(0,0);cx.lineTo(-f-.2,-.75);cx.moveTo(0,0);cx.lineTo(-f-.2,.75);cx.stroke();
+  cx.fillStyle='#374151';rr(-f+.15,-.6,.75,1.2,.12);cx.fill();      // ガスボックス
+  cx.fillStyle='#1f2937';cx.beginPath();cx.arc(0,0,.17,0,7);cx.fill();  // カプラー
+  cx.restore();
+}
+// CX-8 風: マシングレー、長いボディ、ルーフレール、サンルーフ、ミラー、シャークフィン
+function drawCar(){
+  var cxm=S.x+(CAR.front-CAR.rear)/2*Math.cos(S.th),cym=S.y+(CAR.front-CAR.rear)/2*Math.sin(S.th);
+  var L2=CAR.len/2,W2=CAR.wid/2;
+  cx.save();cx.translate(cxm,cym);cx.rotate(S.th);
+  cx.fillStyle='rgba(0,0,0,.3)';rr(-L2+.2,-W2+.25,CAR.len,CAR.wid,.5);cx.fill();
+  var g=cx.createLinearGradient(0,-W2,0,W2);g.addColorStop(0,'#5c6168');g.addColorStop(.5,'#4a4e54');g.addColorStop(1,'#33373c');
+  cx.fillStyle=g;rr(-L2,-W2,CAR.len,CAR.wid,.5);cx.fill();
+  cx.strokeStyle='#23262b';cx.lineWidth=.06;rr(-L2,-W2,CAR.len,CAR.wid,.5);cx.stroke();
+  // ボンネットの稜線
+  cx.strokeStyle='rgba(255,255,255,.18)';cx.lineWidth=.05;cx.beginPath();cx.moveTo(L2-.3,-.45);cx.lineTo(L2-1.45,-.35);cx.moveTo(L2-.3,.45);cx.lineTo(L2-1.45,.35);cx.stroke();
+  // キャビン(ガラス一体)とルーフ
+  cx.fillStyle='#1f2a3a';rr(-L2+.55,-W2+.2,CAR.len-2.05,CAR.wid-.4,.4);cx.fill();
+  cx.fillStyle='#3a3f46';rr(-L2+1.0,-W2+.32,CAR.len-2.85,CAR.wid-.64,.3);cx.fill();   // ルーフ
+  cx.fillStyle='#8fc1ee';rr(L2-1.55,-W2+.3,.6,CAR.wid-.6,.12);cx.fill();   // フロントガラス
+  cx.fillStyle='#6ea6dc';rr(-L2+.6,-W2+.3,.42,CAR.wid-.6,.12);cx.fill();  // リアガラス
+  cx.fillStyle='#1e293b';rr(L2-2.4,-.45,.8,.9,.1);cx.fill();               // サンルーフ
+  // ルーフレール
+  cx.fillStyle='#22262b';cx.fillRect(-L2+1.0,-W2+.22,CAR.len-2.85,.08);cx.fillRect(-L2+1.0,W2-.30,CAR.len-2.85,.08);
+  // ドアミラー
+  cx.fillStyle='#4a4e54';rr(L2-1.75,-W2-.22,.32,.24,.06);cx.fill();rr(L2-1.75,W2-.02,.32,.24,.06);cx.fill();
+  // シャークフィン
+  cx.fillStyle='#2b2f34';cx.beginPath();cx.moveTo(-L2+1.05,-.09);cx.lineTo(-L2+1.45,0);cx.lineTo(-L2+1.05,.09);cx.fill();
+  // ライト
+  cx.fillStyle='#fef3c7';rr(L2-.16,-W2+.12,.14,.5,.05);cx.fill();rr(L2-.16,W2-.62,.14,.5,.05);cx.fill();
+  cx.fillStyle='#ef4444';rr(-L2+.02,-W2+.12,.1,.5,.04);cx.fill();rr(-L2+.02,W2-.62,.1,.5,.04);cx.fill();
+  cx.restore();
+}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.lineTo(x+w-r,y);cx.quadraticCurveTo(x+w,y,x+w,y+r);cx.lineTo(x+w,y+h-r);cx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);cx.lineTo(x+r,y+h);cx.quadraticCurveTo(x,y+h,x,y+h-r);cx.lineTo(x,y+r);cx.quadraticCurveTo(x,y,x+r,y);cx.closePath();}
+
+// ---------- HUD / 進行 ----------
+function hud(){document.getElementById('hT').textContent=S.t.toFixed(1);document.getElementById('hS').textContent=S.sw;document.getElementById('hC').textContent=S.col;
+  var d=Math.round(S.st*180/Math.PI);document.getElementById('hW').textContent=(d>0?'R':d<0?'L':'')+Math.abs(d);}
+var last=null;
+function loop(ts){
+  if(last===null)last=ts;var dt=Math.min(0.05,(ts-last)/1000);last=ts;
+  step(dt);draw();hud();requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+function show(id){['ovTitle','ovLevel','ovResult'].forEach(function(k){document.getElementById(k).hidden=(k!==id);});}
+document.getElementById('bStart').onclick=function(){reset();S.phase='drive';show(null);track('start');};
+document.getElementById('bAgain').onclick=function(){reset();S.phase='drive';show(null);track('again');};
+document.getElementById('bReset').onclick=function(){if(S.phase==='title')return;reset();S.phase='drive';show(null);toast('');};
+
+// 水平出し
+function startLevel(){
+  S.phase='level';
+  var sgn=function(){return Math.random()<.5?-1:1;};
+  S.pitch=sgn()*(1.6+Math.random()*2.0);S.roll=sgn()*(1.2+Math.random()*1.6);
+  S.pitch=Math.round(S.pitch/0.4)*0.4;S.roll=Math.round(S.roll/0.4)*0.4;  // ボタン1回0.4°で必ず0に合う
+  toast('');show('ovLevel');renderLevel();track('parked');
+}
+function col(w){return w<=0.3?'#22c55e':w<=2?'#f59e0b':'#ef4444';}
+function renderLevel(){
+  var p=S.pitch,r=S.roll,w=Math.max(Math.abs(p),Math.abs(r));
+  var fmt=function(v){return (Math.abs(v)<0.05?0:v).toFixed(1);};
+  document.getElementById('lvP').textContent=fmt(p);document.getElementById('lvR').textContent=fmt(r);
+  var b=document.getElementById('bub');var x=Math.max(-1,Math.min(1,r/5))*39,y=Math.max(-1,Math.min(1,p/5))*39;
+  b.style.left=(50+x)+'%';b.style.top=(50+y)+'%';var c=col(w);b.style.background=c;b.style.boxShadow='0 0 18px '+c+'99';
+  var st=document.getElementById('lvSt');
+  if(w<=0.3){st.textContent='✓ 水平です';st.className='st ok';setTimeout(finish,900);}
+  else{st.textContent='調整してください';st.className='st';}
+}
+document.querySelectorAll('.jk button').forEach(function(b){b.addEventListener('click',function(){
+  if(S.phase!=='level')return;
+  if(b.dataset.p)S.pitch+=parseFloat(b.dataset.p);if(b.dataset.r)S.roll+=parseFloat(b.dataset.r);
+  S.pitch=Math.round(S.pitch*10)/10;S.roll=Math.round(S.roll*10)/10;S.t+=1.5;renderLevel();
+});});
+function finish(){
+  if(S.phase!=='level')return;S.phase='done';
+  var t=S.t;var rank=(S.col===0&&S.sw<=2&&t<60)?'S':(S.col===0&&S.sw<=4&&t<100)?'A':(S.col<=1&&t<160)?'B':'C';
+  document.getElementById('rRank').textContent=rank;
+  document.getElementById('rT').textContent=t.toFixed(1)+'s';document.getElementById('rS').textContent=S.sw;document.getElementById('rC').textContent=S.col;
+  var msg={S:'一発。プロの牽引屋さんですか？',A:'上手い。キャンプ場で拍手が起きるレベル。',B:'無事に入った。隣の人も安心。',C:'入った！ 次はもう少し早く。慣れです。'}[rank];
+  document.getElementById('rMsg').textContent=msg;
+  show('ovResult');track('clear_'+rank);
+}
+document.getElementById('bShare').onclick=function(){
+  var txt='トレーラー駐車ゲーム: ランク'+document.getElementById('rRank').textContent+' / '+document.getElementById('rT').textContent+' 切り返し'+S.sw+'回 接触'+S.col+'回 #mono_labo #トレーラー駐車ゲーム';
+  var url=location.href.split('?')[0];
+  if(navigator.share){navigator.share({title:'トレーラー駐車ゲーム',text:txt,url:url}).catch(function(){});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(txt+' '+url).then(function(){alert('結果をコピーしました');});}
+};
+function track(n){if(typeof gtag==='function')gtag('event','tool_open',{tool_name:'parking-game-'+n});}
+window.__G={IN:IN,S:function(){return S;},step:step,draw:draw,hud:hud,view:function(sc,x,y){SC=sc;OX=cv.width/2-x*sc;OY=cv.height/2-y*sc;draw();},resetView:resize};
+reset();
+})();
+</script>
+</body>
+</html>
