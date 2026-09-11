@@ -57,6 +57,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .res .l{font-size:11px;color:var(--mut)}
 .res .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
 .rank{font-size:56px;font-weight:800;line-height:1;color:var(--g);margin:4px 0}
+.pbline{font-size:14px;font-weight:700;color:var(--am);margin:2px 0 4px}
+.small.pb{color:var(--g);font-weight:600}
 /* 水平出しパネル (TrailerLevelの画面を模す) */
 .lv{display:flex;flex-direction:column;align-items:center;gap:10px}
 .lv .st{font-size:13px;font-weight:600;padding:5px 14px;border-radius:20px;background:#1f2937}
@@ -103,12 +105,19 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
           <div>隣のトレーラーや木に当たると赤く光って「接触」に数えられる(止まりはしない)</div>
           <div>折れ角が90°を超えると後退できなくなる。前進して立て直そう</div>
         </div>
+        <div class="seg" id="segStage" hidden>
+          <span>ステージ</span>
+          <button data-s="0" class="on">1 キャンプ場</button>
+          <button data-s="1">2 せまい区画</button>
+          <button data-s="2">3 入口の木</button>
+        </div>
         <div class="seg" id="segSteer">
           <span>ハンドル</span>
           <button data-m="0" class="on">離すと戻る</button>
           <button data-m="1">切ったまま保持</button>
         </div>
         <button class="btn" id="bStart">スタート</button>
+        <div class="small pb" id="tBest" hidden></div>
         <div class="small">PCならキーボードの矢印キーでも操作できます</div>
       </div>
     </div>
@@ -136,6 +145,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
       <div class="panel">
         <h2>✓ 水平です。今夜はぐっすり。</h2>
         <div class="rank" id="rRank">A</div>
+        <div class="pbline" id="rBest" hidden></div>
         <div class="res">
           <div><div class="l">タイム</div><div class="v" id="rT">--</div></div>
           <div><div class="l">切り返し</div><div class="v" id="rS">--</div></div>
@@ -161,27 +171,60 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 'use strict';
 // ---------- ワールド (単位: m、x右・y下、角度はラジアンで0=右向き・時計回り正) ----------
 var W=28, H=44;
-var LANE={x:0,y:16,w:W,h:9};                 // 通路(画面中央)
-var SLOT={x:12.2,y:27.5,w:3.6,h:8.2};        // 目標区画(縦長、通路から下へバックで入れる)
-var SITES=[{x:6.5,y:27.5,w:3.6,h:8.2},{x:17.9,y:27.5,w:3.6,h:8.2},   // 隣の区画(下)
-           {x:3.5,y:6.3,w:3.6,h:8.2},{x:9.5,y:6.3,w:3.6,h:8.2},{x:15.5,y:6.3,w:3.6,h:8.2},{x:21.5,y:6.3,w:3.6,h:8.2}]; // 向かいの区画(上)
-var OBST=[  // 障害物: 駐車中のトレーラー(矩形)と木(円)、区画のポール
-  {t:'tr',x:7.1,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
-  {t:'tr',x:18.5,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
+// 全ステージ共通の飾り: 向かいの区画(上の列)と外周の木
+var TOPPADS=[{x:3.5,y:6.3,w:3.6,h:8.2},{x:9.5,y:6.3,w:3.6,h:8.2},{x:15.5,y:6.3,w:3.6,h:8.2},{x:21.5,y:6.3,w:3.6,h:8.2}];
+var COMMON_OBST=[
   {t:'tr',x:4.1,y:7.0,w:2.3,h:6.0,a:Math.PI/2},
   {t:'tr',x:16.1,y:7.0,w:2.3,h:6.0,a:Math.PI/2},
   {t:'tr',x:22.1,y:7.0,w:2.3,h:6.0,a:Math.PI/2},
   {t:'tree',x:1.6,y:2.2,r:1.3},{t:'tree',x:26.6,y:2.4,r:1.4},{t:'tree',x:13.5,y:2.0,r:1.2},
-  {t:'tree',x:3.5,y:29,r:1.5},{t:'tree',x:24.5,y:29,r:1.6},
   {t:'tree',x:5,y:40,r:1.7},{t:'tree',x:14,y:40.5,r:1.4},{t:'tree',x:23,y:40,r:1.6}
 ];
+// ステージ定義: 区画・障害物・開始位置・ランク基準タイム
+var STAGES=[
+  {name:'キャンプ場',
+   lane:{x:0,y:16,w:W,h:9},
+   slot:{x:12.2,y:27.5,w:3.6,h:8.2},
+   pads:[{x:6.5,y:27.5,w:3.6,h:8.2},{x:17.9,y:27.5,w:3.6,h:8.2}],
+   obst:[{t:'tr',x:7.1,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
+         {t:'tr',x:18.5,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
+         {t:'tree',x:3.5,y:29,r:1.5},{t:'tree',x:24.5,y:29,r:1.6}],
+   start:{x:13,y:20.5,th:0}, th:{S:60,A:100,B:160}},
+  {name:'せまい区画',   // 区画幅3.0m(車体2.3m)、両隣がすぐそこ、入口にポール
+   lane:{x:0,y:16,w:W,h:9},
+   slot:{x:12.5,y:27.5,w:3.0,h:8.2},
+   pads:[{x:9.2,y:27.5,w:3.4,h:8.2},{x:15.9,y:27.5,w:3.4,h:8.2}],
+   obst:[{t:'tr',x:9.75,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
+         {t:'tr',x:16.45,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
+         {t:'post',x:12.5,y:27.5,r:.18},{t:'post',x:15.5,y:27.5,r:.18},
+         {t:'tree',x:3.5,y:29,r:1.5},{t:'tree',x:24.5,y:29,r:1.6}],
+   start:{x:13,y:20.5,th:0}, th:{S:90,A:140,B:220}},
+  {name:'入口の木',     // 区画の両脇に木。斜めの進入が使えず、狭い正面からしか入れない
+   lane:{x:0,y:16,w:W,h:9},
+   slot:{x:12.2,y:27.5,w:3.6,h:8.2},
+   pads:[{x:6.5,y:27.5,w:3.6,h:8.2},{x:17.9,y:27.5,w:3.6,h:8.2}],
+   obst:[{t:'tr',x:7.1,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
+         {t:'tr',x:18.5,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
+         {t:'tree',x:10.7,y:24.9,r:1.15},{t:'tree',x:17.3,y:24.9,r:1.15},
+         {t:'tree',x:3.5,y:29,r:1.5},{t:'tree',x:24.5,y:29,r:1.6}],
+   start:{x:5,y:19,th:0}, th:{S:90,A:140,B:220}}
+];
+var STG=0, LANE, SLOT, SITES, OBST;
+function loadStage(i){
+  STG=i; var st=STAGES[i];
+  LANE=st.lane; SLOT=st.slot;
+  SITES=st.pads.concat(TOPPADS);
+  OBST=st.obst.concat(COMMON_OBST);
+}
+loadStage(0);
 // 車(牽引車)とトレーラーの寸法
 var CAR={L:2.9,a:1.1,len:4.9,wid:1.9,front:3.9,rear:1.0,maxSteer:35*Math.PI/180};
 var TR={Lt:4.3,len:5.8,wid:2.3,bodyFront:1.2};   // 連結点→車軸4.3m、車体は連結点の1.2m後ろから5.8m
 // 状態
 var S={};
 function reset(){
-  S={x:13,y:20.5,th:0,st:0,v:0,psi:0,t:0,run:false,phase:'title',sw:0,col:0,lastDir:0,contact:false,jack:false,
+  var sp=STAGES[STG].start;
+  S={x:sp.x,y:sp.y,th:sp.th,st:0,v:0,psi:0,t:0,run:false,phase:'title',sw:0,col:0,lastDir:0,contact:false,jack:false,
      stopT:0,pitch:0,roll:0};
   S.psi=S.th;   // 真っ直ぐ連結した状態から
   hud();
@@ -435,23 +478,56 @@ document.querySelectorAll('.jk button').forEach(function(b){b.addEventListener('
   if(b.dataset.p)S.pitch+=parseFloat(b.dataset.p);if(b.dataset.r)S.roll+=parseFloat(b.dataset.r);
   S.pitch=Math.round(S.pitch*10)/10;S.roll=Math.round(S.roll*10)/10;S.t+=1.5;renderLevel();
 });});
+// ---- 自己ベスト (ステージごとに端末内へ保存。ランク優先→同ランクならタイム) ----
+var RANKV={S:4,A:3,B:2,C:1};
+function bestKey(){return STG===0?'tpg_best':'tpg_best_s'+(STG+1);}   // ステージ1は公開初期のキーを引き継ぐ
+function loadBest(){try{return JSON.parse(localStorage.getItem(bestKey())||'null');}catch(e){return null;}}
+function showTitleBest(){
+  var b=loadBest(),el=document.getElementById('tBest');
+  if(b){el.hidden=false;el.textContent='🏆 ステージ'+(STG+1)+'の自己ベスト: ランク'+b.rank+' '+Number(b.t).toFixed(1)+'s (切り返し'+b.sw+'回・接触'+b.col+'回)';}
+  else{el.hidden=true;}
+}
+// ステージ選択
+document.querySelectorAll('#segStage button').forEach(function(b){
+  b.addEventListener('click',function(){
+    loadStage(parseInt(b.dataset.s,10));
+    document.querySelectorAll('#segStage button').forEach(function(x){x.classList.toggle('on',x===b);});
+    showTitleBest();
+  });
+});
 function finish(){
   if(S.phase!=='level')return;S.phase='done';
-  var t=S.t;var rank=(S.col===0&&S.sw<=2&&t<60)?'S':(S.col===0&&S.sw<=4&&t<100)?'A':(S.col<=1&&t<160)?'B':'C';
+  var t=Math.round(S.t*10)/10;
+  var th=STAGES[STG].th;
+  var rank=(S.col===0&&S.sw<=2&&t<th.S)?'S':(S.col===0&&S.sw<=4&&t<th.A)?'A':(S.col<=1&&t<th.B)?'B':'C';
   document.getElementById('rRank').textContent=rank;
   document.getElementById('rT').textContent=t.toFixed(1)+'s';document.getElementById('rS').textContent=S.sw;document.getElementById('rC').textContent=S.col;
   var msg={S:'一発。プロの牽引屋さんですか？',A:'上手い。キャンプ場で拍手が起きるレベル。',B:'無事に入った。隣の人も安心。',C:'入った！ 次はもう少し早く。慣れです。'}[rank];
   document.getElementById('rMsg').textContent=msg;
+  var b=loadBest();
+  S.newBest=!b || RANKV[rank]>RANKV[b.rank] || (rank===b.rank && t<b.t);
+  S.lastRank=rank; S.lastT=t;
+  var eb=document.getElementById('rBest'); eb.hidden=false;
+  if(S.newBest){
+    eb.textContent='🏆 自己ベスト更新！';
+    try{localStorage.setItem(bestKey(),JSON.stringify({t:t,rank:rank,sw:S.sw,col:S.col}));}catch(e){}
+  } else {
+    eb.textContent='自己ベスト: ランク'+b.rank+' '+Number(b.t).toFixed(1)+'s';
+  }
+  showTitleBest();
   show('ovResult');track('clear_'+rank);
 }
 document.getElementById('bShare').onclick=function(){
-  var txt='トレーラー駐車ゲーム: ランク'+document.getElementById('rRank').textContent+' / '+document.getElementById('rT').textContent+' 切り返し'+S.sw+'回 接触'+S.col+'回 #mono_labo #トレーラー駐車ゲーム';
+  var txt='トレーラー駐車ゲーム ステージ'+(STG+1)+' 🚙 ランク'+S.lastRank+' '+S.lastT.toFixed(1)+'s 切り返し'+S.sw+'回 接触'+S.col+'回'
+        +(S.newBest?' 🏆自己ベスト更新！':'')
+        +' 何秒で入れられる？ #トレーラー駐車ゲーム #mono_labo';
   var url=location.href.split('?')[0];
   if(navigator.share){navigator.share({title:'トレーラー駐車ゲーム',text:txt,url:url}).catch(function(){});}
   else if(navigator.clipboard){navigator.clipboard.writeText(txt+' '+url).then(function(){alert('結果をコピーしました');});}
 };
 function track(n){if(typeof gtag==='function')gtag('event','tool_open',{tool_name:'parking-game-'+n});}
-window.__G={IN:IN,S:function(){return S;},step:step,draw:draw,hud:hud,view:function(sc,x,y){SC=sc;OX=cv.width/2-x*sc;OY=cv.height/2-y*sc;draw();},resetView:resize};
+window.__G={IN:IN,S:function(){return S;},step:step,draw:draw,hud:hud,view:function(sc,x,y){SC=sc;OX=cv.width/2-x*sc;OY=cv.height/2-y*sc;draw();},resetView:resize,stage:function(){return {STG:STG,SLOT:SLOT,obstN:OBST.length};}};
+showTitleBest();
 reset();
 })();
 </script>
