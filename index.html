@@ -167,6 +167,22 @@ nav{
 .tl-card .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
 .tl-card .v span{font-size:13px;opacity:.6}
 .tl-note{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.7}
+/* ===== PLAY (駐車ゲーム) ===== */
+/* ゲーム画面に合わせたダーク。上下(製品=グレー / ツール=白)との区切りも兼ねる */
+.play-sec{background:linear-gradient(135deg,#0b1220 0%,#1c2a44 100%)}
+.play-sec .sec-eyebrow{color:#7d9bd1}
+.play-sec .sec-title{color:#fff}
+.play-sec .sec-sub{color:rgba(229,231,235,.72)}
+.play-sec .sec-sub b{color:#fff}
+.play-sec .tfeat{color:rgba(229,231,235,.85)}
+.play-sec .tfeat i{color:#22c55e}
+.play-sec .tl-note{color:rgba(229,231,235,.5)}
+.play-sec .tbadge.bg{background:rgba(52,199,89,.16);color:#4ade80}
+.game-shot{display:block;width:min(100%,300px);border-radius:26px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 24px 60px rgba(0,0,0,.45);
+  transition:transform .25s,box-shadow .25s;background:#0b1220}
+.game-shot:hover{transform:translateY(-4px);box-shadow:0 30px 70px rgba(0,0,0,.55)}
+.game-shot img{width:100%;display:block}
 /* 製品の束ね見出し・区切り */
 .prod-head{margin-bottom:72px}
 .prod-head .sec-sub{margin-bottom:0}
@@ -194,7 +210,7 @@ section{padding:96px 24px}
 
 /* ===== TOOLS ===== */
 .tools-sec{background:var(--bg-white)}
-.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2px}
 .tcard{
   background:var(--bg);
   padding:36px 32px;
@@ -402,6 +418,7 @@ footer{
     <div class="nav-links" id="navLinks">
       <a href="#trailerlevel" onclick="document.getElementById('navCheck').checked=false">TrailerLevel</a>
       <a href="#footrest" onclick="document.getElementById('navCheck').checked=false">フットレスト</a>
+      <a href="#play" onclick="document.getElementById('navCheck').checked=false">ゲーム</a>
       <a href="#tools" onclick="document.getElementById('navCheck').checked=false">ツール</a>
       <a href="#shop" onclick="document.getElementById('navCheck').checked=false">ショップ</a>
       <a href="#note" onclick="document.getElementById('navCheck').checked=false">Blog</a>
@@ -426,6 +443,7 @@ footer{
     <p class="hero-sub">3Dプリント×アプリ×エレクトロニクスで、暮らしの「隙間」を埋める道具を作る個人ラボです。</p>
     <div class="hero-actions">
       <a href="#products" class="btn-primary"><i class="ti ti-box" aria-hidden="true"></i>製品を見る</a>
+      <a href="#play" class="btn-ghost"><i class="ti ti-device-gamepad-2" aria-hidden="true"></i>ゲームで遊ぶ</a>
       <a href="#tools" class="btn-ghost"><i class="ti ti-apps" aria-hidden="true"></i>無料ツール</a>
     </div>
   </div>
@@ -510,6 +528,34 @@ footer{
   </div>
 </section>
 
+<!-- PLAY -->
+<section id="play" class="play-sec">
+  <div class="inner">
+    <div class="tl-grid">
+      <div class="tl-visual rv">
+        <a href="./trailer-parking.html" class="game-shot" aria-label="トレーラー駐車ゲームで遊ぶ">
+          <img src="./photo_game.jpg" alt="トレーラー駐車ゲームの画面。キャンプ場の区画にトレーラーをバックで入れているところ" loading="lazy">
+        </a>
+      </div>
+      <div class="rv d1">
+        <div class="sec-eyebrow">Play</div>
+        <span class="tbadge bg"><i class="ti ti-device-gamepad-2" aria-hidden="true" style="font-size:11px"></i> 無料・インストール不要</span>
+        <h2 class="sec-title prod-name">トレーラー駐車ゲーム</h2>
+        <p class="sec-sub" style="margin-bottom:24px">キャンプ場の区画に、トレーラーをバックで入れる。ハンドルは行きたい方向と<b>逆</b>に切る——トレーラー乗りなら「わかる」あの難しさを、スマホで体験できます。最後は水平出しまで。</p>
+        <div class="tfeats" style="margin-bottom:28px">
+          <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>実車と同じ折れ角の物理で、バックの難しさを再現</div>
+          <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>タイム・切り返し・接触でランク判定。自己ベストも記録</div>
+          <div class="tfeat"><i class="ti ti-check" aria-hidden="true"></i>スマホでもPCでも。登録不要、すぐ遊べます</div>
+        </div>
+        <div class="hero-actions" style="justify-content:flex-start">
+          <a href="./trailer-parking.html" class="btn-primary"><i class="ti ti-device-gamepad-2" aria-hidden="true"></i>遊んでみる</a>
+        </div>
+        <p class="tl-note">一発で入れられたら、かなりの腕前です。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- TOOLS -->
 <section id="tools" class="tools-sec">
   <div class="inner">
@@ -517,16 +563,7 @@ footer{
     <h2 class="sec-title">無料ツール・アプリ</h2>
     <p class="sec-sub">ブラウザで動く、インストール不要のWebアプリ。</p>
     <div class="tools-grid">
-      <div class="tcard rv">
-        <span class="tbadge bg"><i class="ti ti-device-gamepad-2" style="font-size:11px" aria-hidden="true"></i> NEW・公開中</span>
-        <div class="ticon ic-g">🚙</div>
-        <div class="tname">トレーラー駐車ゲーム</div>
-        <p class="tdesc">キャンプ場の区画にトレーラーをバックで入れて、最後は水平出し。ハンドルは逆に切る——トレーラー乗りの「あるある」をスマホで体験できます。</p>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:auto">
-          <a href="./trailer-parking.html" class="tlink">遊んでみる <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
-        </div>
-      </div>
-      <div class="tcard ft rv d1">
+      <div class="tcard ft rv">
         <span class="tbadge bl"><i class="ti ti-flask" style="font-size:11px" aria-hidden="true"></i> ベータ版公開中</span>
         <div class="ticon ic-b">⚡</div>
         <div class="tname">Offgrid Designer</div>
