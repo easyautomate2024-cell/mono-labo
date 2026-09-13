@@ -59,6 +59,17 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .rank{font-size:56px;font-weight:800;line-height:1;color:var(--g);margin:4px 0}
 .pbline{font-size:14px;font-weight:700;color:var(--am);margin:2px 0 4px}
 .small.pb{color:var(--g);font-weight:600}
+/* これまでの記録 */
+.hist{margin:12px 0 2px;text-align:left}
+.hist .hl{font-size:11px;color:var(--mut);letter-spacing:1px;margin-bottom:6px}
+.hist .hr{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);padding:5px 9px;border-radius:9px}
+.hist .hr+.hr{margin-top:2px}
+.hist .hr b{color:var(--tx);font-size:13px;width:2.6em;text-align:center}
+.hist .hr .t{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:700;color:var(--tx)}
+.hist .hr .d{width:5.4em;text-align:right;font-size:11px}
+.hist .hr.now{background:rgba(37,99,235,.2);color:var(--tx)}
+.hist .hr.bestrow b{color:var(--am)}
+.hist .hr.bestrow .t{color:var(--am)}
 /* 水平出しパネル (TrailerLevelの画面を模す) */
 .lv{display:flex;flex-direction:column;align-items:center;gap:10px}
 .lv .st{font-size:13px;font-weight:600;padding:5px 14px;border-radius:20px;background:#1f2937}
@@ -108,8 +119,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
         <div class="seg" id="segStage" hidden>
           <span>ステージ</span>
           <button data-s="0" class="on">1 キャンプ場</button>
-          <button data-s="1">2 せまい区画</button>
-          <button data-s="2">3 入口の木</button>
+          <button data-s="1">2 街道の休憩所</button>
+          <button data-s="2">3 高速の斜め枠</button>
         </div>
         <div class="seg" id="segSteer">
           <span>ハンドル</span>
@@ -118,6 +129,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
         </div>
         <button class="btn" id="bStart">スタート</button>
         <div class="small pb" id="tBest" hidden></div>
+        <div class="hist" id="tHist" hidden></div>
         <div class="small">PCならキーボードの矢印キーでも操作できます</div>
       </div>
     </div>
@@ -152,6 +164,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
           <div><div class="l">接触</div><div class="v" id="rC">--</div></div>
         </div>
         <p id="rMsg"></p>
+        <div class="hist" id="rHist" hidden></div>
         <button class="btn" id="bAgain">もう一度</button>
         <button class="btn ghost" id="bShare">結果をシェア</button>
         <a class="btn green" href="./trailerlevel.html">この水準器、本物があります →</a>
@@ -170,7 +183,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 (function(){
 'use strict';
 // ---------- ワールド (単位: m、x右・y下、角度はラジアンで0=右向き・時計回り正) ----------
-var W=28, H=44;
+var W=28, H=44;   // W はステージごとに上書きされる (loadStageで設定)
 // 全ステージ共通の飾り: 向かいの区画(上の列)と外周の木
 var TOPPADS=[{x:3.5,y:6.3,w:3.6,h:8.2},{x:9.5,y:6.3,w:3.6,h:8.2},{x:15.5,y:6.3,w:3.6,h:8.2},{x:21.5,y:6.3,w:3.6,h:8.2}];
 var COMMON_OBST=[
@@ -190,41 +203,127 @@ var STAGES=[
          {t:'tr',x:18.5,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
          {t:'tree',x:3.5,y:29,r:1.5},{t:'tree',x:24.5,y:29,r:1.6}],
    start:{x:13,y:20.5,th:0}, th:{S:60,A:100,B:160}},
-  {name:'せまい区画',   // 区画幅3.0m(車体2.3m)、両隣がすぐそこ、入口にポール
-   lane:{x:0,y:16,w:W,h:9},
-   slot:{x:12.5,y:27.5,w:3.0,h:8.2},
-   pads:[{x:9.2,y:27.5,w:3.4,h:8.2},{x:15.9,y:27.5,w:3.4,h:8.2}],
-   obst:[{t:'tr',x:9.75,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
-         {t:'tr',x:16.45,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
-         {t:'post',x:12.5,y:27.5,r:.18},{t:'post',x:15.5,y:27.5,r:.18},
-         {t:'tree',x:3.5,y:29,r:1.5},{t:'tree',x:24.5,y:29,r:1.6}],
-   start:{x:13,y:20.5,th:0}, th:{S:90,A:140,B:220}},
-  {name:'入口の木',     // 区画の両脇に木。斜めの進入が使えず、狭い正面からしか入れない
-   lane:{x:0,y:16,w:W,h:9},
-   slot:{x:12.2,y:27.5,w:3.6,h:8.2},
-   pads:[{x:6.5,y:27.5,w:3.6,h:8.2},{x:17.9,y:27.5,w:3.6,h:8.2}],
-   obst:[{t:'tr',x:7.1,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
-         {t:'tr',x:18.5,y:28.2,w:2.3,h:6.0,a:Math.PI/2},
-         {t:'tree',x:10.7,y:24.9,r:1.15},{t:'tree',x:17.3,y:24.9,r:1.15},
-         {t:'tree',x:3.5,y:29,r:1.5},{t:'tree',x:24.5,y:29,r:1.6}],
-   start:{x:5,y:19,th:0}, th:{S:90,A:140,B:220}}
+  // 街道の休憩所: 上段=普通車エリア / 通路8m / 下段=大型車エリア。目標は中央の大型車枠(牽引車ごと収める)
+  {name:'街道の休憩所', ground:'asphalt', common:false, needCar:true, worldW:34,
+   lane:{x:0,y:15,w:34,h:7.5},
+   slot:{x:12.3,y:22.5,w:4.0,h:13.5},   // 大型車枠 (連結全長12mが入る奥行き)
+   pads:[ // 上段: 普通車の白線枠(10)
+     {x:1.5,y:10,w:2.5,h:5},{x:4.1,y:10,w:2.5,h:5},{x:6.7,y:10,w:2.5,h:5},{x:9.3,y:10,w:2.5,h:5},{x:11.9,y:10,w:2.5,h:5},
+     {x:14.5,y:10,w:2.5,h:5},{x:17.1,y:10,w:2.5,h:5},{x:19.7,y:10,w:2.5,h:5},{x:22.3,y:10,w:2.5,h:5},{x:24.9,y:10,w:2.5,h:5},
+     // 下段: 大型車枠(5)。3番目が目標
+     {x:3.1,y:22.5,w:4.0,h:13.5},{x:7.7,y:22.5,w:4.0,h:13.5},{x:12.3,y:22.5,w:4.0,h:13.5},
+     {x:16.9,y:22.5,w:4.0,h:13.5},{x:21.5,y:22.5,w:4.0,h:13.5},{x:26.1,y:22.5,w:4.0,h:13.5},
+     {x:30.7,y:22.5,w:4.0,h:13.5}],
+   obst:[ // 上段の普通車 (2枠は空きにして圧迫感を調整)
+     {t:'car',x:2.75,y:12.5,a:Math.PI/2,c:'#e8eaed'},{t:'car',x:5.35,y:12.5,a:Math.PI/2,c:'#3b4149'},
+     {t:'car',x:10.55,y:12.5,a:Math.PI/2,c:'#9aa2ab'},{t:'car',x:13.15,y:12.5,a:Math.PI/2,c:'#c9ced4'},
+     {t:'car',x:15.75,y:12.5,a:Math.PI/2,c:'#2b3d5c'},{t:'car',x:20.95,y:12.5,a:Math.PI/2,c:'#e8eaed'},
+     {t:'car',x:23.55,y:12.5,a:Math.PI/2,c:'#7c3b3b'},{t:'car',x:26.15,y:12.5,a:Math.PI/2,c:'#4a5058'},
+     // 下段の大型車。目標(中央)の両隣は必ず埋めて、通路側の振り出しを難しくする
+     {t:'big',x:5.1,y:27.5,a:-Math.PI/2,L:9.0,W:2.4,c:'#5b6674',kind:'truck'},
+     {t:'big',x:9.7,y:28.2,a:-Math.PI/2,L:11.0,W:2.5,c:'#dfe3e8',kind:'bus'},
+     {t:'big',x:18.9,y:27.8,a:-Math.PI/2,L:10.0,W:2.4,c:'#7a8390',kind:'truck'}],
+   // 背景の飾り (当たり判定なし): 建物と植栽
+   // 画面端に続く枠と車両 (見切れてOK)
+   edgePads:[{x:-1.5,y:22.5,w:4.0,h:13.5},{x:-6.1,y:22.5,w:4.0,h:13.5},
+             {x:-1.1,y:10,w:2.5,h:5},{x:27.5,y:10,w:2.5,h:5},{x:30.1,y:10,w:2.5,h:5},{x:32.7,y:10,w:2.5,h:5}],
+   fillBig:[{x:0.5,y:27.6,a:-Math.PI/2},{x:-4.1,y:27.5,a:-Math.PI/2},{x:28.1,y:27.4,a:-Math.PI/2},{x:32.7,y:27.8,a:-Math.PI/2}],
+   fillCar:[{x:0.15,y:12.5,a:Math.PI/2},{x:28.75,y:12.5,a:Math.PI/2},{x:33.95,y:12.5,a:Math.PI/2}],
+   deco:[{t:'bldg',x:6.5,y:1.2,w:21,h:6.0,label:'物産館'},
+         {t:'green',x:0,y:8.0,w:34,h:1.2},
+         {t:'green',x:0,y:36.5,w:34,h:7.5}],
+   start:{x:10,y:18.7,th:0}, th:{S:120,A:180,B:280}},
+  // 高速の斜め枠: 30°の斜め大型枠。右隣のトラックが枠をはみ出していて入口が狭い
+  {name:'高速の斜め枠', ground:'asphalt', common:false, needCar:true, worldW:34, trailer:'660',
+   lane:{x:0,y:14,w:34,h:8},
+   slot:{cx:12.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+   pads:[ // 斜めの大型枠(3)。中央が目標
+     {cx:6.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+     {cx:12.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+     {cx:18.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+     // 上段は普通車 (まっすぐな枠)
+     {x:1.5,y:8.5,w:2.5,h:5},{x:4.1,y:8.5,w:2.5,h:5},{x:6.7,y:8.5,w:2.5,h:5},{x:9.3,y:8.5,w:2.5,h:5},
+     {x:11.9,y:8.5,w:2.5,h:5},{x:14.5,y:8.5,w:2.5,h:5},{x:17.1,y:8.5,w:2.5,h:5},{x:19.7,y:8.5,w:2.5,h:5},
+     {x:22.3,y:8.5,w:2.5,h:5},{x:24.9,y:8.5,w:2.5,h:5}],
+   obst:[
+     {t:'car',x:2.75,y:11,a:Math.PI/2,c:'#e8eaed'},{t:'car',x:5.35,y:11,a:Math.PI/2,c:'#3b4149'},
+     {t:'car',x:10.55,y:11,a:Math.PI/2,c:'#9aa2ab'},{t:'car',x:13.15,y:11,a:Math.PI/2,c:'#2b3d5c'},
+     {t:'car',x:18.35,y:11,a:Math.PI/2,c:'#c9ced4'},
+     // 右上: 乗用車枠に停めた小型トラック。長すぎて通路側へはみ出し、通路を絞る
+     {t:'big',x:20.95,y:12.9,a:Math.PI/2,L:6.5,W:2.05,c:'#d9dde2',kind:'truck'},
+     // 左隣: こちらも前寄りに停めたトラック。左右から入口が狭められる
+     {t:'big',x:7.3,y:27.2,a:-Math.PI/3,L:10.0,W:2.4,c:'#6b7480',kind:'truck'},
+     // 右隣: 枠から前に大きくはみ出して斜めに停めたトラック (SAあるある)。通路際まで出ていて入口が狭い
+     {t:'big',x:18.5,y:26.0,a:-Math.PI/3,L:11.0,W:2.5,c:'#8a939e',kind:'truck'}],
+   // 画面端に続く斜め枠と車両 (見切れてOK)
+   edgePads:[{cx:0.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},{cx:24.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+             {cx:30.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},{cx:36.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+             {x:-1.1,y:8.5,w:2.5,h:5},{x:27.5,y:8.5,w:2.5,h:5},{x:30.1,y:8.5,w:2.5,h:5},{x:32.7,y:8.5,w:2.5,h:5}],
+   fillBig:[{x:0.0,y:29.2,a:-Math.PI/3},{x:24.0,y:29.2,a:-Math.PI/3},{x:30.0,y:29.2,a:-Math.PI/3},{x:36.0,y:29.2,a:-Math.PI/3}],
+   fillCar:[{x:0.15,y:11,a:Math.PI/2},{x:26.15,y:11,a:Math.PI/2},{x:28.75,y:11,a:Math.PI/2}],
+   // 右上2枠は二輪置き場。台数が多くて通路側へあふれている
+   motoBlocks:[{x:30.8,y:9.9,cols:2,rows:3,dx:1.10,dy:2.40,a:Math.PI/2},
+               {x:33.4,y:9.9,cols:2,rows:3,dx:1.10,dy:2.40,a:Math.PI/2}],
+   deco:[{t:'bldg',x:7.0,y:0.8,w:20,h:5.4,label:'サービスエリア'},
+         {t:'green',x:0,y:6.6,w:34,h:1.2},
+         {t:'green',x:0,y:39.5,w:34,h:4.5}],
+   start:{x:10,y:18,th:0}, th:{S:120,A:190,B:290}}
 ];
-var STG=0, LANE, SLOT, SITES, OBST;
+var STG=0, LANE, SLOT, SITES, OBST, GROUND='grass', DECO=[];
 function loadStage(i){
   STG=i; var st=STAGES[i];
   LANE=st.lane; SLOT=st.slot;
-  SITES=st.pads.concat(TOPPADS);
-  OBST=st.obst.concat(COMMON_OBST);
+  var common=st.common!==false;   // キャンプ場3種は向かいの区画と木を共用、道の駅は使わない
+  SITES=st.pads.concat(common?TOPPADS:[]).concat(st.edgePads||[]);
+  OBST=st.obst.concat(common?COMMON_OBST:[])
+        .concat((st.fillBig||[]).map(randBig))
+        .concat((st.fillCar||[]).map(randCar))
+        .concat([].concat.apply([],(st.motoBlocks||[]).map(expandMoto)));
+  GROUND=st.ground||'grass';
+  DECO=st.deco||[];
+  TR=(st.trailer==='660')?TR660:TR495;   // サービスエリアだけ長いトレーラー
+  W=st.worldW||28;                       // 舗装ステージは横に広い (右まで振り出せるように)
+  if(typeof cv!=='undefined'&&cv)resize();
 }
 loadStage(0);
+var CARP={L:4.4,W:1.78};   // 駐車中の普通車
+// 画面端を埋める車両は、形と色をロード毎にランダムに選ぶ (毎回少し違う駐車場に見える)
+var BIGCOL=['#6b7480','#8a939e','#dfe3e8','#4f5864','#9aa3ad','#b9c0c8','#5d6b7a','#c8ccd2','#7a8390'];
+var CARCOL=['#e8eaed','#3b4149','#9aa2ab','#c9ced4','#2b3d5c','#7c3b3b','#4a5058','#d7dbe0','#33393f'];
+function pick(a){return a[(Math.random()*a.length)|0];}
+function randBig(f){
+  var bus=Math.random()<0.35;
+  return {t:'big',x:f.x,y:f.y,a:f.a,
+          L: bus ? 10.5+Math.random()*1.6 : 8.4+Math.random()*3.4,
+          W: bus ? 2.5 : 2.3+Math.random()*0.25,
+          c: pick(BIGCOL), kind: bus?'bus':'truck'};
+}
+function randCar(f){return {t:'car',x:f.x,y:f.y,a:f.a,c:pick(CARCOL)};}
+// バイク置き場: 枠に詰め込まれた二輪を格子状に並べる (少しゆらがせて雑然と見せる)
+var MOTOCOL=['#2b3038','#7c2f2f','#2f4a6d','#b9c0c8','#3c5c3a','#8a6a2f','#5a3a6b','#c9ced4'];
+var MOTO={L:2.15,W:0.70};
+function expandMoto(b){
+  var out=[];
+  for(var r=0;r<b.rows;r++)for(var c=0;c<b.cols;c++){
+    out.push({t:'moto',
+      x:b.x+c*b.dx+(Math.random()-.5)*0.14,
+      y:b.y+r*b.dy+(Math.random()-.5)*0.14,
+      a:b.a+(Math.random()-.5)*0.12,
+      c:pick(MOTOCOL)});
+  }
+  return out;
+}
 // 車(牽引車)とトレーラーの寸法
 var CAR={L:2.9,a:1.1,len:4.9,wid:1.9,front:3.9,rear:1.0,maxSteer:35*Math.PI/180};
-var TR={Lt:4.3,len:5.8,wid:2.3,bodyFront:1.2};   // 連結点→車軸4.3m、車体は連結点の1.2m後ろから5.8m
+// トレーラーはステージごとに切り替える。既定は495クラス、サービスエリアだけ660クラス
+var TR495={Lt:4.3,len:5.8,wid:2.3,bodyFront:1.2};   // 連結全長 約12.0m
+var TR660={Lt:5.0,len:6.6,wid:2.3,bodyFront:1.2};   // 連結全長 約12.8m
+var TR=TR495;
 // 状態
 var S={};
 function reset(){
   var sp=STAGES[STG].start;
-  S={x:sp.x,y:sp.y,th:sp.th,st:0,v:0,psi:0,t:0,run:false,phase:'title',sw:0,col:0,lastDir:0,contact:false,jack:false,
+  S={x:sp.x,y:sp.y,th:sp.th,st:0,v:0,psi:0,t:0,run:false,phase:'title',sw:0,col:0,lastDir:0,contact:false,jack:false,outTr:false,outCar:false,
      stopT:0,pitch:0,roll:0};
   S.psi=S.th;   // 真っ直ぐ連結した状態から
   hud();
@@ -285,14 +384,21 @@ function step(dt){
   var hit=collide();
   if(hit){ if(!S.contact){S.col++;S.contact=true;S.hitMs=S.t;} }
   else S.contact=false;
-  // 場外
-  var pts=carPoly().concat(trPoly());
-  for(var i=0;i<pts.length;i++){if(pts[i].x<0||pts[i].x>W||pts[i].y<0||pts[i].y>H){S.x=prev.x;S.y=prev.y;S.th=prev.th;S.psi=prev.psi;S.v=0;break;}}
+  // 場外。移動前から出ていた場合は止めない (出たまま固まるのを防ぐ)
+  if(!outside(prev) && outside(S)){S.x=prev.x;S.y=prev.y;S.th=prev.th;S.psi=prev.psi;S.v=0;}
   checkGoal(dt);
 }
 function rectPoly(cx,cy,len,wid,a){
   var c=Math.cos(a),s=Math.sin(a),hl=len/2,hw=wid/2;
   return [{x:cx+c*hl-s*hw,y:cy+s*hl+c*hw},{x:cx+c*hl+s*hw,y:cy+s*hl-c*hw},{x:cx-c*hl+s*hw,y:cy-s*hl-c*hw},{x:cx-c*hl-s*hw,y:cy-s*hl+c*hw}];
+}
+function outside(st){
+  var sv={x:S.x,y:S.y,th:S.th,psi:S.psi};
+  S.x=st.x;S.y=st.y;S.th=st.th;S.psi=st.psi;
+  var pts=carPoly().concat(trPoly()), out=false;
+  for(var i=0;i<pts.length;i++){if(pts[i].x<0||pts[i].x>W||pts[i].y<0||pts[i].y>H){out=true;break;}}
+  S.x=sv.x;S.y=sv.y;S.th=sv.th;S.psi=sv.psi;
+  return out;
 }
 function carPoly(){var cx=S.x+(CAR.front-CAR.rear)/2*Math.cos(S.th),cy=S.y+(CAR.front-CAR.rear)/2*Math.sin(S.th);return rectPoly(cx,cy,CAR.len,CAR.wid,S.th);}
 function trPoly(){var h=hitch(S);var d=TR.bodyFront+TR.len/2;var cx=h.x-d*Math.cos(S.psi),cy=h.y-d*Math.sin(S.psi);return rectPoly(cx,cy,TR.len,TR.wid,S.psi);}
@@ -315,18 +421,51 @@ function collide(){
   var C=carPoly(),T=trPoly();
   for(var i=0;i<OBST.length;i++){var o=OBST[i];
     if(o.t==='tr'){var P=rectPoly(o.x+o.w/2,o.y+o.h/2,o.h,o.w,o.a);if(polyHit(C,P)||polyHit(T,P))return true;}
+    else if(o.t==='car'){var Q=rectPoly(o.x,o.y,CARP.L,CARP.W,o.a);if(polyHit(C,Q)||polyHit(T,Q))return true;}
+    else if(o.t==='big'){var B=rectPoly(o.x,o.y,o.L,o.W,o.a);if(polyHit(C,B)||polyHit(T,B))return true;}
+    else if(o.t==='moto'){var M=rectPoly(o.x,o.y,MOTO.L,MOTO.W,o.a);if(polyHit(C,M)||polyHit(T,M))return true;}
     else{if(circHit(C,o.x,o.y,o.r)||circHit(T,o.x,o.y,o.r))return true;}
   }
   return false;
 }
+// 枠の中心 (斜め枠は cx,cy 指定、まっすぐな枠は x,y+w,h から求める)
+function padC(s){return (s.cx!==undefined)?{x:s.cx,y:s.cy}:{x:s.x+s.w/2,y:s.y+s.h/2};}
+// 点を枠のローカル座標へ (中心基準、-w/2..w/2 / -h/2..h/2)
+function toLocal(p,s){
+  var c=padC(s),a=s.a||0,dx=p.x-c.x,dy=p.y-c.y,co=Math.cos(-a),si=Math.sin(-a);
+  return {x:dx*co-dy*si, y:dx*si+dy*co};
+}
+function anySlot(P){   // 4隅のどれかが目標枠の中 = 枠にかかっている
+  for(var i=0;i<4;i++){var q=toLocal(P[i],SLOT);
+    if(q.x>-SLOT.w/2&&q.x<SLOT.w/2&&q.y>-SLOT.h/2&&q.y<SLOT.h/2)return true;}
+  return false;
+}
+function inSlot(P){   // 4隅すべてが目標枠の中か (斜め枠にも対応)
+  var m=0.15;
+  for(var i=0;i<4;i++){var q=toLocal(P[i],SLOT);
+    if(q.x<-SLOT.w/2+m||q.x>SLOT.w/2-m||q.y<-SLOT.h/2+m||q.y>SLOT.h/2-m)return false;}
+  return true;
+}
 function checkGoal(dt){
-  var T=trPoly();var ok=true;var m=0.15;
-  for(var i=0;i<4;i++){var p=T[i];if(p.x<SLOT.x+m||p.x>SLOT.x+SLOT.w-m||p.y<SLOT.y+m||p.y>SLOT.y+SLOT.h-m){ok=false;break;}}
-  // 向き: 区画は縦、トレーラーの向き(車軸→連結点)が上向き(-90°)に近いこと
-  var ang=Math.abs(norm(S.psi+Math.PI/2));
-  if(ang>12*Math.PI/180)ok=false;
+  // 判定は「枠に収まっているか」だけ。向きは見ない
+  // (枠幅が車体幅+1m程度しかないので、曲がっていればそもそも収まらない)
+  var trIn=inSlot(trPoly());
+  // 大型車スペースのステージは牽引車も枠内に収める
+  var needCar=!!STAGES[STG].needCar;
+  var carIn=needCar?inSlot(carPoly()):true;
+  var ok=trIn&&carIn;
   if(ok&&Math.abs(S.v)<0.05){S.stopT+=dt;if(S.stopT>0.8)startLevel();} else S.stopT=0;
-  toast(S.jack?'折れすぎ！前進して立て直そう':S.contact?'接触！':(ok?'区画に入った！止まって…':''));
+  // どこが駄目なのかを画面に出す (枠が狭いと数cmのはみ出しが目視で分からないため)
+  // 枠に重なっている車体だけを指摘する (離れている間は何も出さない)
+  S.outTr = !trIn && anySlot(trPoly());
+  S.outCar = needCar && !carIn && anySlot(carPoly());
+  var hint = S.jack ? '折れすぎ！前進して立て直そう'
+           : S.contact ? '接触！'
+           : ok ? '枠に入った！止まって…'
+           : (trIn&&needCar&&!carIn) ? 'トレーラーはOK。車も枠内へ'
+           : S.outTr ? 'トレーラーが枠からはみ出している'
+           : '';
+  toast(hint);
 }
 function toast(t){var el=document.getElementById('hM');el.textContent=t;el.hidden=!t;}
 
@@ -342,21 +481,58 @@ function P(x,y){return [OX+x*SC,OY+y*SC];}
 function draw(){
   cx.setTransform(1,0,0,1,0,0);cx.fillStyle='#0b1220';cx.fillRect(0,0,cv.width,cv.height);
   cx.setTransform(SC,0,0,SC,OX,OY);
-  // 芝
-  cx.fillStyle='#2f7d3a';cx.fillRect(0,0,W,H);
-  // 通路(砂利)
-  cx.fillStyle='#8a8f8a';cx.fillRect(LANE.x,LANE.y,LANE.w,LANE.h);
-  cx.fillStyle='#7d827d';for(var i=0;i<60;i++){cx.fillRect((i*7.3)%W,LANE.y+((i*3.1)%LANE.h),.25,.25);}
-  // 区画
-  SITES.concat([SLOT]).forEach(function(s,idx){cx.fillStyle=(s===SLOT)?'#a3a798':'#9a9e92';cx.fillRect(s.x,s.y,s.w,s.h);});
+  if(GROUND==='asphalt'){
+    // 道の駅: アスファルト + 白線の駐車枠
+    cx.fillStyle='#5d6167';cx.fillRect(-12,-12,W+24,H+24);   // 画面の余白まで舗装を広げる
+    // 建物・植栽 (当たり判定なし)
+    DECO.forEach(function(o){
+      if(o.t==='green'){cx.fillStyle='#3d7a43';cx.fillRect(o.x-12,o.y,o.w+24,o.h);
+        cx.fillStyle='#356b3b';for(var k=0;k<18;k++)cx.fillRect(o.x-10+((k*4.1)%(o.w+20)),o.y+((k*1.9)%o.h),.7,.5);}
+      else if(o.t==='bldg'){
+        cx.fillStyle='rgba(0,0,0,.3)';rr(o.x+.3,o.y+.4,o.w,o.h,.3);cx.fill();
+        cx.fillStyle='#cfc9bd';rr(o.x,o.y,o.w,o.h,.3);cx.fill();
+        cx.fillStyle='#b9b2a4';cx.fillRect(o.x+.6,o.y+o.h-1.5,o.w-1.2,1.1);       // 軒
+        cx.fillStyle='#8d7f6a';cx.fillRect(o.x+1.2,o.y+1.0,o.w-2.4,2.6);          // 屋根の帯
+        cx.fillStyle='rgba(255,255,255,.9)';cx.font='bold 1.3px sans-serif';cx.textAlign='center';
+        cx.fillText(o.label,o.x+o.w/2,o.y+2.9);
+      }
+    });
+    cx.fillStyle='#686d74';cx.fillRect(LANE.x,LANE.y,LANE.w,LANE.h);
+    cx.strokeStyle='rgba(255,255,255,.55)';cx.lineWidth=.11;
+    SITES.forEach(function(s){padPath(s);cx.stroke();});
+    cx.fillStyle='#575b61';padPath(SLOT);cx.fill();
+  } else {
+    // 芝
+    cx.fillStyle='#2f7d3a';cx.fillRect(0,0,W,H);
+    // 通路(砂利)
+    cx.fillStyle='#8a8f8a';cx.fillRect(LANE.x,LANE.y,LANE.w,LANE.h);
+    cx.fillStyle='#7d827d';for(var i=0;i<60;i++){cx.fillRect((i*7.3)%W,LANE.y+((i*3.1)%LANE.h),.25,.25);}
+    // 区画
+    SITES.concat([SLOT]).forEach(function(s,idx){cx.fillStyle=(s===SLOT)?'#a3a798':'#9a9e92';cx.fillRect(s.x,s.y,s.w,s.h);});
+  }
   // 目標区画の枠
-  cx.setLineDash([.5,.35]);cx.lineWidth=.14;cx.strokeStyle='#fff';cx.strokeRect(SLOT.x,SLOT.y,SLOT.w,SLOT.h);cx.setLineDash([]);
-  cx.fillStyle='rgba(255,255,255,.85)';cx.font='bold 1.1px sans-serif';cx.textAlign='center';cx.fillText('ここ',SLOT.x+SLOT.w/2,SLOT.y+SLOT.h/2+.4);
+  if(GROUND==='asphalt'){
+    // 大型車スペース: 実際の駐車場のように路面へ「大型車」と白文字 (枠に沿って回す)
+    var sc=padC(SLOT);
+    cx.save();cx.translate(sc.x,sc.y);cx.rotate(SLOT.a||0);cx.translate(0,SLOT.h*0.12);
+    cx.fillStyle='rgba(255,255,255,.30)';cx.font='bold 1.5px sans-serif';cx.textAlign='center';
+    cx.fillText('大型車',0,0);cx.restore();
+  }
+  cx.setLineDash([.5,.35]);cx.lineWidth=.14;cx.strokeStyle='#fff';padPath(SLOT);cx.stroke();cx.setLineDash([]);
+  {
+    var sc2=padC(SLOT);
+    cx.save();cx.translate(sc2.x,sc2.y);cx.rotate(SLOT.a||0);
+    cx.fillStyle='rgba(255,255,255,.85)';cx.font='bold 1.1px sans-serif';cx.textAlign='center';
+    cx.fillText('ここ',0,GROUND==='asphalt'?-SLOT.h/2+2.2:.4);cx.restore();
+  }
   // 障害物
   OBST.forEach(function(o){
     if(o.t==='tree'){cx.fillStyle='rgba(0,0,0,.25)';cx.beginPath();cx.arc(o.x+.3,o.y+.35,o.r,0,7);cx.fill();
       cx.fillStyle='#1f5f2a';cx.beginPath();cx.arc(o.x,o.y,o.r,0,7);cx.fill();cx.fillStyle='#2c7a37';cx.beginPath();cx.arc(o.x-.3,o.y-.3,o.r*.6,0,7);cx.fill();}
     else if(o.t==='post'){cx.fillStyle='#e5e7eb';cx.beginPath();cx.arc(o.x,o.y,o.r,0,7);cx.fill();}
+    else if(o.t==='car'){drawParkedCar(o.x,o.y,o.a,o.c);}
+    else if(o.t==='big'){drawBigVehicle(o);}
+    else if(o.t==='moto'){drawMoto(o);}
     else{drawTrailerBody(o.x+o.w/2,o.y+o.h/2,o.h,o.w,o.a,'#d9dde3',true);}
   });
   // 自分のトレーラーと車
@@ -370,6 +546,12 @@ function draw(){
   wheelPair(S.x,S.y,S.th,CAR.wid-.2,0);
   wheelPair(S.x+CAR.L*Math.cos(S.th),S.y+CAR.L*Math.sin(S.th),S.th,CAR.wid-.2,S.st);
   drawCar();
+  // 枠にかかっているのに収まっていない部分を橙色で示す (どこが出ているか分かるように)
+  if(!S.contact&&(S.outTr||S.outCar)){
+    cx.strokeStyle='rgba(245,158,11,.95)';cx.lineWidth=.14;
+    if(S.outTr){var PT=trPoly();cx.beginPath();PT.forEach(function(p,i){i?cx.lineTo(p.x,p.y):cx.moveTo(p.x,p.y)});cx.closePath();cx.stroke();}
+    if(S.outCar){var PC=carPoly();cx.beginPath();PC.forEach(function(p,i){i?cx.lineTo(p.x,p.y):cx.moveTo(p.x,p.y)});cx.closePath();cx.stroke();}
+  }
   // 接触中は赤い枠で知らせる
   if(S.contact){
     cx.strokeStyle='rgba(239,68,68,.9)';cx.lineWidth=.16;
@@ -380,6 +562,51 @@ function wheelPair(x,y,a,track,steer){
   var c=Math.cos(a),s=Math.sin(a);
   [[-1],[1]].forEach(function(k){var wx=x-s*track/2*k[0],wy=y+c*track/2*k[0];
     cx.save();cx.translate(wx,wy);cx.rotate(a+steer);cx.fillStyle='#111827';cx.fillRect(-.35,-.13,.7,.26);cx.restore();});
+}
+// バイク (真上から): 細い車体・前後タイヤ・横に張り出したハンドル で二輪に見せる
+function drawMoto(o){
+  var L=MOTO.L;
+  cx.save();cx.translate(o.x,o.y);cx.rotate(o.a);
+  cx.fillStyle='rgba(0,0,0,.34)';rr(-L/2+.1,-.16,L,.34,.15);cx.fill();     // 影
+  cx.fillStyle='#1b2026';
+  rr(-L/2+.04,-.11,.66,.22,.1);cx.fill();                                   // 後輪
+  rr(L/2-.66,-.10,.58,.20,.09);cx.fill();                                   // 前輪
+  cx.fillStyle=o.c;rr(-L/2+.46,-.16,L-1.02,.32,.13);cx.fill();              // 車体(タンク〜カウル)
+  cx.fillStyle='rgba(16,22,30,.85)';rr(-L/2+.5,-.14,.58,.28,.11);cx.fill(); // シート
+  cx.fillStyle='#2a3038';cx.fillRect(L/2-.80,-.40,.09,.80);                 // ハンドル
+  cx.fillStyle='#454e59';cx.fillRect(L/2-.84,-.47,.17,.09);cx.fillRect(L/2-.84,.38,.17,.09); // ミラー
+  cx.fillStyle='#eef2f6';rr(L/2-.46,-.10,.18,.20,.09);cx.fill();            // ヘッドライト
+  cx.restore();
+}
+// 駐車中の大型車 (バス・トラック)。道の駅の大型車エリア用
+function drawBigVehicle(o){
+  var L=o.L,Wd=o.W;
+  cx.save();cx.translate(o.x,o.y);cx.rotate(o.a);
+  cx.fillStyle='rgba(0,0,0,.34)';rr(-L/2+.22,-Wd/2+.28,L,Wd,.32);cx.fill();
+  cx.fillStyle=o.c;rr(-L/2,-Wd/2,L,Wd,.32);cx.fill();
+  cx.strokeStyle='rgba(0,0,0,.28)';cx.lineWidth=.06;rr(-L/2,-Wd/2,L,Wd,.32);cx.stroke();
+  if(o.kind==='truck'){
+    cx.fillStyle='#e7eaee';rr(-L/2+.35,-Wd/2+.28,L-3.2,Wd-.56,.18);cx.fill();          // 荷台(白い箱)
+    cx.fillStyle='rgba(22,30,42,.55)';rr(L/2-1.9,-Wd/2+.22,.85,Wd-.44,.16);cx.fill();  // フロントガラス
+    cx.fillStyle='rgba(0,0,0,.22)';cx.fillRect(-L/2+.35,-Wd/2+.26,.14,Wd-.52);         // 荷台とキャブの境
+  } else {
+    cx.fillStyle='rgba(255,255,255,.20)';cx.fillRect(-L/2+.7,-Wd/2+.34,L-1.4,Wd-.68);  // ルーフ
+    cx.fillStyle='rgba(22,30,42,.42)';
+    for(var i=0;i<6;i++){cx.fillRect(-L/2+1.3+i*1.5,-Wd/2+.12,1.0,.24);cx.fillRect(-L/2+1.3+i*1.5,Wd/2-.36,1.0,.24);}
+    cx.fillStyle='rgba(22,30,42,.55)';rr(L/2-1.05,-Wd/2+.2,.72,Wd-.4,.16);cx.fill();   // フロントガラス
+  }
+  cx.restore();
+}
+// 駐車中の普通車 (道の駅ステージ)。真上から見た形: ボディ+ガラス+ルーフ
+function drawParkedCar(x,y,a,col){
+  var L=CARP.L,Wd=CARP.W;
+  cx.save();cx.translate(x,y);cx.rotate(a);
+  cx.fillStyle='rgba(0,0,0,.32)';rr(-L/2+.16,-Wd/2+.2,L,Wd,.44);cx.fill();
+  cx.fillStyle=col;rr(-L/2,-Wd/2,L,Wd,.44);cx.fill();
+  cx.strokeStyle='rgba(0,0,0,.22)';cx.lineWidth=.05;rr(-L/2,-Wd/2,L,Wd,.44);cx.stroke();
+  cx.fillStyle='rgba(22,30,42,.55)';rr(-L/2+.55,-Wd/2+.17,L-1.1,Wd-.34,.3);cx.fill();   // ガラス
+  cx.fillStyle=col;rr(-L/2+1.25,-Wd/2+.25,L-2.5,Wd-.5,.24);cx.fill();                    // ルーフ
+  cx.restore();
 }
 // Hobby 495 UL 風: 白いボディ、グラファイトの帯、Hekiルーフウィンドウ2つ、前にガスボックス+A型ドローバー
 function drawTrailerBody(x,y,len,wid,a,color,ghost){
@@ -437,6 +664,13 @@ function drawCar(){
   cx.fillStyle='#ef4444';rr(-L2+.02,-W2+.12,.1,.5,.04);cx.fill();rr(-L2+.02,W2-.62,.1,.5,.04);cx.fill();
   cx.restore();
 }
+// 駐車枠のパス (斜め枠は中心で回転させる)
+function padPath(s){
+  var c=padC(s),a=s.a||0;
+  cx.save();cx.translate(c.x,c.y);cx.rotate(a);
+  cx.beginPath();cx.rect(-s.w/2,-s.h/2,s.w,s.h);
+  cx.restore();
+}
 function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.lineTo(x+w-r,y);cx.quadraticCurveTo(x+w,y,x+w,y+r);cx.lineTo(x+w,y+h-r);cx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);cx.lineTo(x+r,y+h);cx.quadraticCurveTo(x,y+h,x,y+h-r);cx.lineTo(x,y+r);cx.quadraticCurveTo(x,y,x+r,y);cx.closePath();}
 
 // ---------- HUD / 進行 ----------
@@ -480,19 +714,67 @@ document.querySelectorAll('.jk button').forEach(function(b){b.addEventListener('
 });});
 // ---- 自己ベスト (ステージごとに端末内へ保存。ランク優先→同ランクならタイム) ----
 var RANKV={S:4,A:3,B:2,C:1};
-function bestKey(){return STG===0?'tpg_best':'tpg_best_s'+(STG+1);}   // ステージ1は公開初期のキーを引き継ぐ
+// 記録のキーはステージ名で持つ (順番を入れ替えても記録が迷子にならない)。
+// ステージ1のベストだけは公開初期のキーをそのまま引き継ぐ
+function bestKey(){return STG===0?'tpg_best':'tpg_best_'+STAGES[STG].name;}
+function histKey(){return 'tpg_hist_'+STAGES[STG].name;}
 function loadBest(){try{return JSON.parse(localStorage.getItem(bestKey())||'null');}catch(e){return null;}}
-function showTitleBest(){
-  var b=loadBest(),el=document.getElementById('tBest');
-  if(b){el.hidden=false;el.textContent='🏆 ステージ'+(STG+1)+'の自己ベスト: ランク'+b.rank+' '+Number(b.t).toFixed(1)+'s (切り返し'+b.sw+'回・接触'+b.col+'回)';}
-  else{el.hidden=true;}
+function loadHist(){try{return JSON.parse(localStorage.getItem(histKey())||'[]');}catch(e){return [];}}
+function pushHist(rec){
+  var h=loadHist(); h.unshift(rec); h=h.slice(0,8);
+  try{localStorage.setItem(histKey(),JSON.stringify(h));}catch(e){}
+  return h;
 }
-// ステージ選択
+function showTitleBest(){
+  var b=loadBest(),h=loadHist(),el=document.getElementById('tBest');
+  if(!b){el.hidden=true;return;}
+  var s='🏆 ステージ'+(STG+1)+'の自己ベスト: ランク'+b.rank+' '+Number(b.t).toFixed(1)+'s (切り返し'+b.sw+'回・接触'+b.col+'回)';
+  el.hidden=false;el.textContent=s;
+}
+// タイトル画面にも履歴を出す (クリアしなくても過去の記録を確認できるように)
+function showTitleHist(){
+  var h=loadHist();
+  if(!h.length){document.getElementById('tHist').hidden=true;return;}
+  renderHist(h,'tHist','前回');
+}
+// 直近の記録を並べる (結果画面=今回を先頭に / タイトル画面=前回を先頭に)
+function renderHist(h,elId,labelFirst){
+  var el=document.getElementById(elId||'rHist');
+  if(!h.length){el.hidden=true;return;}
+  // ベストはランク優先→同ランクならタイム (自己ベストの判定と揃える)
+  var bi=0;
+  for(var k=1;k<h.length;k++){
+    if(RANKV[h[k].rank]>RANKV[h[bi].rank]||(h[k].rank===h[bi].rank&&h[k].t<h[bi].t))bi=k;
+  }
+  var first=labelFirst||'今回';
+  el.hidden=false;
+  el.innerHTML='<div class="hl">これまでの記録 (ステージ'+(STG+1)+')</div>'+h.slice(0,6).map(function(r,i){
+    var cls='hr'+(i===0&&first==='今回'?' now':'')+(i===bi?' bestrow':'');
+    return '<div class="'+cls+'"><span>'+(i===0?first:i+'回前')+'</span><b>'+(i===bi?'🏆':'')+r.rank+'</b>'
+         + '<span class="t">'+Number(r.t).toFixed(1)+'s</span>'
+         + '<span class="d">切'+r.sw+' 接'+r.col+'</span></div>';
+  }).join('');
+}
+// ステージ選択 (公開前の試遊用: URLに ?stages を付けたときだけ選択肢を表示)
+// 公開スケジュール: ステージごとの解禁時刻(日本時間)。時刻が来ると自動で選べるようになる。
+// ?stages を付けたURLでは未公開ぶんも表示する (動作確認用)
+var RELEASE=[0,
+             Date.parse('2026-09-13T20:00:00+09:00'),   // 2 街道の休憩所
+             Infinity];                                  // 3 高速の斜め枠 (解禁日は未定)
+var PREVIEW=location.search.indexOf('stages')>=0;
+function stageOpen(i){return PREVIEW||Date.now()>=RELEASE[i];}
+(function(){
+  var open=0;
+  document.querySelectorAll('#segStage button').forEach(function(b){
+    if(stageOpen(parseInt(b.dataset.s,10)))open++; else b.hidden=true;
+  });
+  if(open>1)document.getElementById('segStage').hidden=false;   // 2つ以上あるときだけ選択肢を出す
+})();
 document.querySelectorAll('#segStage button').forEach(function(b){
   b.addEventListener('click',function(){
     loadStage(parseInt(b.dataset.s,10));
     document.querySelectorAll('#segStage button').forEach(function(x){x.classList.toggle('on',x===b);});
-    showTitleBest();
+    showTitleBest();showTitleHist();
   });
 });
 function finish(){
@@ -514,7 +796,8 @@ function finish(){
   } else {
     eb.textContent='自己ベスト: ランク'+b.rank+' '+Number(b.t).toFixed(1)+'s';
   }
-  showTitleBest();
+  renderHist(pushHist({t:t,rank:rank,sw:S.sw,col:S.col}));
+  showTitleBest();showTitleHist();
   show('ovResult');track('clear_'+rank);
 }
 document.getElementById('bShare').onclick=function(){
@@ -527,7 +810,7 @@ document.getElementById('bShare').onclick=function(){
 };
 function track(n){if(typeof gtag==='function')gtag('event','tool_open',{tool_name:'parking-game-'+n});}
 window.__G={IN:IN,S:function(){return S;},step:step,draw:draw,hud:hud,view:function(sc,x,y){SC=sc;OX=cv.width/2-x*sc;OY=cv.height/2-y*sc;draw();},resetView:resize,stage:function(){return {STG:STG,SLOT:SLOT,obstN:OBST.length};}};
-showTitleBest();
+showTitleBest();showTitleHist();
 reset();
 })();
 </script>
