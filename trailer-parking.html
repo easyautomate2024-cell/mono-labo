@@ -273,7 +273,7 @@ var STAGES=[
   // 道路は航空写真の実測: 縁石から 停車帯3.6 / 車線3.2 / 2mの帯 / 車線3.2 / 車線3.6 / 中央分離帯2.0。
   // 寸法は先方確認前。ローカル試作
   {name:'SUN BASE（仮）', ground:'asphalt', common:false, needCar:false, key:'sunbase2609', noSlotLabel:true,
-   worldW:28, worldH:37, view:{w:24},   // 対向車線には出ないので中央の帯まで
+   worldW:28, worldH:37, view:{w:24,h:26},   // 対向車線には出ないので中央の帯まで。横長画面(iPad横)は縦26mが入る倍率
    lane:{x:19.15,y:0,w:15.6,h:37},
    slot:{x:3.7,y:21.4,w:4.0,h:12.0},
    pads:[{x:3.4,y:21.0,w:9.0,h:12.8}],
@@ -529,7 +529,8 @@ function resize(){
   var st=document.getElementById('stage');DPR=window.devicePixelRatio||1;
   cv.width=st.clientWidth*DPR;cv.height=st.clientHeight*DPR;
   SC=Math.min(cv.width/W,cv.height/H);OX=(cv.width-W*SC)/2;OY=(cv.height-H*SC)/2;
-  if(STAGES[STG].view){SC=cv.width/STAGES[STG].view.w;follow(true);}   // 追従カメラ (広いステージ用)
+  // 追従カメラ (広いステージ用): 横幅 view.w が収まる倍率。横長画面では縦に view.h が収まる倍率で頭打ち
+  if(STAGES[STG].view){var v=STAGES[STG].view;SC=cv.width/v.w;if(v.h)SC=Math.min(SC,cv.height/v.h);follow(true);}
 }
 // 追従カメラ: 連結点を画面の中心に置き、世界の端では止める。jump=true なら即座に合わせる
 function follow(jump){
