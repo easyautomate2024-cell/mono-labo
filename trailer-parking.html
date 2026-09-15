@@ -169,7 +169,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
         <div class="hist" id="rHist" hidden></div>
         <button class="btn" id="bAgain">もう一度</button>
         <button class="btn ghost" id="bShare">結果をシェア</button>
-        <a class="btn green" href="./trailerlevel.html">この水準器、本物があります →</a>
+        <a class="btn green" id="bProduct" href="./trailerlevel.html">この水準器、本物があります →</a>
       </div>
     </div>
   </div>
@@ -947,7 +947,8 @@ function finish(){
   showTitleBest();showTitleHist();
   show('ovResult');track('clear_'+rank);
 }
-document.getElementById('bShare').onclick=function(){
+document.getElementById('bProduct').onclick=function(){trackProduct();};
+document.getElementById('bShare').onclick=function(){track('share');
   var txt='トレーラー駐車ゲーム ステージ'+(STG+1)+' 🚙 ランク'+S.lastRank+' '+S.lastT.toFixed(1)+'s 切り返し'+S.sw+'回 接触'+S.col+'回'
         +(S.newBest?' 🏆自己ベスト更新！':'')
         +' 何秒で入れられる？ #トレーラー駐車ゲーム #mono_labo';
@@ -955,7 +956,9 @@ document.getElementById('bShare').onclick=function(){
   if(navigator.share){navigator.share({title:'トレーラー駐車ゲーム',text:txt,url:url}).catch(function(){});}
   else if(navigator.clipboard){navigator.clipboard.writeText(txt+' '+url).then(function(){alert('結果をコピーしました');});}
 };
-function track(n){if(typeof gtag==='function')gtag('event','tool_open',{tool_name:'parking-game-'+n});}
+// ゲーム内の操作は game_action（キーイベントではない）。tool_open は製品ページへ進む意思表示だけに使う
+function track(n){if(typeof gtag==='function')gtag('event','game_action',{action:n});}
+function trackProduct(){if(typeof gtag==='function')gtag('event','tool_open',{tool_name:'parking-game-to-product'});}
 window.__G={IN:IN,S:function(){return S;},step:step,draw:draw,hud:hud,view:function(sc,x,y){SC=sc;OX=cv.width/2-x*sc;OY=cv.height/2-y*sc;draw();},resetView:resize,stage:function(){return {STG:STG,SLOT:SLOT,obstN:OBST.length};}};
 showTitleBest();showTitleHist();
 reset();
