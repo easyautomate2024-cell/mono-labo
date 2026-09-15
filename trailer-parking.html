@@ -120,8 +120,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
           <span>ステージ</span>
           <button data-s="0" class="on">1 キャンプ場</button>
           <button data-s="1">2 街道の休憩所</button>
-          <button data-s="2">3 高速の斜め枠</button>
-          <button data-s="3">4 SUN BASE（仮）</button>
+          <button data-s="2">3 SUN BASE（仮）</button>
+          <button data-s="3">4 高速の斜め枠</button>
         </div>
         <div class="seg" id="segSteer">
           <span>ハンドル</span>
@@ -234,41 +234,6 @@ var STAGES=[
          {t:'green',x:0,y:8.0,w:34,h:1.2},
          {t:'green',x:0,y:36.5,w:34,h:7.5}],
    start:{x:10,y:18.7,th:0}, th:{S:120,A:180,B:280}},
-  // 高速の斜め枠: 30°の斜め大型枠。右隣のトラックが枠をはみ出していて入口が狭い
-  {name:'高速の斜め枠', ground:'asphalt', common:false, needCar:true, worldW:34, trailer:'660',
-   lane:{x:0,y:14,w:34,h:8},
-   slot:{cx:12.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
-   pads:[ // 斜めの大型枠(3)。中央が目標
-     {cx:6.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
-     {cx:12.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
-     {cx:18.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
-     // 上段は普通車 (まっすぐな枠)
-     {x:1.5,y:8.5,w:2.5,h:5},{x:4.1,y:8.5,w:2.5,h:5},{x:6.7,y:8.5,w:2.5,h:5},{x:9.3,y:8.5,w:2.5,h:5},
-     {x:11.9,y:8.5,w:2.5,h:5},{x:14.5,y:8.5,w:2.5,h:5},{x:17.1,y:8.5,w:2.5,h:5},{x:19.7,y:8.5,w:2.5,h:5},
-     {x:22.3,y:8.5,w:2.5,h:5},{x:24.9,y:8.5,w:2.5,h:5}],
-   obst:[
-     {t:'car',x:2.75,y:11,a:Math.PI/2,c:'#e8eaed'},{t:'car',x:5.35,y:11,a:Math.PI/2,c:'#3b4149'},
-     {t:'car',x:10.55,y:11,a:Math.PI/2,c:'#9aa2ab'},{t:'car',x:13.15,y:11,a:Math.PI/2,c:'#2b3d5c'},
-     {t:'car',x:18.35,y:11,a:Math.PI/2,c:'#c9ced4'},
-     // 右上: 乗用車枠に停めた小型トラック。長すぎて通路側へはみ出し、通路を絞る
-     {t:'big',x:20.95,y:12.9,a:Math.PI/2,L:6.5,W:2.05,c:'#d9dde2',kind:'truck'},
-     // 左隣: こちらも前寄りに停めたトラック。左右から入口が狭められる
-     {t:'big',x:7.3,y:27.2,a:-Math.PI/3,L:10.0,W:2.4,c:'#6b7480',kind:'truck'},
-     // 右隣: 枠から前に大きくはみ出して斜めに停めたトラック (SAあるある)。通路際まで出ていて入口が狭い
-     {t:'big',x:18.5,y:26.0,a:-Math.PI/3,L:11.0,W:2.5,c:'#8a939e',kind:'truck'}],
-   // 画面端に続く斜め枠と車両 (見切れてOK)
-   edgePads:[{cx:0.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},{cx:24.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
-             {cx:30.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},{cx:36.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
-             {x:-1.1,y:8.5,w:2.5,h:5},{x:27.5,y:8.5,w:2.5,h:5},{x:30.1,y:8.5,w:2.5,h:5},{x:32.7,y:8.5,w:2.5,h:5}],
-   fillBig:[{x:0.0,y:29.2,a:-Math.PI/3},{x:24.0,y:29.2,a:-Math.PI/3},{x:30.0,y:29.2,a:-Math.PI/3},{x:36.0,y:29.2,a:-Math.PI/3}],
-   fillCar:[{x:0.15,y:11,a:Math.PI/2},{x:26.15,y:11,a:Math.PI/2},{x:28.75,y:11,a:Math.PI/2}],
-   // 右上2枠は二輪置き場。台数が多くて通路側へあふれている
-   motoBlocks:[{x:30.8,y:9.9,cols:2,rows:3,dx:1.10,dy:2.40,a:Math.PI/2},
-               {x:33.4,y:9.9,cols:2,rows:3,dx:1.10,dy:2.40,a:Math.PI/2}],
-   deco:[{t:'bldg',x:7.0,y:0.8,w:20,h:5.4,label:'サービスエリア'},
-         {t:'green',x:0,y:6.6,w:34,h:1.2},
-         {t:'green',x:0,y:39.5,w:34,h:4.5}],
-   start:{x:10,y:18,th:0}, th:{S:120,A:190,B:290}},
   // SUN BASE(仮): 稲城のRVパーク。府中街道(右・縦)から幅4.5mの入口を通り、幅3.7mの道(左へ)から敷地へ。
   // 道路は航空写真の実測: 縁石から 停車帯3.6 / 車線3.2 / 2mの帯 / 車線3.2 / 車線3.6 / 中央分離帯2.0。
   // 寸法は先方確認前。ローカル試作
@@ -314,7 +279,42 @@ var STAGES=[
      {t:'img',src:'sunbase_logo.png',x:10.05,y:24.6,w:4.0},
      {t:'text',x:20.95,y:34.4,s:'50',c:'#e8a13d',size:1.3,sy:4.2},
      {t:'text',x:24.35,y:34.4,s:'50',c:'#e8a13d',size:1.3,sy:4.2}],
-   start:{x:20.9,y:28.5,th:-Math.PI/2}, th:{S:150,A:220,B:330}}
+   start:{x:20.9,y:28.5,th:-Math.PI/2}, th:{S:150,A:220,B:330}},
+  // 高速の斜め枠: 30°の斜め大型枠。右隣のトラックが枠をはみ出していて入口が狭い
+  {name:'高速の斜め枠', ground:'asphalt', common:false, needCar:true, worldW:34, trailer:'660',
+   lane:{x:0,y:14,w:34,h:8},
+   slot:{cx:12.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+   pads:[ // 斜めの大型枠(3)。中央が目標
+     {cx:6.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+     {cx:12.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+     {cx:18.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+     // 上段は普通車 (まっすぐな枠)
+     {x:1.5,y:8.5,w:2.5,h:5},{x:4.1,y:8.5,w:2.5,h:5},{x:6.7,y:8.5,w:2.5,h:5},{x:9.3,y:8.5,w:2.5,h:5},
+     {x:11.9,y:8.5,w:2.5,h:5},{x:14.5,y:8.5,w:2.5,h:5},{x:17.1,y:8.5,w:2.5,h:5},{x:19.7,y:8.5,w:2.5,h:5},
+     {x:22.3,y:8.5,w:2.5,h:5},{x:24.9,y:8.5,w:2.5,h:5}],
+   obst:[
+     {t:'car',x:2.75,y:11,a:Math.PI/2,c:'#e8eaed'},{t:'car',x:5.35,y:11,a:Math.PI/2,c:'#3b4149'},
+     {t:'car',x:10.55,y:11,a:Math.PI/2,c:'#9aa2ab'},{t:'car',x:13.15,y:11,a:Math.PI/2,c:'#2b3d5c'},
+     {t:'car',x:18.35,y:11,a:Math.PI/2,c:'#c9ced4'},
+     // 右上: 乗用車枠に停めた小型トラック。長すぎて通路側へはみ出し、通路を絞る
+     {t:'big',x:20.95,y:12.9,a:Math.PI/2,L:6.5,W:2.05,c:'#d9dde2',kind:'truck'},
+     // 左隣: こちらも前寄りに停めたトラック。左右から入口が狭められる
+     {t:'big',x:7.3,y:27.2,a:-Math.PI/3,L:10.0,W:2.4,c:'#6b7480',kind:'truck'},
+     // 右隣: 枠から前に大きくはみ出して斜めに停めたトラック (SAあるある)。通路際まで出ていて入口が狭い
+     {t:'big',x:18.5,y:26.0,a:-Math.PI/3,L:11.0,W:2.5,c:'#8a939e',kind:'truck'}],
+   // 画面端に続く斜め枠と車両 (見切れてOK)
+   edgePads:[{cx:0.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},{cx:24.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+             {cx:30.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},{cx:36.625,cy:28.35,w:4.1,h:14.3,a:Math.PI/6},
+             {x:-1.1,y:8.5,w:2.5,h:5},{x:27.5,y:8.5,w:2.5,h:5},{x:30.1,y:8.5,w:2.5,h:5},{x:32.7,y:8.5,w:2.5,h:5}],
+   fillBig:[{x:0.0,y:29.2,a:-Math.PI/3},{x:24.0,y:29.2,a:-Math.PI/3},{x:30.0,y:29.2,a:-Math.PI/3},{x:36.0,y:29.2,a:-Math.PI/3}],
+   fillCar:[{x:0.15,y:11,a:Math.PI/2},{x:26.15,y:11,a:Math.PI/2},{x:28.75,y:11,a:Math.PI/2}],
+   // 右上2枠は二輪置き場。台数が多くて通路側へあふれている
+   motoBlocks:[{x:30.8,y:9.9,cols:2,rows:3,dx:1.10,dy:2.40,a:Math.PI/2},
+               {x:33.4,y:9.9,cols:2,rows:3,dx:1.10,dy:2.40,a:Math.PI/2}],
+   deco:[{t:'bldg',x:7.0,y:0.8,w:20,h:5.4,label:'サービスエリア'},
+         {t:'green',x:0,y:6.6,w:34,h:1.2},
+         {t:'green',x:0,y:39.5,w:34,h:4.5}],
+   start:{x:10,y:18,th:0}, th:{S:120,A:190,B:290}}
 ];
 var STG=0, LANE, SLOT, SITES, OBST, GROUND='grass', DECO=[];
 var IMGS={};   // 路面標示に使う画像のキャッシュ
@@ -900,8 +900,8 @@ function renderHist(h,elId,labelFirst){
 // ?stages を付けたURLでは未公開ぶんも表示する (動作確認用)
 var RELEASE=[0,
              Date.parse('2026-09-13T20:00:00+09:00'),   // 2 街道の休憩所
-             Infinity,                                   // 3 高速の斜め枠 (解禁日は未定)
-             Infinity];                                  // 4 SUN BASE (試作。先方確認前)
+             Infinity,                                   // 3 SUN BASE (合言葉 ?k= でだけ開く。公開は先方OK後)
+             Infinity];                                  // 4 高速の斜め枠 (解禁日は未定)
 var PREVIEW=location.search.indexOf('stages')>=0;
 var KEY=(location.search.match(/[?&]k=([^&]+)/)||[])[1]||'';   // 合言葉 (先方に試してもらう用)
 function stageOpen(i){
