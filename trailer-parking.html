@@ -120,7 +120,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
           <span>ステージ</span>
           <button data-s="0" class="on">1 キャンプ場</button>
           <button data-s="1">2 街道の休憩所</button>
-          <button data-s="2">3 SUN BASE（仮）</button>
+          <button data-s="2">3 SUN BASE</button>
           <button data-s="3">4 高速の斜め枠</button>
         </div>
         <div class="seg" id="segSteer">
@@ -132,6 +132,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
         <div class="small pb" id="tBest" hidden></div>
         <div class="hist" id="tHist" hidden></div>
         <div class="small">PCならキーボードの矢印キーでも操作できます</div>
+        <div class="small" id="tCredit" hidden>ステージ3は、RVパーク <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>（東京都稲城市）さんの協力で作りました</div>
       </div>
     </div>
     <!-- 水平出し -->
@@ -236,8 +237,8 @@ var STAGES=[
    start:{x:10,y:18.7,th:0}, th:{S:120,A:180,B:280}},
   // SUN BASE(仮): 稲城のRVパーク。府中街道(右・縦)から幅4.5mの入口を通り、幅3.7mの道(左へ)から敷地へ。
   // 道路は航空写真の実測: 縁石から 停車帯3.6 / 車線3.2 / 2mの帯 / 車線3.2 / 車線3.6 / 中央分離帯2.0。
-  // 寸法は先方確認前。ローカル試作
-  {name:'SUN BASE（仮）', ground:'asphalt', common:false, needCar:false, key:'sunbase2609', noSlotLabel:true, clipWorld:true,
+  // 寸法は航空写真からの推定 (先方に確認中)。2026-09-15 20:00 公開
+  {name:'SUN BASE', ground:'asphalt', common:false, needCar:false, key:'sunbase2609', noSlotLabel:true, clipWorld:true,
    worldW:28, worldH:37, view:{w:24,h:26},   // 対向車線には出ないので中央の帯まで。横長画面(iPad横)は縦26mが入る倍率
    lane:{x:19.15,y:0,w:15.6,h:37},
    slot:{x:3.7,y:21.4,w:4.0,h:12.0},
@@ -900,12 +901,12 @@ function renderHist(h,elId,labelFirst){
 // ?stages を付けたURLでは未公開ぶんも表示する (動作確認用)
 var RELEASE=[0,
              Date.parse('2026-09-13T20:00:00+09:00'),   // 2 街道の休憩所
-             Infinity,                                   // 3 SUN BASE (合言葉 ?k= でだけ開く。公開は先方OK後)
+             Date.parse('2026-09-15T20:00:00+09:00'),   // 3 SUN BASE (それまでは合言葉 ?k= でだけ開く)
              Infinity];                                  // 4 高速の斜め枠 (解禁日は未定)
 var PREVIEW=location.search.indexOf('stages')>=0;
 var KEY=(location.search.match(/[?&]k=([^&]+)/)||[])[1]||'';   // 合言葉 (先方に試してもらう用)
 function stageOpen(i){
-  if(STAGES[i].key)return KEY===STAGES[i].key;   // 合言葉付きのステージは、合言葉でだけ開く (?stages でも出さない)
+  if(STAGES[i].key&&KEY===STAGES[i].key)return true;   // 合言葉が合えば解禁前でも開く (先方の確認用リンク)
   return PREVIEW||Date.now()>=RELEASE[i];
 }
 (function(){
@@ -914,6 +915,7 @@ function stageOpen(i){
     if(stageOpen(parseInt(b.dataset.s,10)))open++; else b.hidden=true;
   });
   if(open>1)document.getElementById('segStage').hidden=false;   // 2つ以上あるときだけ選択肢を出す
+  if(stageOpen(2))document.getElementById('tCredit').hidden=false;   // SUN BASE の協力クレジット
 })();
 document.querySelectorAll('#segStage button').forEach(function(b){
   b.addEventListener('click',function(){
