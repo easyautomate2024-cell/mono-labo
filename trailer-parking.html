@@ -279,12 +279,12 @@ var STAGES=[
    pads:[{x:3.4,y:21.0,w:9.0,h:12.8}],
    obst:[
      // 駐車車両 (先方の図より): 区画の隣、北浜ビル寄り。SUVは区画側、軽トラは歩道側で敷地内に収まる
-     {t:'car',x:8.9,y:31.0,a:-Math.PI/2,c:'#eef0f2'},
-     {t:'big',x:11.2,y:31.0,a:-Math.PI/2,L:3.4,W:1.48,c:'#f2f2f2',kind:'truck'},
+     {t:'suv',x:8.9,y:31.0,a:-Math.PI/2},
+     {t:'kei',x:11.2,y:31.0,a:-Math.PI/2},
      {t:'wall',x:-2.00,y:21.00,w:5.40,h:16.00,c:'#8d7f6a'},
-     {t:'wall',x:-2.00,y:35.00,w:14.40,h:2.60,c:'#cfc9bd',label:'北浜ビル'},
+     {t:'wall',x:-2.00,y:35.00,w:14.40,h:2.60,c:'#cfc9bd'},
      {t:'wall',x:3.40,y:33.80,w:9.00,h:1.20,c:'#2f6b38'},
-     {t:'wall',x:-2.00,y:-2.00,w:14.40,h:19.10,c:'#cfc9bd',label:'隣の建物'},
+     {t:'wall',x:-2.00,y:-2.00,w:14.40,h:19.10,c:'#cfc9bd'},
      {t:'wall',x:12.40,y:0.00,w:2.50,h:16.80,c:'#cdc2b4',pat:'brick',c2:'#b5786a',pass:true},
      {t:'wall',x:14.90,y:0.00,w:0.30,h:16.80,c:'#e9ecef',pass:true},
      {t:'wall',x:15.20,y:0.00,w:1.50,h:16.80,c:'#5a5f66',pass:true},
@@ -475,6 +475,8 @@ function collide(){
     else if(o.t==='big'){var B=rectPoly(o.x,o.y,o.L,o.W,o.a);if(polyHit(C,B)||polyHit(T,B))return true;}
     else if(o.t==='moto'){var M=rectPoly(o.x,o.y,MOTO.L,MOTO.W,o.a);if(polyHit(C,M)||polyHit(T,M))return true;}
     else if(o.t==='wall'){var Wp=rectPoly(o.x+o.w/2,o.y+o.h/2,o.w,o.h,0);if(polyHit(C,Wp)||polyHit(T,Wp))return true;}
+    else if(o.t==='suv'){var Sv=rectPoly(o.x,o.y,SUV.L,SUV.W,o.a);if(polyHit(C,Sv)||polyHit(T,Sv))return true;}
+    else if(o.t==='kei'){var Kt=rectPoly(o.x,o.y,KEI.L,KEI.W,o.a);if(polyHit(C,Kt)||polyHit(T,Kt))return true;}
     else{var hr=o.hit||o.r;if(circHit(C,o.x,o.y,hr)||circHit(T,o.x,o.y,hr))return true;}
   }
   return false;
@@ -608,6 +610,8 @@ function draw(){
     else if(o.t==='car'){drawParkedCar(o.x,o.y,o.a,o.c);}
     else if(o.t==='big'){drawBigVehicle(o);}
     else if(o.t==='moto'){drawMoto(o);}
+    else if(o.t==='suv'){drawSuv(o);}
+    else if(o.t==='kei'){drawKei(o);}
     else if(o.t==='wall'){cx.fillStyle=o.c||'#7b7f86';cx.fillRect(o.x,o.y,o.w,o.h);
       if(o.pat==='brick'){var cs=o.cell||0.45;cx.fillStyle=o.c2||'#b5786a';
         var ci0=Math.floor(o.x/cs),ci1=Math.ceil((o.x+o.w)/cs),cj0=Math.floor(o.y/cs),cj1=Math.ceil((o.y+o.h)/cs);
@@ -681,6 +685,43 @@ function drawBigVehicle(o){
   cx.restore();
 }
 // 駐車中の普通車 (道の駅ステージ)。真上から見た形: ボディ+ガラス+ルーフ
+// 駐車中の白いSUV (CX-5風 4.55x1.85): 自車のCX-8と同じ描き方を白で
+var SUV={L:4.55,W:1.85}, KEI={L:3.4,W:1.48};
+function drawSuv(o){
+  var L=SUV.L,Wd=SUV.W,L2=L/2,W2=Wd/2;
+  cx.save();cx.translate(o.x,o.y);cx.rotate(o.a);
+  cx.fillStyle='rgba(0,0,0,.3)';rr(-L2+.18,-W2+.22,L,Wd,.5);cx.fill();
+  var g=cx.createLinearGradient(0,-W2,0,W2);g.addColorStop(0,'#ffffff');g.addColorStop(.5,'#f1f3f5');g.addColorStop(1,'#d3d8de');
+  cx.fillStyle=g;rr(-L2,-W2,L,Wd,.5);cx.fill();
+  cx.strokeStyle='#9aa0a8';cx.lineWidth=.05;rr(-L2,-W2,L,Wd,.5);cx.stroke();
+  cx.strokeStyle='rgba(0,0,0,.12)';cx.lineWidth=.05;cx.beginPath();cx.moveTo(L2-.3,-.42);cx.lineTo(L2-1.4,-.33);cx.moveTo(L2-.3,.42);cx.lineTo(L2-1.4,.33);cx.stroke();
+  cx.fillStyle='#1f2a3a';rr(-L2+.5,-W2+.18,L-1.95,Wd-.36,.4);cx.fill();      // キャビン(ガラス一体)
+  cx.fillStyle='#eceff2';rr(-L2+.95,-W2+.3,L-2.7,Wd-.6,.3);cx.fill();        // ルーフ
+  cx.fillStyle='#8fc1ee';rr(L2-1.5,-W2+.28,.55,Wd-.56,.12);cx.fill();        // フロントガラス
+  cx.fillStyle='#6ea6dc';rr(-L2+.55,-W2+.28,.4,Wd-.56,.12);cx.fill();        // リアガラス
+  cx.fillStyle='#22262b';cx.fillRect(-L2+.95,-W2+.2,L-2.7,.08);cx.fillRect(-L2+.95,W2-.28,L-2.7,.08);   // ルーフレール
+  cx.fillStyle='#e3e6ea';rr(L2-1.7,-W2-.22,.3,.22,.06);cx.fill();rr(L2-1.7,W2,.3,.22,.06);cx.fill();   // ミラー
+  cx.fillStyle='#fff3c4';rr(L2-.12,-W2+.15,.1,.4,.04);cx.fill();rr(L2-.12,W2-.55,.1,.4,.04);cx.fill();
+  cx.fillStyle='#e0413a';rr(-L2+.02,-W2+.15,.1,.4,.04);cx.fill();rr(-L2+.02,W2-.55,.1,.4,.04);cx.fill();
+  cx.restore();
+}
+// 駐車中の軽トラ (3.4x1.48): 前1.4mがキャブ、後ろ2.0mが荷台 (白いアオリ・グレーの床)
+function drawKei(o){
+  var L=KEI.L,Wd=KEI.W,L2=L/2,W2=Wd/2;
+  cx.save();cx.translate(o.x,o.y);cx.rotate(o.a);
+  cx.fillStyle='rgba(0,0,0,.3)';rr(-L2+.16,-W2+.2,L,Wd,.2);cx.fill();
+  cx.fillStyle='#f4f5f6';rr(-L2,-W2,2.0,Wd,.12);cx.fill();                     // 荷台のアオリ
+  cx.fillStyle='#6f757c';cx.fillRect(-L2+.12,-W2+.12,1.8,Wd-.24);             // 荷台の床
+  cx.strokeStyle='#9aa0a8';cx.lineWidth=.04;rr(-L2,-W2,2.0,Wd,.12);cx.stroke();
+  cx.fillStyle='#f7f8f9';rr(L2-1.4,-W2,1.4,Wd,.22);cx.fill();                  // キャブ
+  cx.strokeStyle='#9aa0a8';rr(L2-1.4,-W2,1.4,Wd,.22);cx.stroke();
+  cx.fillStyle='#1f2a3a';rr(L2-1.28,-W2+.14,1.05,Wd-.28,.18);cx.fill();       // キャブのガラス
+  cx.fillStyle='#eceff2';rr(L2-1.12,-W2+.27,.52,Wd-.54,.12);cx.fill();        // ルーフ
+  cx.fillStyle='#8fc1ee';rr(L2-.55,-W2+.22,.3,Wd-.44,.08);cx.fill();          // フロントガラス
+  cx.fillStyle='#e3e6ea';rr(L2-.9,-W2-.18,.24,.18,.05);cx.fill();rr(L2-.9,W2,.24,.18,.05);cx.fill();  // ミラー
+  cx.fillStyle='#fff3c4';rr(L2-.1,-W2+.12,.08,.3,.03);cx.fill();rr(L2-.1,W2-.42,.08,.3,.03);cx.fill();
+  cx.restore();
+}
 function drawParkedCar(x,y,a,col){
   var L=CARP.L,Wd=CARP.W;
   cx.save();cx.translate(x,y);cx.rotate(a);
