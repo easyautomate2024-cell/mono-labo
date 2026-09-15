@@ -284,8 +284,8 @@ var STAGES=[
      {t:'wall',x:-2.00,y:21.00,w:5.40,h:16.00,c:'#8d7f6a'},
      {t:'wall',x:-2.00,y:35.00,w:14.40,h:2.60,c:'#cfc9bd'},
      {t:'wall',x:3.40,y:33.80,w:9.00,h:1.20,c:'#2f6b38'},
-     {t:'wall',x:-2.00,y:8.60,w:14.40,h:8.50,c:'#6b6f75',roof:'gable',ridge:'h',c2:'#868b92',c3:'#555960'},   // 隣の建物 (道路側)
-     {t:'wall',x:-2.00,y:-2.00,w:14.40,h:10.20,c:'#6b6f75',roof:'gable',ridge:'h',c2:'#868b92',c3:'#555960'},  // 隣の建物 (奥)
+     {t:'wall',x:-2.00,y:8.60,w:14.40,h:8.50,c:'#3a3e46',roof:'gable',ridge:'v',c2:'#4a505a',c3:'#2f343c',c4:'#d9dce1',c5:'#8b9099'},   // 隣の建物 (道路側: 黒っぽいスレート屋根、棟は街道と平行)
+     {t:'wall',x:-2.00,y:-2.00,w:14.40,h:10.20,c:'#6a4a3e',roof:'gable',ridge:'h',c2:'#8c5c4c',c3:'#6a4236',c4:'#ece6dd',c5:'#4a2e26'},  // 北隣の白い家 (妻側が街道向き、茶赤の屋根)
      {t:'wall',x:12.40,y:0.00,w:2.50,h:16.80,c:'#cdc2b4',pat:'brick',c2:'#b5786a',pass:true},
      {t:'wall',x:14.90,y:0.00,w:0.30,h:16.80,c:'#e9ecef',pass:true},
      {t:'wall',x:15.20,y:0.00,w:1.50,h:16.80,c:'#5a5f66',pass:true},
@@ -617,10 +617,14 @@ function draw(){
       if(o.roof==='gable'){var hz=o.ridge?(o.ridge==='h'):(o.w>=o.h);
         cx.fillStyle=o.c2||'#7a7e84';if(hz)cx.fillRect(o.x,o.y,o.w,o.h/2);else cx.fillRect(o.x,o.y,o.w/2,o.h);
         cx.fillStyle=o.c3||'#585c62';if(hz)cx.fillRect(o.x,o.y+o.h/2,o.w,o.h/2);else cx.fillRect(o.x+o.w/2,o.y,o.w/2,o.h);
-        cx.strokeStyle='#3a3d42';cx.lineWidth=.14;cx.beginPath();
+        cx.strokeStyle=o.c5||'#3a3d42';cx.lineWidth=.14;cx.beginPath();
         if(hz){cx.moveTo(o.x,o.y+o.h/2);cx.lineTo(o.x+o.w,o.y+o.h/2);}else{cx.moveTo(o.x+o.w/2,o.y);cx.lineTo(o.x+o.w/2,o.y+o.h);}
         cx.stroke();
-        cx.strokeStyle='#9599a0';cx.lineWidth=.16;cx.strokeRect(o.x+.1,o.y+.1,o.w-.2,o.h-.2);}   // 軒
+        cx.strokeStyle='rgba(0,0,0,.14)';cx.lineWidth=.04;cx.beginPath();
+        if(hz){for(var ty=o.y+.6;ty<o.y+o.h;ty+=.6){cx.moveTo(o.x,ty);cx.lineTo(o.x+o.w,ty);}}
+        else{for(var tx=o.x+.6;tx<o.x+o.w;tx+=.6){cx.moveTo(tx,o.y);cx.lineTo(tx,o.y+o.h);}}
+        cx.stroke();
+        cx.strokeStyle=o.c4||'#aab4c2';cx.lineWidth=.16;cx.strokeRect(o.x+.1,o.y+.1,o.w-.2,o.h-.2);}   // 軒
       if(o.pat==='brick'){var cs=o.cell||0.45;cx.fillStyle=o.c2||'#b5786a';
         var ci0=Math.floor(o.x/cs),ci1=Math.ceil((o.x+o.w)/cs),cj0=Math.floor(o.y/cs),cj1=Math.ceil((o.y+o.h)/cs);
         cx.save();cx.beginPath();cx.rect(o.x,o.y,o.w,o.h);cx.clip();
