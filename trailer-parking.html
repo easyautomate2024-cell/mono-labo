@@ -121,6 +121,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
           <button data-s="0" class="on">1 キャンプ場</button>
           <button data-s="1">2 街道の休憩所</button>
           <button data-s="2">3 高速の斜め枠</button>
+          <button data-s="3">4 SUN BASE（仮）</button>
         </div>
         <div class="seg" id="segSteer">
           <span>ハンドル</span>
@@ -190,7 +191,7 @@ var COMMON_OBST=[
   {t:'tr',x:4.1,y:7.0,w:2.3,h:6.0,a:Math.PI/2},
   {t:'tr',x:16.1,y:7.0,w:2.3,h:6.0,a:Math.PI/2},
   {t:'tr',x:22.1,y:7.0,w:2.3,h:6.0,a:Math.PI/2},
-  {t:'tree',x:1.6,y:2.2,r:1.3},{t:'tree',x:26.6,y:2.4,r:1.4},{t:'tree',x:13.5,y:2.0,r:1.2},
+  {t:'tree',x:1.6,y:2.2,r:1.3},{t:'tree',x:26.6,y:2.4,r:1.4},{t:'tree',x:13.5,y:2.0,r:1.5},
   {t:'tree',x:5,y:40,r:1.7},{t:'tree',x:14,y:40.5,r:1.4},{t:'tree',x:23,y:40,r:1.6}
 ];
 // ステージ定義: 区画・障害物・開始位置・ランク基準タイム
@@ -267,9 +268,55 @@ var STAGES=[
    deco:[{t:'bldg',x:7.0,y:0.8,w:20,h:5.4,label:'サービスエリア'},
          {t:'green',x:0,y:6.6,w:34,h:1.2},
          {t:'green',x:0,y:39.5,w:34,h:4.5}],
-   start:{x:10,y:18,th:0}, th:{S:120,A:190,B:290}}
+   start:{x:10,y:18,th:0}, th:{S:120,A:190,B:290}},
+  // SUN BASE(仮): 稲城のRVパーク。府中街道(右・縦)から幅4.5mの入口を通り、幅3.7mの道(左へ)から敷地へ。
+  // 道路は航空写真の実測: 縁石から 停車帯3.6 / 車線3.2 / 2mの帯 / 車線3.2 / 車線3.6 / 中央分離帯2.0。
+  // 寸法は先方確認前。ローカル試作
+  {name:'SUN BASE（仮）', ground:'asphalt', common:false, needCar:false,
+   worldW:28, worldH:37, view:{w:24},   // 対向車線には出ないので中央の帯まで
+   lane:{x:19.15,y:0,w:15.6,h:37},
+   slot:{x:3.7,y:21.4,w:4.0,h:12.0},
+   pads:[{x:3.4,y:21.0,w:9.0,h:12.8}],
+   obst:[
+     // 駐車車両 (先方の図より): 区画の隣、北浜ビル寄り。SUVは区画側、軽トラは歩道側で敷地内に収まる
+     {t:'car',x:8.9,y:31.0,a:-Math.PI/2,c:'#eef0f2'},
+     {t:'big',x:11.2,y:31.0,a:-Math.PI/2,L:3.4,W:1.48,c:'#f2f2f2',kind:'truck'},
+     {t:'wall',x:-2.00,y:21.00,w:5.40,h:16.00,c:'#8d7f6a'},
+     {t:'wall',x:-2.00,y:35.00,w:14.40,h:2.60,c:'#cfc9bd',label:'北浜ビル'},
+     {t:'wall',x:3.40,y:33.80,w:9.00,h:1.20,c:'#2f6b38'},
+     {t:'wall',x:-2.00,y:-2.00,w:14.40,h:19.10,c:'#cfc9bd',label:'隣の建物'},
+     {t:'wall',x:12.40,y:0.00,w:2.50,h:16.80,c:'#cdc2b4',pat:'brick',c2:'#b5786a',pass:true},
+     {t:'wall',x:14.90,y:0.00,w:0.30,h:16.80,c:'#e9ecef',pass:true},
+     {t:'wall',x:15.20,y:0.00,w:1.50,h:16.80,c:'#5a5f66',pass:true},
+     {t:'wall',x:16.70,y:0.00,w:2.10,h:16.10,c:'#5a9a58'},
+     {t:'wall',x:18.80,y:0.00,w:0.35,h:16.80,c:'#c9ced4'},
+     {t:'wall',x:12.40,y:21.30,w:2.50,h:15.70,c:'#cdc2b4',pat:'brick',c2:'#b5786a',pass:true},
+     {t:'wall',x:14.90,y:21.30,w:0.30,h:15.70,c:'#e9ecef',pass:true},
+     {t:'wall',x:15.20,y:21.30,w:1.50,h:15.70,c:'#5a5f66',pass:true},
+     {t:'wall',x:16.70,y:21.70,w:2.10,h:15.30,c:'#5a9a58'},
+     {t:'wall',x:18.80,y:21.30,w:0.35,h:15.70,c:'#c9ced4'},
+     // 街路樹: 植え込みの帯の上に約6m間隔 (帯より後に描く)
+     {t:'tree',x:17.75,y:0.9,r:1.5,hit:0.5},
+     {t:'tree',x:17.75,y:6.7,r:1.5,hit:0.5},
+     {t:'tree',x:17.75,y:12.5,r:1.5,hit:0.5},
+     {t:'tree',x:17.75,y:25.6,r:1.5,hit:0.5},
+     {t:'tree',x:17.75,y:31.3,r:1.5,hit:0.5},
+     {t:'tree',x:17.75,y:37.0,r:1.5,hit:0.5}
+],
+   deco:[
+     {t:'line',x1:22.75,y1:0,x2:22.75,y2:37,w:0.15,dash:[2.0,2.0]},
+     {t:'line',x1:25.95,y1:0,x2:25.95,y2:37,w:0.15},
+     {t:'line',x1:26.35,y1:0,x2:26.35,y2:37,w:0.12,dash:[0.5,0.7]},
+     {t:'line',x1:27.55,y1:0,x2:27.55,y2:37,w:0.12,dash:[0.5,0.7]},
+     {t:'line',x1:27.95,y1:0,x2:27.95,y2:37,w:0.15},
+     {t:'line',x1:31.15,y1:0,x2:31.15,y2:37,w:0.15,dash:[5.0,5.0]},
+     {t:'img',src:'sunbase_logo.png',x:10.05,y:24.6,w:4.0},
+     {t:'text',x:20.95,y:34.4,s:'50',c:'#e8a13d',size:1.3,sy:4.2},
+     {t:'text',x:24.35,y:34.4,s:'50',c:'#e8a13d',size:1.3,sy:4.2}],
+   start:{x:20.9,y:28.5,th:-Math.PI/2}, th:{S:150,A:220,B:330}}
 ];
 var STG=0, LANE, SLOT, SITES, OBST, GROUND='grass', DECO=[];
+var IMGS={};   // 路面標示に使う画像のキャッシュ
 function loadStage(i){
   STG=i; var st=STAGES[i];
   LANE=st.lane; SLOT=st.slot;
@@ -283,6 +330,7 @@ function loadStage(i){
   DECO=st.deco||[];
   TR=(st.trailer==='660')?TR660:TR495;   // サービスエリアだけ長いトレーラー
   W=st.worldW||28;                       // 舗装ステージは横に広い (右まで振り出せるように)
+  H=st.worldH||44;
   if(typeof cv!=='undefined'&&cv)resize();
 }
 loadStage(0);
@@ -326,6 +374,7 @@ function reset(){
   S={x:sp.x,y:sp.y,th:sp.th,st:0,v:0,psi:0,t:0,run:false,phase:'title',sw:0,col:0,lastDir:0,contact:false,jack:false,outTr:false,outCar:false,
      stopT:0,pitch:0,roll:0};
   S.psi=S.th;   // 真っ直ぐ連結した状態から
+  if(typeof cv!=='undefined'&&cv)follow(true);
   hud();
 }
 // ---------- 入力 ----------
@@ -420,11 +469,13 @@ function circHit(P,cx,cy,r){ // 円と凸多角形
 function collide(){
   var C=carPoly(),T=trPoly();
   for(var i=0;i<OBST.length;i++){var o=OBST[i];
+    if(o.pass)continue;   // 見た目だけで当たらない (段差のない歩道など)
     if(o.t==='tr'){var P=rectPoly(o.x+o.w/2,o.y+o.h/2,o.h,o.w,o.a);if(polyHit(C,P)||polyHit(T,P))return true;}
     else if(o.t==='car'){var Q=rectPoly(o.x,o.y,CARP.L,CARP.W,o.a);if(polyHit(C,Q)||polyHit(T,Q))return true;}
     else if(o.t==='big'){var B=rectPoly(o.x,o.y,o.L,o.W,o.a);if(polyHit(C,B)||polyHit(T,B))return true;}
     else if(o.t==='moto'){var M=rectPoly(o.x,o.y,MOTO.L,MOTO.W,o.a);if(polyHit(C,M)||polyHit(T,M))return true;}
-    else{if(circHit(C,o.x,o.y,o.r)||circHit(T,o.x,o.y,o.r))return true;}
+    else if(o.t==='wall'){var Wp=rectPoly(o.x+o.w/2,o.y+o.h/2,o.w,o.h,0);if(polyHit(C,Wp)||polyHit(T,Wp))return true;}
+    else{var hr=o.hit||o.r;if(circHit(C,o.x,o.y,hr)||circHit(T,o.x,o.y,hr))return true;}
   }
   return false;
 }
@@ -475,11 +526,23 @@ function resize(){
   var st=document.getElementById('stage');DPR=window.devicePixelRatio||1;
   cv.width=st.clientWidth*DPR;cv.height=st.clientHeight*DPR;
   SC=Math.min(cv.width/W,cv.height/H);OX=(cv.width-W*SC)/2;OY=(cv.height-H*SC)/2;
+  if(STAGES[STG].view){SC=cv.width/STAGES[STG].view.w;follow(true);}   // 追従カメラ (広いステージ用)
+}
+// 追従カメラ: 連結点を画面の中心に置き、世界の端では止める。jump=true なら即座に合わせる
+function follow(jump){
+  var v=STAGES[STG].view; if(!v)return;
+  var vw=cv.width/SC, vh=cv.height/SC, h=hitch(S);
+  var x0=h.x-vw/2, y0=h.y-vh/2;
+  x0=(vw>=W)?(W-vw)/2:Math.max(0,Math.min(W-vw,x0));
+  y0=(vh>=H)?(H-vh)/2:Math.max(0,Math.min(H-vh,y0));
+  var tx=-x0*SC, ty=-y0*SC;
+  if(jump){OX=tx;OY=ty;} else {OX+=(tx-OX)*0.12;OY+=(ty-OY)*0.12;}
 }
 window.addEventListener('resize',resize);resize();
 function P(x,y){return [OX+x*SC,OY+y*SC];}
 function draw(){
   cx.setTransform(1,0,0,1,0,0);cx.fillStyle='#0b1220';cx.fillRect(0,0,cv.width,cv.height);
+  follow(false);
   cx.setTransform(SC,0,0,SC,OX,OY);
   if(GROUND==='asphalt'){
     // 道の駅: アスファルト + 白線の駐車枠
@@ -501,6 +564,18 @@ function draw(){
     cx.strokeStyle='rgba(255,255,255,.55)';cx.lineWidth=.11;
     SITES.forEach(function(s){padPath(s);cx.stroke();});
     cx.fillStyle='#575b61';padPath(SLOT);cx.fill();
+    // 路面標示: 白線 (line) とオレンジの標示 (mark)。車道の上に描く
+    DECO.forEach(function(o){
+      if(o.t==='line'){cx.strokeStyle=o.c||'#fff';cx.lineWidth=o.w||0.15;cx.setLineDash(o.dash||[]);
+        cx.beginPath();cx.moveTo(o.x1,o.y1);cx.lineTo(o.x2,o.y2);cx.stroke();cx.setLineDash([]);}
+      else if(o.t==='img'){var im=IMGS[o.src];if(!im){im=new Image();im.src=o.src;IMGS[o.src]=im;}
+        if(im.complete&&im.naturalWidth){var ih=o.h||o.w*im.naturalHeight/im.naturalWidth;
+          cx.save();cx.translate(o.x,o.y);cx.rotate(o.rot||0);cx.globalAlpha=o.alpha||0.85;
+          cx.drawImage(im,-o.w/2,-ih/2,o.w,ih);cx.restore();}}
+      else if(o.t==='text'){cx.save();cx.translate(o.x,o.y);cx.rotate(o.rot||0);cx.scale(1,o.sy||1);
+        cx.fillStyle=o.c||'#e8a13d';cx.font='bold '+(o.size||1)+'px sans-serif';cx.textAlign='center';cx.textBaseline='middle';
+        cx.fillText(o.s,0,0);cx.restore();}
+    });
   } else {
     // 芝
     cx.fillStyle='#2f7d3a';cx.fillRect(0,0,W,H);
@@ -533,6 +608,14 @@ function draw(){
     else if(o.t==='car'){drawParkedCar(o.x,o.y,o.a,o.c);}
     else if(o.t==='big'){drawBigVehicle(o);}
     else if(o.t==='moto'){drawMoto(o);}
+    else if(o.t==='wall'){cx.fillStyle=o.c||'#7b7f86';cx.fillRect(o.x,o.y,o.w,o.h);
+      if(o.pat==='brick'){var cs=o.cell||0.45;cx.fillStyle=o.c2||'#b5786a';
+        var ci0=Math.floor(o.x/cs),ci1=Math.ceil((o.x+o.w)/cs),cj0=Math.floor(o.y/cs),cj1=Math.ceil((o.y+o.h)/cs);
+        cx.save();cx.beginPath();cx.rect(o.x,o.y,o.w,o.h);cx.clip();
+        for(var ci=ci0;ci<ci1;ci++)for(var cj=cj0;cj<cj1;cj++)if((ci+cj)%2===0)cx.fillRect(ci*cs,cj*cs,cs,cs);
+        cx.restore();}
+      if(o.label){cx.fillStyle='rgba(30,26,20,.75)';cx.font='bold 1.1px sans-serif';cx.textAlign='center';
+        cx.fillText(o.label,Math.min(Math.max(o.x+o.w/2,2.4),W-2.4),Math.min(Math.max(o.y+o.h/2,1.2),H-1.2)+.4);}}
     else{drawTrailerBody(o.x+o.w/2,o.y+o.h/2,o.h,o.w,o.a,'#d9dde3',true);}
   });
   // 自分のトレーラーと車
@@ -760,7 +843,8 @@ function renderHist(h,elId,labelFirst){
 // ?stages を付けたURLでは未公開ぶんも表示する (動作確認用)
 var RELEASE=[0,
              Date.parse('2026-09-13T20:00:00+09:00'),   // 2 街道の休憩所
-             Infinity];                                  // 3 高速の斜め枠 (解禁日は未定)
+             Infinity,                                   // 3 高速の斜め枠 (解禁日は未定)
+             Infinity];                                  // 4 SUN BASE (試作。先方確認前)
 var PREVIEW=location.search.indexOf('stages')>=0;
 function stageOpen(i){return PREVIEW||Date.now()>=RELEASE[i];}
 (function(){
