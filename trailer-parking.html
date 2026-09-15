@@ -272,7 +272,7 @@ var STAGES=[
   // SUN BASE(仮): 稲城のRVパーク。府中街道(右・縦)から幅4.5mの入口を通り、幅3.7mの道(左へ)から敷地へ。
   // 道路は航空写真の実測: 縁石から 停車帯3.6 / 車線3.2 / 2mの帯 / 車線3.2 / 車線3.6 / 中央分離帯2.0。
   // 寸法は先方確認前。ローカル試作
-  {name:'SUN BASE（仮）', ground:'asphalt', common:false, needCar:false, key:'sunbase2609',
+  {name:'SUN BASE（仮）', ground:'asphalt', common:false, needCar:false, key:'sunbase2609', noSlotLabel:true,
    worldW:28, worldH:37, view:{w:24},   // 対向車線には出ないので中央の帯まで
    lane:{x:19.15,y:0,w:15.6,h:37},
    slot:{x:3.7,y:21.4,w:4.0,h:12.0},
@@ -589,7 +589,7 @@ function draw(){
     SITES.concat([SLOT]).forEach(function(s,idx){cx.fillStyle=(s===SLOT)?'#a3a798':'#9a9e92';cx.fillRect(s.x,s.y,s.w,s.h);});
   }
   // 目標区画の枠
-  if(GROUND==='asphalt'){
+  if(GROUND==='asphalt'&&!STAGES[STG].noSlotLabel){
     // 大型車スペース: 実際の駐車場のように路面へ「大型車」と白文字 (枠に沿って回す)
     var sc=padC(SLOT);
     cx.save();cx.translate(sc.x,sc.y);cx.rotate(SLOT.a||0);cx.translate(0,SLOT.h*0.12);
