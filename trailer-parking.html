@@ -272,7 +272,7 @@ var STAGES=[
   // SUN BASE(仮): 稲城のRVパーク。府中街道(右・縦)から幅4.5mの入口を通り、幅3.7mの道(左へ)から敷地へ。
   // 道路は航空写真の実測: 縁石から 停車帯3.6 / 車線3.2 / 2mの帯 / 車線3.2 / 車線3.6 / 中央分離帯2.0。
   // 寸法は先方確認前。ローカル試作
-  {name:'SUN BASE（仮）', ground:'asphalt', common:false, needCar:false, key:'sunbase2609', noSlotLabel:true,
+  {name:'SUN BASE（仮）', ground:'asphalt', common:false, needCar:false, key:'sunbase2609', noSlotLabel:true, clipWorld:true,
    worldW:28, worldH:37, view:{w:24,h:26},   // 対向車線には出ないので中央の帯まで。横長画面(iPad横)は縦26mが入る倍率
    lane:{x:19.15,y:0,w:15.6,h:37},
    slot:{x:3.7,y:21.4,w:4.0,h:12.0},
@@ -548,6 +548,8 @@ function draw(){
   cx.setTransform(1,0,0,1,0,0);cx.fillStyle='#0b1220';cx.fillRect(0,0,cv.width,cv.height);
   follow(false);
   cx.setTransform(SC,0,0,SC,OX,OY);
+  cx.save();
+  if(STAGES[STG].clipWorld){cx.beginPath();cx.rect(0,0,W,H);cx.clip();}   // 世界の外は描かない。余白は背景の紺のまま=「何もない」と分かるように
   if(GROUND==='asphalt'){
     // 道の駅: アスファルト + 白線の駐車枠
     cx.fillStyle='#5d6167';cx.fillRect(-12,-12,W+24,H+24);   // 画面の余白まで舗装を広げる
@@ -657,6 +659,7 @@ function draw(){
     cx.strokeStyle='rgba(239,68,68,.9)';cx.lineWidth=.16;
     [carPoly(),trPoly()].forEach(function(P){cx.beginPath();P.forEach(function(p,i){i?cx.lineTo(p.x,p.y):cx.moveTo(p.x,p.y)});cx.closePath();cx.stroke();});
   }
+  cx.restore();
 }
 function wheelPair(x,y,a,track,steer){
   var c=Math.cos(a),s=Math.sin(a);
