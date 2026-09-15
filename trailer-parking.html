@@ -601,7 +601,7 @@ function draw(){
     var sc2=padC(SLOT);
     cx.save();cx.translate(sc2.x,sc2.y);cx.rotate(SLOT.a||0);
     cx.fillStyle='rgba(255,255,255,.85)';cx.font='bold 1.1px sans-serif';cx.textAlign='center';
-    cx.fillText('ここ',0,GROUND==='asphalt'?-SLOT.h/2+2.2:.4);cx.restore();
+    cx.fillText('ここ',0,(GROUND==='asphalt'&&!STAGES[STG].noSlotLabel)?-SLOT.h/2+2.2:.4);cx.restore();   // 「大型車」がある枠は上寄せ、無ければ上下中央
   }
   // 障害物
   OBST.forEach(function(o){
