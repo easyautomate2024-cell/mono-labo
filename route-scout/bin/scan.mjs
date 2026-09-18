@@ -18,6 +18,7 @@ import { dirname, join } from 'node:path';
 import { GsiVectorTileProvider, SEVERITY } from '../lib/width.mjs';
 import { FileCache, MemoryCache } from '../lib/cache-node.mjs';
 import { scanRoute } from '../lib/scout.mjs';
+import { GoogleRoutesProvider } from '../lib/routing.mjs';
 import { fetchPanoMetadata, isStale } from '../lib/svlink.mjs';
 import * as polyline from '../lib/polyline.mjs';
 import { parseArgs, parseLatLng, num } from './args.mjs';
@@ -32,7 +33,7 @@ const LABEL = {
 
 async function main() {
   const { options, positional } = parseArgs(process.argv.slice(2), {
-    flags: ['json', 'no-cache', 'help'],
+    flags: ['json', 'no-cache', 'help', 'avoid-tolls', 'avoid-highways'],
   });
 
   if (options.help) {
@@ -40,6 +41,11 @@ async function main() {
   node route-scout/bin/scan.mjs --coords "<緯度,経度> <緯度,経度> ..."
   node route-scout/bin/scan.mjs --polyline <encoded polyline>
   node route-scout/bin/scan.mjs --geojson <LineString を含むファイル>
+  node route-scout/bin/scan.mjs --from "旭川駅" --to "43.5551,142.4695"
+
+ルート取得（--from/--to）だけが課金されうる。キーは環境変数
+ROUTE_SCOUT_ROUTES_KEY か --routes-key で渡す。実行後に encoded polyline を
+出力するので、閾値を変えて掛け直すときは --polyline で再取得せずに済む。
 
 オプション:
   --step <m>          サンプリング間隔（既定 10）
@@ -49,6 +55,11 @@ async function main() {
   --min-run <m>       これより短い区間を捨てる（既定 0）
   --link-interval <m> 長い区間に追加リンクを出す間隔（既定 200）
   --precision <5|6>   polyline の精度（既定 5）
+  --from <地点>       出発地（「緯度,経度」か住所）
+  --to <地点>         目的地（同上）
+  --routes-key <KEY>  Routes API のキー（既定は環境変数 ROUTE_SCOUT_ROUTES_KEY）
+  --avoid-tolls       有料道路を避ける
+  --avoid-highways    自動車専用道路を避ける
   --sv-key <KEY>      パノラマの有無と撮影日を照会する
   --json              JSON で出す
   --no-cache          タイルのローカルキャッシュを使わない
@@ -57,7 +68,7 @@ async function main() {
     return;
   }
 
-  const coords = await readRoute(options, positional);
+  const { coords, fetched } = await readRoute(options, positional);
   if (coords.length < 2) throw new Error('ルートの座標が 2 点未満');
 
   const cacheDir = options['cache-dir'] ?? join(HERE, '..', '.cache');
@@ -67,7 +78,8 @@ async function main() {
     ...(options.endpoint ? { endpoint: options.endpoint } : {}),
   });
 
-  const result = await scanRoute(coords, {
+  const route = fetched ? fetched.coords : coords;
+  const result = await scanRoute(route, {
     provider,
     zoom: num(options.zoom, 16),
     stepM: num(options.step, 10),
@@ -80,24 +92,52 @@ async function main() {
   if (options['sv-key']) await annotatePanoramas(result, options['sv-key']);
 
   if (options.json) {
-    console.log(JSON.stringify({ ...result, samples: undefined, tileStats: provider.stats }, null, 2));
+    console.log(JSON.stringify(
+      { ...result, samples: undefined, tileStats: provider.stats, route: fetched ?? undefined },
+      null,
+      2,
+    ));
     return;
   }
 
-  report(result, provider);
+  report(result, provider, fetched);
 }
 
 /** 入力を [経度, 緯度] の折れ線にする */
 async function readRoute(options, positional) {
+  if (options.from || options.to) {
+    if (!options.from || !options.to) throw new Error('--from と --to は両方必要');
+    return { coords: null, fetched: await fetchRoute(options) };
+  }
   if (options.polyline) {
-    return polyline.decode(options.polyline, num(options.precision, 5));
+    return { coords: polyline.decode(options.polyline, num(options.precision, 5)), fetched: null };
   }
   if (options.geojson) {
-    return extractLineString(JSON.parse(await readFile(options.geojson, 'utf8')));
+    return { coords: extractLineString(JSON.parse(await readFile(options.geojson, 'utf8'))), fetched: null };
   }
   const text = options.coords ?? positional.join(' ');
   if (!text.trim()) throw new Error('ルートが指定されていない（--help を参照）');
-  return text.trim().split(/\s+/).map(parseLatLng);
+  return { coords: text.trim().split(/\s+/).map(parseLatLng), fetched: null };
+}
+
+/** ステップ6。ここだけが課金されうるので、呼ぶ前に一度だけ通る形にしてある */
+async function fetchRoute(options) {
+  const key = options['routes-key'] ?? process.env.ROUTE_SCOUT_ROUTES_KEY;
+  if (!key) throw new Error('Routes API のキーが無い（--routes-key か ROUTE_SCOUT_ROUTES_KEY）');
+  const provider = new GoogleRoutesProvider({ key });
+  return provider.route(asWaypoint(options.from), asWaypoint(options.to), {
+    avoidTolls: options['avoid-tolls'],
+    avoidHighways: options['avoid-highways'],
+  });
+}
+
+/** 「緯度,経度」に見えれば座標、そうでなければ住所として渡す */
+function asWaypoint(text) {
+  try {
+    return parseLatLng(text);
+  } catch {
+    return text;
+  }
 }
 
 function extractLineString(geojson) {
@@ -128,9 +168,14 @@ async function annotatePanoramas(result, key) {
   }
 }
 
-function report(result, provider) {
+function report(result, provider, fetched) {
   const { stats, runs } = result;
   console.log('');
+  if (fetched) {
+    console.log(`ルート取得: ${fetched.distanceMeters}m / ${fetched.duration}（Routes API 1 回分）`);
+    console.log(`同じルートを掛け直すなら --polyline '${fetched.encodedPolyline}'`);
+    console.log('');
+  }
   console.log(`ルート全長 ${fmtDistance(stats.routeLengthM)} / サンプル ${stats.sampleCount} 点 / タイル ${stats.tileCount} 枚`);
   console.log(`幅員データとの照合率 ${(stats.matchRate * 100).toFixed(1)}%（残りは「データなし」扱いで警告を出していない）`);
   console.log('');

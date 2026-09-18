@@ -14,6 +14,7 @@ import * as polyline from '../lib/polyline.mjs';
 import { classify, widthLabel, SEVERITY } from '../lib/width.mjs';
 import { panoUrl, isStale } from '../lib/svlink.mjs';
 import { scanRoute, SegmentIndex, tilesCovering } from '../lib/scout.mjs';
+import { GoogleRoutesProvider } from '../lib/routing.mjs';
 
 let passed = 0;
 const failures = [];
@@ -356,6 +357,61 @@ await checkAsync('scanRoute: 未マッチは警告にしない', async () => {
   const result = await scanRoute(route, { provider, stepM: 10 });
   assert(result.runs.length === 0, '警告は出ない');
   assert(result.stats.matchRate === 0, `マッチ率 ${result.stats.matchRate}`);
+});
+
+// ---------------------------------------------------------------- ルート取得
+
+await checkAsync('routing: 課金 SKU を上げない要求を出す', async () => {
+  const encoded = polyline.encode([[142.4695, 43.5551], [142.4795, 43.5551]]);
+  let captured = null;
+  const fetchImpl = async (url, init) => {
+    captured = { url, init };
+    return {
+      ok: true,
+      async json() {
+        return {
+          routes: [{
+            distanceMeters: 806,
+            duration: '120s',
+            polyline: { encodedPolyline: encoded },
+          }],
+        };
+      },
+    };
+  };
+
+  const provider = new GoogleRoutesProvider({ key: 'TESTKEY', fetchImpl });
+  const result = await provider.route([142.4695, 43.5551], '旭川駅');
+
+  assert(captured.init.headers['X-Goog-Api-Key'] === 'TESTKEY', 'キーはヘッダで送る');
+  assert(!captured.url.includes('TESTKEY'), 'キーを URL に載せない');
+
+  const mask = captured.init.headers['X-Goog-FieldMask'];
+  assert(mask === 'routes.polyline.encodedPolyline,routes.distanceMeters,routes.duration', `フィールドマスク: ${mask}`);
+  assert(!mask.includes('legs'), 'legs を足すと上位 SKU に跳ねる');
+
+  const body = JSON.parse(captured.init.body);
+  assert(body.routingPreference === 'TRAFFIC_UNAWARE', '渋滞考慮は既定で切る');
+  assert(body.polylineQuality === 'HIGH_QUALITY', 'カーブで誤スナップしないよう高精度');
+  assert(body.origin.location.latLng.latitude === 43.5551, '座標の出発地');
+  assert(body.origin.location.latLng.longitude === 142.4695, '座標の出発地（経度）');
+  assert(body.destination.address === '旭川駅', '住所の目的地');
+
+  assert(result.coords.length === 2, '復号した頂点数');
+  near(result.coords[0][1], 43.5551, 1e-5, '復号した緯度');
+  assert(result.distanceMeters === 806, '距離');
+  assert(result.encodedPolyline === encoded, '再実行用に polyline を返す');
+  assert(provider.stats.calls === 1, '呼び出し回数を数える');
+});
+
+check('routing: キーが無ければ作れない', () => {
+  let threw = false;
+  try {
+    new GoogleRoutesProvider({});
+  } catch {
+    threw = true;
+  }
+  assert(threw, 'キー無しで例外');
 });
 
 // ---------------------------------------------------------------- 結果
