@@ -33,24 +33,30 @@ Node 18 以上。依存パッケージなし、ビルド工程なし。
 
 ### 画面から使う
 
-ルート取得には API キーが要るが、キーはブラウザに置かない。キーを持つ中継を挟む。
-
-手元で試す場合:
+**キーも設定も要らない。** `start-windows.bat` をダブルクリックするか、リポジトリ直下で:
 
 ```
-# 1) ルート取得の中継を立てる
+python -m http.server 8080 --directory .
+```
+
+ブラウザで `http://localhost:8080/route-scout/` を開く
+（`file://` では ES モジュールが動かないので必ず HTTP 経由で）。
+
+出発地と目的地を入れて「広い道のルートを調べる」だけ。ルートの取得元は既定で
+**キー不要モード**（OSRM 公開デモ + Nominatim）になっている。公開デモなので
+本番運用には使えず、有料道路などの指定も効かない。
+
+公開するときは取得元を「中継ごしに Google Routes API」に切り替える。
+キーはブラウザに置かず、中継に持たせる:
+
+```
+# 手元で中継を立てる
 ROUTE_SCOUT_ROUTES_KEY="..." node route-scout/proxy/local.mjs
-
-# 2) 別の端末で静的サーバを立てる（ES モジュールは file:// では動かない）
-python3 -m http.server 8000
-
-# 3) http://localhost:8000/route-scout/ を開き、
-#    「設定」に http://127.0.0.1:8787/ を入れる
+# 画面の「設定」に http://127.0.0.1:8787/ を入れる
 ```
 
-公開する場合は `proxy/worker.mjs` を Cloudflare Workers に貼り、
-`ROUTES_API_KEY` を Secret として登録する。`ALLOW_ORIGIN` を
-公開先のオリジンに絞ること。ビルド工程は不要。
+本番は `proxy/worker.mjs` を Cloudflare Workers に貼り、`ROUTES_API_KEY` を Secret に登録。
+`ALLOW_ORIGIN` は公開先のオリジンに絞ること。ビルド工程は不要。
 
 ### コマンドラインから使う
 
@@ -71,8 +77,9 @@ ROUTE_SCOUT_ROUTES_KEY="..." node route-scout/bin/scan.mjs --from "旭川駅" --
 node route-scout/test/run.mjs
 ```
 
-ネットワークにも npm にも依存しない 32 件。MVT の復号、測地計算、polyline、判定、
-区間統合、誤警告の抑制、Routes API の要求内容、広い道への寄せ、採点までを固定データで確認する。
+ネットワークにも npm にも依存しない 36 件。MVT の復号、測地計算、polyline、判定、
+区間統合、誤警告の抑制、Routes API の要求内容、広い道への寄せ、採点、キー不要の
+ルート取得までを固定データで確認する。
 
 ## 検証済みのこと / していないこと
 
@@ -110,6 +117,7 @@ lib/polyline.mjs   Google encoded polyline の符号化・復号
 lib/width.mjs      幅員プロバイダ（差し替え可能）と判定
 lib/svlink.mjs     SV リンク、Google マップへの経路受け渡し URL
 lib/routing.mjs    ルート取得（Google Routes API）。キーはサーバー側にだけ置く
+lib/routing-osrm.mjs キー不要のルート取得（OSRM 公開デモ + Nominatim）
 lib/scout.mjs      走査本体（スナップ → 判定 → 統合 → リンク）
 lib/widen.mjs      広い道への寄せ（採点 → 経由点の選定 → 引き直し）
 lib/cache-node.mjs タイルのローカルキャッシュ（Node 用）
@@ -118,6 +126,8 @@ bin/scan.mjs       決まった経路の走査
 proxy/worker.mjs   ルート取得の中継（Cloudflare Workers 用・単体で完結）
 proxy/local.mjs    同じ契約を手元で動かす版
 index.html         画面。出発地・目的地を入れるだけ
+start-windows.bat  ローカルサーバをダブルクリックで起動（Windows）
+CLAUDE.md          作業を引き継ぐセッション向けの申し送り
 test/run.mjs       オフラインのテスト
 ```
 
