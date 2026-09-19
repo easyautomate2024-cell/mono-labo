@@ -73,7 +73,9 @@ export class GoogleRoutesProvider extends RouteProvider {
       };
     }
 
-    const res = await this.fetchImpl(this.endpoint, {
+    // ブラウザの fetch はレシーバを見るので、メソッド呼び出しにしない
+    const doFetch = this.fetchImpl;
+    const res = await doFetch(this.endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

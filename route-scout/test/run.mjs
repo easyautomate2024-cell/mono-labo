@@ -11,7 +11,7 @@ import {
   lngLatToTileFraction, lngLatToTile, tileCoordToLngLat, tileBounds, lineLength,
 } from '../lib/geo.mjs';
 import * as polyline from '../lib/polyline.mjs';
-import { classify, widthLabel, SEVERITY } from '../lib/width.mjs';
+import { classify, widthLabel, SEVERITY, GsiVectorTileProvider } from '../lib/width.mjs';
 import { panoUrl, isStale } from '../lib/svlink.mjs';
 import { scanRoute, SegmentIndex, tilesCovering } from '../lib/scout.mjs';
 import { GoogleRoutesProvider } from '../lib/routing.mjs';
@@ -402,6 +402,30 @@ await checkAsync('routing: 課金 SKU を上げない要求を出す', async () 
   assert(result.distanceMeters === 806, '距離');
   assert(result.encodedPolyline === encoded, '再実行用に polyline を返す');
   assert(provider.stats.calls === 1, '呼び出し回数を数える');
+});
+
+await checkAsync('fetch をメソッドとして呼ばない（ブラウザの Illegal invocation 対策）', async () => {
+  const receivers = [];
+  // アロー関数にすると this を観測できないので、あえて普通の関数で受ける
+  const fetchImpl = function (url) {
+    receivers.push(this);
+    if (String(url).includes('computeRoutes')) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ routes: [{ polyline: { encodedPolyline: 'a', }, distanceMeters: 1, duration: '1s' }] }),
+      });
+    }
+    return Promise.resolve({ ok: true, status: 200, arrayBuffer: async () => new ArrayBuffer(0) });
+  };
+
+  const tiles = new GsiVectorTileProvider({ fetchImpl });
+  await tiles.roadsInTile({ z: 16, x: 58703, y: 23942 });
+  await new GoogleRoutesProvider({ key: 'K', fetchImpl }).route([142, 43], [142.1, 43]);
+
+  assert(receivers.length === 2, `呼び出し回数 ${receivers.length}`);
+  for (const receiver of receivers) {
+    assert(receiver === undefined, `fetch の this が ${receiver && receiver.constructor.name} になっている`);
+  }
 });
 
 check('routing: キーが無ければ作れない', () => {

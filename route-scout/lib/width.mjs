@@ -101,7 +101,10 @@ export class GsiVectorTileProvider extends WidthProvider {
     }
 
     const headers = this.userAgent ? { 'User-Agent': this.userAgent } : undefined;
-    const res = await this.fetchImpl(this.url(tile), { headers });
+    // ブラウザの fetch はレシーバを見る。this.fetchImpl(...) と呼ぶと
+    // this がプロバイダになり Illegal invocation で落ちるので、一度外に出す。
+    const doFetch = this.fetchImpl;
+    const res = await doFetch(this.url(tile), { headers });
     if (res.status === 404) {
       this.stats.missing++;
       if (this.cache) await this.cache.set(key, new Uint8Array(0));

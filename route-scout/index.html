@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ルート下見 — 牽引で通れない道を出発前に洗い出す | mono labo</title>
+<meta name="description" content="走行ルート上の幅員が狭い区間を抽出し、進行方向を向いたストリートビューで1件ずつ確認できるツール。キャンピングトレーラー牽引者向け。">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#f5f5f7;--bg-white:#ffffff;
+  --text:#1d1d1f;--muted:#6e6e73;
+  --accent:#0071e3;--green:#34c759;
+  --warn:#ff9500;--avoid:#ff3b30;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+a{color:var(--accent)}
+
+nav{background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 20px}
+.nav-inner{max-width:1100px;margin:0 auto;height:52px;display:flex;align-items:center;gap:10px;font-size:14px}
+.nav-inner a{color:var(--muted);text-decoration:none}
+
+header{max-width:1100px;margin:0 auto;padding:28px 20px 16px}
+h1{font-size:26px;letter-spacing:-.01em}
+header p{color:var(--muted);font-size:14px;margin-top:6px}
+
+main{max-width:1100px;margin:0 auto;padding:0 20px 40px;display:grid;gap:16px;grid-template-columns:minmax(0,1fr) 380px}
+@media (max-width:900px){main{grid-template-columns:minmax(0,1fr)}}
+
+.card{background:var(--bg-white);border:1px solid var(--border);border-radius:14px;padding:16px}
+.card h2{font-size:15px;margin-bottom:10px}
+
+#map{height:460px;border-radius:14px;border:1px solid var(--border);background:#e8e8ec}
+@media (max-width:900px){#map{height:340px}}
+
+.modes{display:flex;gap:6px;margin-bottom:10px}
+.modes button{flex:1;padding:7px;font-size:13px;border:1px solid var(--border2);background:var(--bg-white);border-radius:9px;cursor:pointer;color:var(--muted)}
+.modes button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+textarea,input[type=text]{width:100%;font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border2);border-radius:9px;background:var(--bg-white);color:var(--text)}
+textarea{resize:vertical;min-height:64px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+.row{display:flex;gap:8px;margin-top:12px}
+.btn{flex:1;padding:10px;font-size:14px;font-weight:600;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:var(--bg);color:var(--muted);border:1px solid var(--border2);font-weight:400;flex:0 0 auto;padding:10px 14px}
+
+details{margin-top:12px;font-size:13px}
+summary{cursor:pointer;color:var(--muted);font-size:12px}
+.tune{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;margin-top:8px;font-size:12px}
+.tune input{width:82px;text-align:right}
+
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+.status{font-size:13px;color:var(--muted);min-height:20px;margin-top:10px}
+.status.err{color:var(--avoid)}
+
+.stats{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:10px}
+.stats b{color:var(--text);font-weight:600}
+
+.run{border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;background:var(--bg-white)}
+.run:hover{border-color:var(--border2)}
+.run.avoid{border-left-color:var(--avoid)}
+.run.warn{border-left-color:var(--warn)}
+.run-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;color:#fff}
+.badge.avoid{background:var(--avoid)}
+.badge.warn{background:var(--warn)}
+.run-where{font-size:14px;font-weight:600}
+.run-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.run-links{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.run-links a{font-size:12px;text-decoration:none}
+.run-links a:hover{text-decoration:underline}
+
+.empty{font-size:13px;color:var(--muted);text-align:center;padding:24px 10px}
+.ok{color:var(--green);font-weight:600}
+
+footer{max-width:1100px;margin:0 auto;padding:0 20px 40px;font-size:12px;color:var(--muted)}
+footer .disclaimer{background:#fff8e6;border:1px solid #ffe2a8;border-radius:10px;padding:12px;margin-bottom:10px;color:#6b4e00}
+</style>
+</head>
+<body>
+
+<nav><div class="nav-inner"><a href="../">&larr; mono labo</a></div></nav>
+
+<header>
+  <h1>ルート下見</h1>
+  <p>走行ルート上の「狭くて通れないかもしれない区間」だけを出発前に洗い出します。判定材料は国土地理院の道路幅員データ。最終判断はあなたがストリートビューで行います。</p>
+</header>
+
+<main>
+  <div>
+    <div id="map"></div>
+    <div class="card" style="margin-top:16px" id="results">
+      <h2>下見の結果</h2>
+      <div class="empty">経路を指定して「この経路を下見する」を押してください。</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>経路を決める</h2>
+      <div class="modes">
+        <button type="button" data-mode="click" aria-pressed="true">地図をクリック</button>
+        <button type="button" data-mode="paste" aria-pressed="false">polyline を貼る</button>
+      </div>
+
+      <div id="pane-click">
+        <p class="hint">地図をクリックすると経由点が増えます。点と点は直線で結ぶので、道なりの経路を見たいときは polyline を貼ってください。</p>
+        <div class="row">
+          <button type="button" class="btn ghost" id="undo">1点戻す</button>
+          <button type="button" class="btn ghost" id="clear">全部消す</button>
+        </div>
+      </div>
+
+      <div id="pane-paste" hidden>
+        <label for="polyline">encoded polyline</label>
+        <textarea id="polyline" placeholder="_p~iF~ps|U_ulLnnqC..." spellcheck="false"></textarea>
+        <p class="hint">コマンドラインの <code>scan.mjs</code> が出力したものをそのまま貼れます。</p>
+      </div>
+
+      <div class="row">
+        <button type="button" class="btn" id="scan">この経路を下見する</button>
+      </div>
+      <div class="status" id="status"></div>
+
+      <details>
+        <summary>判定のつまみ（実走で詰める値）</summary>
+        <div class="tune">
+          <span>警告する幅員区分（以下）</span><input type="text" id="t-warn" value="1">
+          <span>回避推奨の区分（以下）</span><input type="text" id="t-avoid" value="0">
+          <span>スナップ半径 (m)</span><input type="text" id="t-radius" value="20">
+          <span>向きのずれ許容 (度)</span><input type="text" id="t-angle" value="45">
+          <span>サンプリング間隔 (m)</span><input type="text" id="t-step" value="10">
+        </div>
+        <p class="hint">区分は 0=3m未満 / 1=3〜5.5m / 2=5.5〜13m / 3=13〜19.5m / 4=19.5m以上。</p>
+      </details>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="disclaimer">
+    <b>このツールは通行可否を保証しません。</b>
+    幅員データには電柱・路上駐車・カーブミラーの張り出し・牽引時の内輪差が含まれていません。
+    警告が出なかった区間が通れるとも限りません。必ずストリートビューと現地で確かめてください。
+  </div>
+  <p>道路幅員データ: <a href="https://github.com/gsi-cyberjapan/gsimaps-vector-experiment" target="_blank" rel="noopener">国土地理院ベクトルタイル提供実験</a> / 地図: 国土地理院</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script type="module">
+import { scanRoute } from './lib/scout.mjs';
+import { GsiVectorTileProvider, SEVERITY } from './lib/width.mjs';
+import * as polylineCodec from './lib/polyline.mjs';
+
+// 取得先の差し替え。提供実験の URL が変わったときや、
+// 手元で試すときのための逃げ道。
+const params = new URLSearchParams(location.search);
+const endpoint = params.get('endpoint');
+const basemap = params.get('basemap') ?? 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
+
+const map = L.map('map', { zoomControl: true }).setView([43.5551, 142.4695], 14);
+L.tileLayer(basemap, { maxZoom: 18, attribution: '国土地理院' }).addTo(map);
+
+// タイルはメモリに溜めて、同じ経路を掛け直すときに取り直さない
+const cache = {
+  store: new Map(),
+  async get(key) { return this.store.get(key) ?? null; },
+  async set(key, bytes) { this.store.set(key, bytes); },
+};
+const provider = new GsiVectorTileProvider({ cache, ...(endpoint ? { endpoint } : {}) });
+
+let waypoints = [];
+let mode = 'click';
+const markers = L.layerGroup().addTo(map);
+const routeLine = L.layerGroup().addTo(map);
+const warnLayer = L.layerGroup().addTo(map);
+
+const $ = (id) => document.getElementById(id);
+const statusEl = $('status');
+
+function setStatus(text, isError = false) {
+  statusEl.textContent = text;
+  statusEl.classList.toggle('err', isError);
+}
+
+for (const button of document.querySelectorAll('.modes button')) {
+  button.addEventListener('click', () => {
+    mode = button.dataset.mode;
+    for (const other of document.querySelectorAll('.modes button')) {
+      other.setAttribute('aria-pressed', String(other === button));
+    }
+    $('pane-click').hidden = mode !== 'click';
+    $('pane-paste').hidden = mode !== 'paste';
+  });
+}
+
+map.on('click', (event) => {
+  if (mode !== 'click') return;
+  waypoints.push([event.latlng.lng, event.latlng.lat]);
+  drawWaypoints();
+});
+
+$('undo').addEventListener('click', () => { waypoints.pop(); drawWaypoints(); });
+$('clear').addEventListener('click', () => { waypoints = []; drawWaypoints(); warnLayer.clearLayers(); });
+
+function drawWaypoints() {
+  markers.clearLayers();
+  routeLine.clearLayers();
+  for (const [lng, lat] of waypoints) {
+    L.circleMarker([lat, lng], { radius: 5, color: '#0071e3', fillColor: '#fff', fillOpacity: 1, weight: 2 }).addTo(markers);
+  }
+  if (waypoints.length >= 2) {
+    L.polyline(waypoints.map(([lng, lat]) => [lat, lng]), { color: '#0071e3', weight: 4, opacity: 0.7 }).addTo(routeLine);
+  }
+}
+
+function currentRoute() {
+  if (mode === 'paste') {
+    const text = $('polyline').value.trim();
+    if (!text) throw new Error('polyline が空です');
+    return polylineCodec.decode(text);
+  }
+  if (waypoints.length < 2) throw new Error('地図を 2 点以上クリックしてください');
+  return waypoints;
+}
+
+function readNumber(id, fallback) {
+  const value = Number($(id).value);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+$('scan').addEventListener('click', async () => {
+  const button = $('scan');
+  let coords;
+  try {
+    coords = currentRoute();
+  } catch (err) {
+    setStatus(err.message, true);
+    return;
+  }
+
+  if (mode === 'paste') {
+    waypoints = coords;
+    drawWaypoints();
+    map.fitBounds(L.polyline(coords.map(([lng, lat]) => [lat, lng])).getBounds(), { padding: [30, 30] });
+  }
+
+  button.disabled = true;
+  setStatus('地理院タイルを読んでいます…');
+  warnLayer.clearLayers();
+
+  try {
+    const result = await scanRoute(coords, {
+      provider,
+      stepM: readNumber('t-step', 10),
+      snapRadiusM: readNumber('t-radius', 20),
+      angleToleranceDeg: readNumber('t-angle', 45),
+      thresholds: {
+        warnAtOrBelow: readNumber('t-warn', 1),
+        avoidAtOrBelow: readNumber('t-avoid', 0),
+      },
+    });
+    render(result);
+    setStatus(`タイル ${result.stats.tileCount} 枚を読みました。`);
+  } catch (err) {
+    setStatus(`読めませんでした: ${err.message}`, true);
+    console.error(err);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+function render(result) {
+  const { stats, runs, samples } = result;
+  const box = $('results');
+  box.innerHTML = '<h2>下見の結果</h2>';
+
+  const statsEl = document.createElement('div');
+  statsEl.className = 'stats';
+  statsEl.innerHTML =
+    `<span>全長 <b>${fmt(stats.routeLengthM)}</b></span>` +
+    `<span>回避推奨 <b>${stats.avoidCount}</b> 件</span>` +
+    `<span>要確認 <b>${stats.warnCount}</b> 件</span>` +
+    `<span>幅員データ照合率 <b>${(stats.matchRate * 100).toFixed(0)}%</b></span>`;
+  box.appendChild(statsEl);
+
+  if (!runs.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = '<span class="ok">幅員による警告区間はありません。</span><br>' +
+      'ただし幅員データに含まれない障害物（電柱・路上駐車・張り出し）はあります。';
+    box.appendChild(empty);
+    return;
+  }
+
+  for (const run of runs) {
+    // 警告区間を地図に重ねる
+    const points = samples
+      .filter((s) => s.distance >= run.startM && s.distance <= run.endM)
+      .map((s) => [s.point[1], s.point[0]]);
+    const line = L.polyline(points, {
+      color: run.severity === SEVERITY.AVOID ? '#ff3b30' : '#ff9500',
+      weight: 8,
+      opacity: 0.85,
+    }).addTo(warnLayer);
+
+    const card = document.createElement('div');
+    card.className = `run ${run.severity}`;
+    const badge = run.severity === SEVERITY.AVOID ? '回避推奨' : '要確認';
+    card.innerHTML =
+      `<div class="run-head">` +
+        `<span class="badge ${run.severity}">${badge}</span>` +
+        `<span class="run-where">起点から ${fmt(run.startM)}</span>` +
+      `</div>` +
+      `<div class="run-meta">延長 ${Math.round(run.lengthM)}m / 幅員 ${run.widthLabel}` +
+        `${run.roadCategory ? ' / ' + run.roadCategory : ''}` +
+        `${run.unknownCount ? ' / データなし区間を含む' : ''}</div>`;
+
+    const links = document.createElement('div');
+    links.className = 'run-links';
+    run.links.forEach((link, i) => {
+      const a = document.createElement('a');
+      a.href = link.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = run.links.length > 1
+        ? `ストリートビューで見る（${fmt(link.distanceM)} 地点・進行方向）`
+        : 'ストリートビューで見る（進行方向を向きます）';
+      links.appendChild(a);
+    });
+    card.appendChild(links);
+
+    card.addEventListener('click', (event) => {
+      if (event.target.tagName === 'A') return;
+      map.fitBounds(line.getBounds(), { padding: [60, 60], maxZoom: 18 });
+    });
+    box.appendChild(card);
+  }
+}
+
+function fmt(m) {
+  return m >= 1000 ? `${(m / 1000).toFixed(1)}km` : `${Math.round(m)}m`;
+}
+</script>
+</body>
+</html>
