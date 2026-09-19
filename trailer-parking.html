@@ -20,7 +20,7 @@
 // ※ STAGES[].name は記録のlocalStorageキーなので翻訳しない (日本語のまま識別子として使う)
 var LANG=(function(){
   var q=(location.search.match(/[?&]lang=(en|ja)/)||[])[1];
-  if(q){try{localStorage.setItem('tpg_lang',q);}catch(e){} return q;}
+  if(q)return q;                      // URL指定はその場限り (保存しない)
   try{var v=localStorage.getItem('tpg_lang'); if(v==='en'||v==='ja')return v;}catch(e){}
   return (navigator.language||'').toLowerCase().indexOf('ja')===0?'ja':'en';
 })();
@@ -85,6 +85,8 @@ function applyLang(){
     var v=EN[e.dataset.ih]; if(v!==undefined)e.innerHTML=v; });
   document.querySelectorAll('[data-it]').forEach(function(e){
     var v=EN[e.dataset.it]; if(v!==undefined)e.title=v; });
+  var pb=document.getElementById('bProduct');
+  if(pb)pb.href='./trailerlevel-en.html';   // 製品ページも英語版へ
  }
  // 言語切替リンク (タイトル画面の末尾)
   var host=document.getElementById('tCredit');
