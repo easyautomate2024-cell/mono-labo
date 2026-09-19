@@ -40,7 +40,7 @@ main{max-width:1100px;margin:0 auto;padding:0 20px 40px;display:grid;gap:16px;gr
 .modes button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 
 label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
-textarea,input[type=text]{width:100%;font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border2);border-radius:9px;background:var(--bg-white);color:var(--text)}
+textarea,input[type=text],select{width:100%;font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border2);border-radius:9px;background:var(--bg-white);color:var(--text)}
 textarea{resize:vertical;min-height:64px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 
 .row{display:flex;gap:8px;margin-top:12px}
@@ -127,6 +127,13 @@ footer .disclaimer{background:#fff8e6;border:1px solid #ffe2a8;border-radius:10p
         <label class="chk"><input type="checkbox" id="avoid-highways"> 自動車専用道路を避ける</label>
       </div>
 
+      <label for="engine">ルートの取得元</label>
+      <select id="engine">
+        <option value="osrm">キー不要で試す（OSRM 公開デモ）</option>
+        <option value="proxy">中継ごしに Google Routes API</option>
+      </select>
+      <p class="hint" id="engine-hint"></p>
+
       <div class="row">
         <button type="button" class="btn" id="go">広い道のルートを調べる</button>
       </div>
@@ -157,13 +164,14 @@ footer .disclaimer{background:#fff8e6;border:1px solid #ffe2a8;border-radius:10p
     幅員データには電柱・路上駐車・カーブミラーの張り出し・牽引時の内輪差が含まれていません。
     警告が出なかった区間が通れるとも限りません。必ずストリートビューと現地で確かめてください。
   </div>
-  <p>道路幅員データ: <a href="https://github.com/gsi-cyberjapan/gsimaps-vector-experiment" target="_blank" rel="noopener">国土地理院ベクトルタイル提供実験</a> / 地図: 国土地理院</p>
+  <p>道路幅員データ: <a href="https://github.com/gsi-cyberjapan/gsimaps-vector-experiment" target="_blank" rel="noopener">国土地理院ベクトルタイル提供実験</a> / 地図: 国土地理院<br>キー不要モードのルート: <a href="https://project-osrm.org/" target="_blank" rel="noopener">OSRM</a> 公開デモサーバ / 地名の検索と道路データ: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> コントリビューター。いずれも公開デモであり本番運用向けではありません。連続した実行は控えてください。</p>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script type="module">
 import { GsiVectorTileProvider, SEVERITY } from './lib/width.mjs';
 import { widenRoute } from './lib/widen.mjs';
+import { OsrmRouteProvider } from './lib/routing-osrm.mjs';
 import { directionsUrl } from './lib/svlink.mjs';
 import * as polylineCodec from './lib/polyline.mjs';
 
@@ -223,6 +231,46 @@ class ProxyRouteProvider {
   }
 }
 
+// キー不要モードの取得先（差し替えは検証用）
+const osrmBase = params.get('osrm');
+const nominatimBase = params.get('nominatim');
+let osrmProvider = null;
+
+/**
+ * 取得元を選ぶ。キー不要モードは 1 つのインスタンスを使い回して、
+ * 同じ地名を何度も引かないようにする（Nominatim の利用方針）。
+ */
+function makeRouteProvider() {
+  if ($('engine').value === 'proxy') {
+    const proxy = $('proxy').value.trim();
+    if (!proxy) {
+      $('settings').open = true;
+      throw new Error('ルート取得の中継URLを設定してください（設定を開きました）');
+    }
+    return new ProxyRouteProvider(proxy);
+  }
+  if (!osrmProvider) {
+    osrmProvider = new OsrmRouteProvider({
+      ...(osrmBase ? { base: osrmBase } : {}),
+      ...(nominatimBase ? { geocoderBase: nominatimBase } : {}),
+    });
+  }
+  return osrmProvider;
+}
+
+function updateEngineHint() {
+  const keyless = $('engine').value !== 'proxy';
+  $('engine-hint').textContent = keyless
+    ? 'キーも設定も要りません。公開デモなので本番運用には使えず、有料道路などの指定も効きません。'
+    : 'APIキーを持つ中継が要ります。「設定」に中継URLを入れてください。';
+  for (const id of ['avoid-tolls', 'avoid-highways']) {
+    $(id).disabled = keyless;
+    $(id).closest('.chk').style.opacity = keyless ? 0.45 : 1;
+  }
+}
+$('engine').addEventListener('change', updateEngineHint);
+updateEngineHint();
+
 // 中継URLは置き場所であってキーではないので、覚えておいてよい
 const savedProxy = params.get('proxy') ?? safeGet(PROXY_STORE);
 if (savedProxy) $('proxy').value = savedProxy;
@@ -250,10 +298,11 @@ $('go').addEventListener('click', async () => {
   const to = $('to').value.trim();
   if (!from || !to) return setStatus('出発地と目的地を入れてください', true);
 
-  const proxy = $('proxy').value.trim();
-  if (!proxy) {
-    $('settings').open = true;
-    return setStatus('ルート取得の中継URLを設定してください（設定を開きました）', true);
+  let routeProvider;
+  try {
+    routeProvider = makeRouteProvider();
+  } catch (err) {
+    return setStatus(err.message, true);
   }
 
   $('go').disabled = true;
@@ -266,7 +315,7 @@ $('go').addEventListener('click', async () => {
     const result = await widenRoute({
       from,
       to,
-      routeProvider: new ProxyRouteProvider(proxy),
+      routeProvider,
       widthProvider,
       routeOptions: {
         avoidTolls: $('avoid-tolls').checked,

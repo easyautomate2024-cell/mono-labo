@@ -14,6 +14,7 @@ import * as polyline from '../lib/polyline.mjs';
 import { classify, widthLabel, SEVERITY, GsiVectorTileProvider } from '../lib/width.mjs';
 import { panoUrl, isStale, directionsUrl } from '../lib/svlink.mjs';
 import { widenRoute, scoreRoute, DEFAULT_WIDEN_OPTIONS } from '../lib/widen.mjs';
+import { OsrmRouteProvider, parseLatLng } from '../lib/routing-osrm.mjs';
 import { scanRoute, SegmentIndex, tilesCovering } from '../lib/scout.mjs';
 import { GoogleRoutesProvider } from '../lib/routing.mjs';
 
@@ -554,6 +555,76 @@ check('widen: 遠回りが過ぎれば採用しない採点になっている', 
   const longDetour = scoreRoute(fake([], base + 10000), base);
   near(longDetour.total, 1000, 1e-9, '長い迂回');
   assert(longDetour.total > narrow.total, '10km も遠回りするほどではない');
+});
+
+// ---------------------------------------------------------------- キー不要のルート取得
+
+await checkAsync('osrm: 座標と経由点を経路に載せる', async () => {
+  const encoded = polyline.encode([[142.462, 43.5551], [142.488, 43.5551]]);
+  const seen = [];
+  const fetchImpl = function (url) {
+    seen.push(String(url));
+    return Promise.resolve({
+      ok: true,
+      json: async () => ({ code: 'Ok', routes: [{ geometry: encoded, distance: 2100, duration: 180 }] }),
+    });
+  };
+
+  const provider = new OsrmRouteProvider({ fetchImpl });
+  const result = await provider.route([142.462, 43.5551], [142.488, 43.5551], {
+    intermediates: [[142.475, 43.56]],
+  });
+
+  assert(seen.length === 1, `呼び出し ${seen.length} 回（座標なら地名検索は不要）`);
+  assert(seen[0].includes('142.462000,43.555100;142.475000,43.560000;142.488000,43.555100'),
+    `経由点が経路に載っていない: ${seen[0]}`);
+  assert(seen[0].includes('overview=full'), '粗い形状だとカーブで誤判定するので full');
+  assert(result.coords.length === 2, '復号した頂点数');
+  assert(result.distanceMeters === 2100, '距離');
+  assert(result.duration === '180s', '所要時間');
+});
+
+await checkAsync('osrm: 地名は一度だけ引く', async () => {
+  const encoded = polyline.encode([[142.462, 43.5551], [142.488, 43.5551]]);
+  let geocodes = 0;
+  const fetchImpl = function (url) {
+    const text = String(url);
+    if (text.includes('nominatim')) {
+      geocodes++;
+      return Promise.resolve({ ok: true, json: async () => [{ lon: '142.462', lat: '43.5551' }] });
+    }
+    return Promise.resolve({
+      ok: true,
+      json: async () => ({ code: 'Ok', routes: [{ geometry: encoded, distance: 1, duration: 1 }] }),
+    });
+  };
+
+  const provider = new OsrmRouteProvider({ fetchImpl });
+  await provider.route('美瑛駅', [142.488, 43.5551]);
+  await provider.route('美瑛駅', [142.488, 43.5551]);
+  await provider.route('美瑛駅', [142.488, 43.5551], { intermediates: [[142.47, 43.56]] });
+
+  assert(geocodes === 1, `地名を ${geocodes} 回引いている（利用方針に触れる）`);
+  assert(provider.stats.calls === 3, 'ルート取得の回数');
+});
+
+await checkAsync('osrm: 見つからなければ理由がわかる', async () => {
+  const fetchImpl = () => Promise.resolve({ ok: true, json: async () => [] });
+  const provider = new OsrmRouteProvider({ fetchImpl });
+  let message = '';
+  try {
+    await provider.route('ありえない地名', [142.488, 43.5551]);
+  } catch (err) {
+    message = err.message;
+  }
+  assert(message.includes('ありえない地名'), `案内が不親切: ${message}`);
+  assert(message.includes('緯度,経度'), '代わりの入れ方を案内していない');
+});
+
+check('osrm: 緯度経度の読み取り', () => {
+  assert(JSON.stringify(parseLatLng('43.5551,142.462')) === '[142.462,43.5551]', '緯度が先');
+  assert(parseLatLng('美瑛駅') === null, '地名は座標ではない');
+  assert(parseLatLng('200,300') === null, '範囲外');
 });
 
 // ---------------------------------------------------------------- 結果
