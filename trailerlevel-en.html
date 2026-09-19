@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRAILER LEVEL — Wi-Fi leveling monitor for camper trailers | mono labo</title>
+<meta name="description" content="A Wi-Fi leveling monitor for camper trailers and motorhomes. Connect your phone to the unit and your browser becomes a live 0.1-degree level. No app, no account, no signal required. Hand-built in Japan.">
+<meta property="og:title" content="TRAILER LEVEL — your phone's browser becomes the level">
+<meta property="og:description" content="No app. No account. No signal. A Wi-Fi leveling monitor for camper trailers and motorhomes, hand-built in Japan.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="mono labo">
+<meta property="og:image" content="https://easyautomate2024-cell.github.io/mono-labo/photo_tl_hero.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="alternate" hreflang="ja" href="https://easyautomate2024-cell.github.io/mono-labo/trailerlevel.html">
+<link rel="alternate" hreflang="en" href="https://easyautomate2024-cell.github.io/mono-labo/trailerlevel-en.html">
+<link rel="alternate" hreflang="x-default" href="https://easyautomate2024-cell.github.io/mono-labo/trailerlevel-en.html">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CT3HK859TJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-CT3HK859TJ');
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{
+  --bg:#f5f5f7;--bg-white:#ffffff;
+  --text:#1d1d1f;--muted:#6e6e73;
+  --accent:#0071e3;--green:#34c759;--amber:#b96800;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --dk:#0b1220;--dk-card:#111a2e;--dk-border:#263248;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg-white);color:var(--text);line-height:1.6;overflow-x:hidden}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 48px}
+.nav-inner{max-width:1100px;margin:0 auto;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--muted);font-size:14px}
+.nav-logo img{width:24px;height:auto}
+.nav-logo .sep{margin:0 6px;opacity:.4}
+.nav-logo strong{color:var(--text)}
+.nav-links{display:flex;align-items:center;gap:20px}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;transition:color .2s;white-space:nowrap}
+.nav-logo{white-space:nowrap}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{background:var(--accent);color:#fff!important;font-size:13px;font-weight:600;padding:8px 18px;border-radius:980px;transition:filter .2s}
+.nav-cta:hover{filter:brightness(1.1)}
+
+/* HERO */
+.hero{
+  background:linear-gradient(180deg,#fff 0%,#f0f4ff 100%);
+  border-bottom:1px solid var(--border);
+  padding:80px 24px 64px;
+  text-align:center;
+}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,159,10,0.1);border:1px solid rgba(255,159,10,0.3);color:var(--amber);font-size:12px;font-weight:600;padding:5px 14px;border-radius:980px;margin-bottom:24px;letter-spacing:.4px}
+.hero-badge.on-sale{background:rgba(52,199,89,0.1);border-color:rgba(52,199,89,0.35);color:#1f8a3b}
+.hero h1{font-size:clamp(28px,5vw,58px);font-weight:700;letter-spacing:-.03em;line-height:1.2;margin-bottom:16px}
+.hero h1 span{color:var(--accent)}
+.hero-sub{font-size:clamp(15px,1.8vw,19px);color:var(--muted);max-width:620px;margin:0 auto 36px;line-height:1.7}
+.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:48px}
+.btn-p{background:var(--accent);color:#fff;font-size:15px;font-weight:600;padding:14px 32px;border-radius:980px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:filter .2s}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-s{background:transparent;border:1px solid var(--border2);color:var(--text);font-size:15px;font-weight:500;padding:14px 32px;border-radius:980px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .2s}
+.btn-s:hover{background:var(--bg)}
+.hero-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tag{font-size:12px;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:4px 12px;border-radius:980px}
+
+/* DEVICE MOCK (共通) */
+.tl-phone{
+  background:var(--dk);color:#e5e7eb;
+  border:1px solid var(--dk-border);border-radius:36px;
+  padding:30px 24px 26px;
+  width:min(100%,320px);
+  box-shadow:0 24px 64px rgba(11,18,32,0.35);
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  font-family:-apple-system,system-ui,sans-serif;
+}
+.tl-phone.sm{width:min(100%,260px);padding:22px 18px 20px;border-radius:28px;gap:10px}
+.tl-title{font-size:14px;font-weight:600;opacity:.85}
+.tl-phone.sm .tl-title{font-size:13px}
+.tl-status{font-size:13px;font-weight:600;padding:5px 14px;border-radius:20px;background:#1f2937;transition:background .3s}
+.tl-gauge{position:relative;width:78%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 50%,#111a2e,#0a1120);border:2px solid var(--dk-border)}
+.tl-ring{position:absolute;border:2px dashed #2b3a55;border-radius:50%}
+.tl-ring.r1{inset:33%}
+.tl-ring.r2{inset:16%}
+.tl-ch{position:absolute;left:0;right:0;height:2px;top:50%;transform:translateY(-1px);background:var(--dk-border)}
+.tl-cv{position:absolute;top:0;bottom:0;width:2px;left:50%;transform:translateX(-1px);background:var(--dk-border)}
+.tl-fwd{position:absolute;top:6%;left:50%;transform:translateX(-50%);text-align:center;color:#7d9bd1;font-size:10px;line-height:1.2;letter-spacing:1px}
+.tl-bubble{
+  position:absolute;width:22%;aspect-ratio:1;border-radius:50%;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  background:#ef4444;box-shadow:0 0 18px rgba(239,68,68,.6);
+  transition:background .3s,box-shadow .3s;
+}
+.tl-cards{display:flex;gap:10px;width:100%}
+.tl-card{flex:1;background:var(--dk-card);border:1px solid var(--dk-border);border-radius:12px;padding:10px;text-align:center}
+.tl-card .l{font-size:11px;opacity:.7}
+.tl-card .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.tl-card .v span{font-size:13px;opacity:.6}
+.mock-wrap{display:flex;justify-content:center;padding:0 24px 72px;background:linear-gradient(180deg,#f0f4ff 0%,#fff 40%)}
+.mock-cap{text-align:center;font-size:13px;color:var(--muted);margin-top:16px}
+
+/* SCROLL SCRUB (トレーラーが水平になる) */
+.scrub{height:280vh;position:relative;background:var(--dk)}
+.scrub-sticky{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;overflow:hidden;padding:24px}
+.scrub-cap{position:relative;height:2.4em;width:100%;max-width:640px;text-align:center}
+.scrub-cap span{position:absolute;inset:0;font-size:clamp(18px,3vw,28px);font-weight:700;color:#e5e7eb;opacity:0;transition:opacity .4s;line-height:1.4}
+.scrub-svg{width:min(86vw,560px);height:auto}
+.scrub-read{display:flex;align-items:center;gap:14px}
+.scrub-pill{font-size:14px;font-weight:600;padding:6px 16px;border-radius:20px;background:#1f2937;color:#e5e7eb;transition:background .3s}
+.scrub-val{background:var(--dk-card);border:1px solid var(--dk-border);border-radius:12px;padding:8px 18px;text-align:center;color:#e5e7eb}
+.scrub-val .l{font-size:11px;opacity:.7}
+.scrub-val .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.scrub-val .v span{font-size:14px;opacity:.6}
+.scrub-hint{font-size:12px;color:rgba(229,231,235,.45);letter-spacing:1px}
+
+/* GALLERY */
+.gal-sec{background:var(--bg-white)}
+.gal-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.gal-item.wide{grid-column:1/-1}
+.gal-item img,.gal-item video{width:100%;border-radius:18px;display:block;box-shadow:0 12px 40px rgba(0,0,0,0.10);border:1px solid var(--border)}
+.gal-cap{font-size:13px;color:var(--muted);margin-top:10px;text-align:center}
+@media(max-width:640px){.gal-grid{grid-template-columns:1fr}}
+
+/* SECTIONS */
+section{padding:88px 24px}
+.inner{max-width:1100px;margin:0 auto}
+.sec-eyebrow{font-size:12px;font-weight:600;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:10px}
+.sec-title{font-size:clamp(22px,3vw,38px);font-weight:700;letter-spacing:-.02em;margin-bottom:10px}
+.sec-sub{font-size:16px;color:var(--muted);margin-bottom:48px;line-height:1.6}
+
+/* FOR WHO */
+.who-sec{background:var(--bg)}
+.who-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.who-card{background:var(--bg-white);border:1px solid var(--border);border-radius:16px;padding:24px;display:flex;align-items:flex-start;gap:14px}
+.who-icon{font-size:28px;flex-shrink:0}
+.who-title{font-size:15px;font-weight:700;margin-bottom:4px}
+.who-desc{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* VOICE (使っている方の声) */
+.voice-sec{padding:72px 24px;background:var(--bg-white);border-top:1px solid var(--border)}
+.voice-card{max-width:720px;margin:28px auto 0;padding:32px 36px;border-radius:20px;background:var(--bg);border:1px solid var(--border);position:relative}
+.voice-card:before{content:"\201C";position:absolute;top:8px;left:22px;font-size:72px;line-height:1;color:var(--accent);opacity:.25;font-family:Georgia,serif}
+.voice-quote{font-size:1.15rem;line-height:1.9;color:var(--text);margin:0 0 18px}
+.voice-quote strong{font-weight:700;background:linear-gradient(transparent 62%,rgba(52,199,89,.28) 62%)}
+.voice-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:.9rem;color:var(--muted)}
+.voice-meta a{color:var(--accent);text-decoration:none}
+.voice-meta a:hover{text-decoration:underline}
+.voice-note{text-align:center;font-size:.85rem;color:var(--muted);margin-top:18px}
+.voice-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1000px;margin:28px auto 0;align-items:stretch}
+.voice-grid .voice-card{margin:0;max-width:none}
+.voice-photo{margin:0;border-radius:20px;overflow:hidden;border:1px solid var(--border);background:#000;display:flex;flex-direction:column}
+.voice-photo img{width:100%;height:100%;object-fit:cover;display:block;min-height:240px}
+.voice-photo figcaption{font-size:.85rem;color:var(--muted);padding:10px 14px;background:var(--bg)}
+.voice-card.voice-second{margin-top:20px;max-width:1000px}
+@media (max-width:700px){.voice-grid{grid-template-columns:1fr}}
+@media (max-width:600px){.voice-card{padding:26px 22px}.voice-quote{font-size:1.05rem}}
+
+/* FEATURES */
+.feat-sec{background:var(--bg-white)}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.fcard{background:var(--bg);border-radius:16px;padding:28px}
+.fcard-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px}
+.ic-b{background:rgba(0,113,227,0.1)}
+.ic-g{background:rgba(52,199,89,0.1)}
+.ic-o{background:rgba(255,159,10,0.1)}
+.ic-p{background:rgba(175,82,222,0.1)}
+.fcard-title{font-size:17px;font-weight:700;margin-bottom:6px}
+.fcard-desc{font-size:13.5px;color:var(--muted);line-height:1.65}
+
+/* SCREEN MOCKS ROW */
+.screens{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:32px;margin-top:56px;justify-items:center}
+.screen-item{width:100%;max-width:280px}
+.screen-label{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px;text-align:center}
+.mini{background:var(--dk);border:1px solid var(--dk-border);border-radius:24px;padding:20px 16px;color:#e5e7eb;font-family:-apple-system,system-ui,sans-serif;font-size:12px;box-shadow:0 16px 40px rgba(11,18,32,0.25)}
+.mini h4{font-size:13px;font-weight:600;opacity:.85;text-align:center;margin-bottom:12px}
+.mini .mcard{background:var(--dk-card);border:1px solid var(--dk-border);border-radius:12px;padding:12px;margin-bottom:10px}
+.mini .lbl{font-size:10px;opacity:.6}
+.mini .ok{color:#22c55e;font-size:11px;margin-top:3px}
+.mini .am{color:#f59e0b;font-size:11px;margin-top:3px}
+.mini .rec{font-size:10px;opacity:.75;line-height:1.7;margin-top:4px}
+.mini .mbtn{background:#2563eb;border-radius:10px;padding:9px;text-align:center;font-size:12px;font-weight:600;margin-top:4px}
+.mini .mbtn.ghost{background:#1f2937;color:#9aa7bd}
+.mini .devbox{width:56px;height:38px;border:2px solid #7d9bd1;border-radius:5px;margin:10px auto 6px;position:relative}
+.mini .devbox::before{content:'';position:absolute;left:14px;right:14px;top:-3px;height:5px;background:#7d9bd1;border-radius:3px 3px 0 0}
+.mini .cent{text-align:center;opacity:.8}
+.mini .row{display:flex;align-items:center;gap:10px}
+.mini .mgauge{width:44px;height:44px;border-radius:50%;background:#0a1120;border:1.5px solid var(--dk-border);position:relative;flex-shrink:0}
+.mini .mgauge::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--dk-border)}
+.mini .mgauge::after{content:'';position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--dk-border)}
+.mini .mdot{position:absolute;width:13px;height:13px;border-radius:50%;background:#22c55e;left:50%;top:50%;transform:translate(-50%,-50%)}
+.mini .big{font-size:16px;font-weight:700}
+.mini .bar{height:6px;background:#0a1120;border-radius:3px;overflow:hidden;margin:6px 0 3px}
+.mini .bar i{display:block;height:100%;width:72%;background:#22c55e}
+.mini .ghost2{display:flex;gap:6px}
+.mini .ghost2 div{flex:1;background:#0d1526;border:1px dashed var(--dk-border);border-radius:9px;padding:7px;text-align:center;font-size:9px;opacity:.45}
+.mini .arr{margin-left:auto;opacity:.4}
+
+/* ROADMAP (ガス残量計・構想) */
+.road-sec{background:var(--dk);color:#e5e7eb}
+.road-sec .sec-eyebrow{color:#7d9bd1}
+.road-sec .sec-title{color:#fff}
+.road-sec .sec-sub{color:rgba(229,231,235,.65)}
+.road-grid{display:grid;grid-template-columns:5fr 6fr;gap:64px;align-items:center}
+@media(max-width:860px){.road-grid{grid-template-columns:1fr;gap:40px}}
+.road-feats{display:flex;flex-direction:column;gap:14px;margin-bottom:28px}
+.road-feat{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:rgba(229,231,235,.85)}
+.road-feat i{color:#22c55e;font-size:16px;flex-shrink:0;margin-top:2px}
+.road-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,159,10,0.14);border:1px solid rgba(255,159,10,0.35);color:#f59e0b;font-size:12px;font-weight:600;padding:5px 14px;border-radius:980px;margin-bottom:18px}
+.road-note{font-size:13px;color:rgba(229,231,235,.5);line-height:1.7}
+
+/* HOW TO USE */
+.how-sec{background:var(--bg)}
+.steps3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.stepc{background:var(--bg-white);border:1px solid var(--border);border-radius:18px;padding:28px;text-align:center}
+.step-visual{height:170px;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.step-visual svg{width:210px;height:auto}
+.stepc .n{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;margin-bottom:12px}
+.stepc .t{font-size:16px;font-weight:700;margin-bottom:8px}
+.stepc .d{font-size:13px;color:var(--muted);line-height:1.7;text-align:left}
+.mini.stepm{width:180px;padding:16px 14px;border-radius:20px;box-shadow:0 12px 28px rgba(11,18,32,0.22)}
+.wrow{display:flex;align-items:center;gap:8px;background:var(--dk-card);border:1px solid var(--dk-border);border-radius:10px;padding:9px 10px;font-size:12px;margin-bottom:7px;color:#cbd5e1}
+.wrow i{color:#7d9bd1}
+.wrow.on{border-color:rgba(34,197,94,.6);color:#fff}
+.wrow .ck{margin-left:auto;color:#22c55e;font-weight:700}
+
+/* HOW VIDEO */
+.how-video{margin-top:56px}
+.how-video video{width:100%;max-width:860px;display:block;margin:0 auto;border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,0.12);border:1px solid var(--border)}
+.how-video .gal-cap{max-width:860px;margin-left:auto;margin-right:auto}
+
+/* FAQ */
+.faq-sec{background:var(--bg-white)}
+.faqs{display:flex;flex-direction:column;max-width:760px}
+.faq{border-bottom:1px solid var(--border);padding:24px 0}
+.faq:last-child{border-bottom:none}
+.faq-q{font-size:16px;font-weight:700;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+.faq-q::before{content:"Q";color:var(--accent);font-size:14px;font-weight:800;background:rgba(0,113,227,0.1);padding:2px 8px;border-radius:6px;flex-shrink:0;margin-top:1px}
+.faq-a{font-size:14px;color:var(--muted);line-height:1.75;padding-left:36px}
+
+/* CTA */
+.cta-sec{background:linear-gradient(135deg,#0b1220 0%,#1c2a44 100%);padding:80px 24px;text-align:center}
+.cta-sec h2{font-size:clamp(24px,3.5vw,42px);font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:12px}
+.cta-sec p{font-size:16px;color:rgba(255,255,255,0.75);margin-bottom:36px;line-height:1.7}
+.btn-white{background:#fff;color:#0b1220;font-size:15px;font-weight:700;padding:16px 36px;border-radius:980px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:filter .2s}
+.btn-white:hover{filter:brightness(.94)}
+.cta-note{font-size:13px;color:rgba(255,255,255,0.5);margin-top:20px}
+.cta-note a{color:rgba(255,255,255,0.65)}
+
+/* FOOTER */
+footer{background:#1d1d1f;padding:36px 48px}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.fbrand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.fbrand img{width:22px;height:auto}
+.fbrand span{font-size:13px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px}
+.fcopy{font-size:12px;color:rgba(255,255,255,0.3)}
+.flinks{display:flex;gap:20px}
+.flinks a{font-size:13px;color:rgba(255,255,255,0.4);text-decoration:none}
+.flinks a:hover{color:rgba(255,255,255,0.75)}
+
+/* SCROLL REVEAL */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+.rv.d1{transition-delay:.08s}
+.rv.d2{transition-delay:.16s}
+.rv.d3{transition-delay:.24s}
+.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  .rv{opacity:1;transform:none;transition:none}
+  .scrub{height:auto}
+  .scrub-sticky{position:relative;height:auto;padding:80px 24px}
+}
+
+@media(max-width:600px){
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  footer{padding:32px 24px}
+  .footer-inner{flex-direction:column;text-align:center}
+}
+
+/* --- 英語ページだけの追加 --- */
+.lang-sw{font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--border2);padding:6px 14px;border-radius:980px}
+.lang-sw:hover{background:var(--bg)}
+/* FCC ID のような長い型番が改行できず、ページ全体を横に広げてしまうので折り返しを許可する */
+.spec-tbl{width:100%;max-width:760px;border-collapse:collapse;font-size:14px;table-layout:fixed}
+.spec-tbl th,.spec-tbl td{text-align:left;padding:14px 4px;border-bottom:1px solid var(--border);vertical-align:top;overflow-wrap:anywhere}
+.spec-tbl th{width:38%;font-weight:600;color:var(--muted)}
+.honest{background:var(--bg);border:1px solid var(--border);border-radius:18px;padding:32px 34px;max-width:760px}
+.honest h3{font-size:17px;font-weight:700;margin-bottom:16px}
+.honest ul{list-style:none;display:flex;flex-direction:column;gap:14px}
+.honest li{font-size:14px;color:var(--muted);line-height:1.7;padding-left:26px;position:relative}
+.honest li::before{content:"\2022";position:absolute;left:8px;color:var(--accent);font-weight:700}
+.honest li strong{color:var(--text);font-weight:600}
+.price-row{display:flex;align-items:baseline;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
+.price-main{font-size:34px;font-weight:700;letter-spacing:-.02em}
+.price-sub{font-size:15px;color:var(--muted)}
+.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:40px}
+.why-card{background:var(--bg-white);border:1px solid var(--border);border-radius:16px;padding:26px}
+.why-card .ic{font-size:26px;margin-bottom:12px;display:block}
+.why-card h4{font-size:16px;font-weight:700;margin-bottom:6px}
+.why-card p{font-size:13.5px;color:var(--muted);line-height:1.7}
+@media(max-width:600px){.spec-tbl th{width:44%}.honest{padding:26px 22px}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="./index.html" class="nav-logo">
+      <img src="./logo.png" alt="mono labo">
+      <span>mono labo</span>
+      <span class="sep">/</span>
+      <strong>TRAILER LEVEL</strong>
+    </a>
+    <div class="nav-links">
+      <a href="#why">Why no app</a>
+      <a href="#howto">How it works</a>
+      <a href="#specs">Specs</a>
+      <a href="#faq">FAQ</a>
+      <a href="./trailerlevel.html" class="lang-sw">&#26085;&#26412;&#35486;</a>
+      <a href="#order" class="nav-cta">Order</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge on-sale"><i class="ti ti-tool"></i> Hand-built in Japan &middot; Ships worldwide</div>
+  <h1>Stop walking back and forth<br>to <span>level your trailer</span>.</h1>
+  <p class="hero-sub">A Wi-Fi leveling monitor for camper trailers and motorhomes. Put the unit inside, connect your phone to its Wi-Fi, and your browser becomes a live 0.1&deg; level &mdash; readable from wherever you are standing. No app. No account. No cell signal.</p>
+  <div class="hero-actions">
+    <a href="#order" class="btn-p"><i class="ti ti-mail"></i>How to order</a>
+    <a href="#howto" class="btn-s"><i class="ti ti-info-circle"></i>See how it works</a>
+  </div>
+  <div class="hero-tags">
+    <span class="tag">#caravan</span>
+    <span class="tag">#travel trailer</span>
+    <span class="tag">#motorhome</span>
+    <span class="tag">#leveling</span>
+    <span class="tag">#no app required</span>
+  </div>
+</div>
+
+<!-- DEVICE MOCK -->
+<div class="mock-wrap">
+  <div>
+    <div class="tl-phone" aria-label="TRAILER LEVEL screen">
+      <div class="tl-title">TRAILER LEVEL</div>
+      <div class="tl-status" id="demo-status">Adjust</div>
+      <div class="tl-gauge">
+        <div class="tl-ring r1"></div>
+        <div class="tl-ring r2"></div>
+        <div class="tl-ch"></div>
+        <div class="tl-cv"></div>
+        <div class="tl-fwd">&#9650;<br>FRONT</div>
+        <div class="tl-bubble" id="demo-bubble"></div>
+      </div>
+      <div class="tl-cards">
+        <div class="tl-card"><div class="l">Pitch</div><div class="v"><span id="demo-pv">3.2</span><span>&deg;</span></div></div>
+        <div class="tl-card"><div class="l">Roll</div><div class="v"><span id="demo-rv">-1.8</span><span>&deg;</span></div></div>
+      </div>
+    </div>
+    <div class="mock-cap">What you see on your phone (live demo)</div>
+  </div>
+</div>
+
+<!-- WHY NO APP -->
+<section class="feat-sec" id="why">
+  <div class="inner">
+    <div class="sec-eyebrow rv">The difference</div>
+    <h2 class="sec-title rv">No app. That is the whole point.</h2>
+    <p class="sec-sub rv">Most leveling gadgets make you install an app, create an account, and pair over Bluetooth. This one serves a web page from the device itself. Anything with a browser can read it.</p>
+    <div class="why-grid">
+      <div class="why-card rv"><span class="ic">&#128241;</span><h4>Nothing to install</h4><p>Connect to the unit's Wi-Fi and the level page opens. Works on iPhone, Android, tablets, even a laptop.</p></div>
+      <div class="why-card rv d1"><span class="ic">&#128101;</span><h4>Two people, two screens</h4><p>Whoever is turning the jack and whoever is watching can both have the reading open at the same time.</p></div>
+      <div class="why-card rv d2"><span class="ic">&#128246;</span><h4>Works with no signal</h4><p>The unit is its own access point. Deep in a forest or a car park with no bars, it behaves exactly the same.</p></div>
+      <div class="why-card rv d3"><span class="ic">&#128274;</span><h4>Still works in five years</h4><p>No app store, no forced updates, no account that can be shut down. It is a web page on a box you own.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-sec" id="howto">
+  <div class="inner">
+    <div class="sec-eyebrow rv">How it works</div>
+    <h2 class="sec-title rv">Three steps, about a minute.</h2>
+    <p class="sec-sub rv">Once it is mounted, this is the whole routine every time you arrive at a site.</p>
+    <div class="steps3">
+      <div class="stepc rv">
+        <div class="n">1</div>
+        <div class="t">Plug it in</div>
+        <div class="d">Any 5&nbsp;V USB source &mdash; the socket in your trailer, or a power bank. The unit boots in a few seconds. A cable is included.</div>
+      </div>
+      <div class="stepc rv d1">
+        <div class="n">2</div>
+        <div class="t">Join its Wi-Fi</div>
+        <div class="d">Pick the unit's network on your phone. The level screen opens by itself. No app, no login, no pairing.</div>
+      </div>
+      <div class="stepc rv d2">
+        <div class="n">3</div>
+        <div class="t">Watch while you level</div>
+        <div class="d">Work the jacks or drive onto the ramps while the bubble and the numbers update live. Green means level.</div>
+      </div>
+    </div>
+    <div class="how-video rv">
+      <video src="./video_tl_usage.mp4" poster="./video_tl_usage_poster.jpg" muted loop playsinline controls preload="metadata" aria-label="Adjusting a trailer while watching the level readout on a phone"></video>
+      <div class="gal-cap">Levelling a real trailer with the phone propped next to the hitch.</div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section class="gal-sec" id="gallery">
+  <div class="inner">
+    <div class="sec-eyebrow rv">The unit</div>
+    <h2 class="sec-title rv">Palm-sized, matte black.</h2>
+    <p class="sec-sub rv">3D-printed ABS shell with a textured finish. It comes with a mount so it clicks in and out of one fixed spot.</p>
+    <div class="gal-grid">
+      <div class="gal-item wide rv"><img src="./photo_tl_hero.jpg" alt="TRAILER LEVEL unit" loading="lazy"><div class="gal-cap">The unit and its mount.</div></div>
+      <div class="gal-item rv"><img src="./photo_tl_mounted.jpg" alt="Unit mounted inside a trailer" loading="lazy"><div class="gal-cap">Mounted inside, powered from the built-in USB socket.</div></div>
+      <div class="gal-item rv d1"><img src="./photo_tl_usb.jpg" alt="USB-C power connection" loading="lazy"><div class="gal-cap">USB-C in. 5&nbsp;V from anything.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="feat-sec" id="features">
+  <div class="inner">
+    <div class="sec-eyebrow rv">Details</div>
+    <h2 class="sec-title rv">Built around the things that actually go wrong.</h2>
+    <div class="feat-grid">
+      <div class="fcard rv"><div class="fcard-icon ic-b">&#127919;</div><div class="fcard-title">0.1&deg; resolution</div><div class="fcard-desc">Pitch and roll, updated live over a websocket. Fine enough to chase the last half degree out of an absorption fridge.</div></div>
+      <div class="fcard rv d1"><div class="fcard-icon ic-g">&#9878;</div><div class="fcard-title">Two-point calibration</div><div class="fcard-desc">Mount it crooked and it does not matter. A one-minute routine cancels out how the unit happens to sit &mdash; and you do not need a level surface to do it.</div></div>
+      <div class="fcard rv d2"><div class="fcard-icon ic-o">&#127777;</div><div class="fcard-title">Temperature compensation</div><div class="fcard-desc">MEMS sensors drift with temperature. The unit records the temperature at calibration and corrects for it &mdash; and warns you on screen if it has moved too far.</div></div>
+      <div class="fcard rv d3"><div class="fcard-icon ic-p">&#128260;</div><div class="fcard-title">Updates over the air</div><div class="fcard-desc">New firmware is pushed from the same web page. No USB cable, no computer, no driver hunting.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SPECS -->
+<section class="gal-sec" id="specs">
+  <div class="inner">
+    <div class="sec-eyebrow rv">Specifications</div>
+    <h2 class="sec-title rv">What is in the box.</h2>
+    <table class="spec-tbl rv">
+      <tr><th>Resolution</th><td>0.1&deg; (pitch and roll)</td></tr>
+      <tr><th>Interface</th><td>Web page served by the unit. Any modern browser. No app.</td></tr>
+      <tr><th>Wireless</th><td>Wi-Fi 2.4&nbsp;GHz &mdash; the unit is its own access point</td></tr>
+      <tr><th>Power</th><td>USB 5&nbsp;V (USB-A to USB-C cable included). No battery inside.</td></tr>
+      <tr><th>Enclosure</th><td>3D-printed ABS, textured black. Indoor use &mdash; not weatherproof.</td></tr>
+      <tr><th>In the box</th><td>Unit &times;1, mount &times;1, USB cable &times;1, illustrated manual</td></tr>
+      <tr><th>Radio module</th><td>Espressif ESP32-WROOM-32E<br>Contains FCC ID: 2AC7Z-ESP32WROOM32E<br>Contains IC: 21098-ESPWROOM32E</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- HONEST -->
+<section class="who-sec" id="order">
+  <div class="inner">
+    <div class="sec-eyebrow rv">Ordering</div>
+    <h2 class="sec-title rv">Before you order, read this.</h2>
+    <p class="sec-sub rv">This is a one-person operation, not a company. Here is exactly what you are buying.</p>
+
+    <div style="text-align:center;margin-bottom:40px" class="rv">
+      <div class="price-row">
+        <span class="price-main">&yen;8,800</span>
+        <span class="price-sub">(roughly US$55-60, depending on the rate)</span>
+      </div>
+      <p class="price-sub">Shipping from Japan quoted separately &mdash; ask and I will price it for your country.</p>
+      <div style="margin-top:24px">
+        <a href="https://www.instagram.com/trailerjourney.style" target="_blank" rel="noopener" class="btn-p"><i class="ti ti-brand-instagram"></i>Message me on Instagram</a>
+      </div>
+    </div>
+
+    <div class="honest rv" style="margin:0 auto">
+      <h3>Honest notes</h3>
+      <ul>
+        <li><strong>Made to order, by hand.</strong> Each unit is assembled, flashed, calibrated and tested individually. Expect a lead time rather than same-day dispatch &mdash; I will tell you the real date before you pay.</li>
+        <li><strong>Ships from Japan.</strong> Delivery time and any import duty depend on your country. Duty is the buyer's responsibility.</li>
+        <li><strong>It is an aid, not an instrument.</strong> Two-point calibration and temperature compensation make it accurate enough to be genuinely useful, but it is not a certified measuring device. Use your own judgement for the final call.</li>
+        <li><strong>Not weatherproof.</strong> It lives inside the trailer.</li>
+        <li><strong>Small-batch terms.</strong> I cannot take returns for change of mind. If it arrives broken or stops working, tell me and I will sort it out properly.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-sec" id="faq">
+  <div class="inner">
+    <div class="sec-eyebrow rv">FAQ</div>
+    <h2 class="sec-title rv">Questions people actually ask.</h2>
+    <div class="faqs">
+      <div class="faq rv"><div class="faq-q">Does my phone lose internet while I use it?</div><div class="faq-a">Yes &mdash; while you are joined to the unit's Wi-Fi, that phone is not on the internet. Levelling takes a minute or two, and most phones fall back to mobile data for other apps. If you want to stay online, use a second device to read the level.</div></div>
+      <div class="faq rv"><div class="faq-q">Trailer or motorhome?</div><div class="faq-a">Both. It measures the attitude of whatever it is mounted to. Caravans, travel trailers, fifth wheels, motorhomes, van conversions &mdash; all the same job.</div></div>
+      <div class="faq rv"><div class="faq-q">Does it need to be mounted perfectly straight?</div><div class="faq-a">No. That is what the two-point calibration is for. Stick it down wherever is convenient and calibrate once.</div></div>
+      <div class="faq rv"><div class="faq-q">Can I leave it plugged in all the time?</div><div class="faq-a">It is designed to be switched on when you arrive and off when you leave. It is not intended for permanent power or for use while driving.</div></div>
+      <div class="faq rv"><div class="faq-q">What if it breaks?</div><div class="faq-a">Message me. I built it, so I can fix it or replace it. Firmware problems can usually be solved with an over-the-air update.</div></div>
+      <div class="faq rv"><div class="faq-q">Why is it so much cheaper than the big brands?</div><div class="faq-a">No retail margin, no packaging design, no marketing budget, no app to maintain. It is one person, a 3D printer, and a soldering iron.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-sec">
+  <h2>Interested?</h2>
+  <p>Send me a message and tell me which country you are in.<br>I will come back with shipping cost and a realistic date.</p>
+  <a href="https://www.instagram.com/trailerjourney.style" target="_blank" rel="noopener" class="btn-white"><i class="ti ti-brand-instagram"></i>Message me on Instagram</a>
+  <div class="cta-note">Questions are welcome even if you are not buying &mdash; feedback from owners is how this thing got good.</div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <a href="./index.html" class="fbrand"><img src="./logo.png" alt=""><span>MONO LABO</span></a>
+    <div class="flinks">
+      <a href="./trailerlevel.html">&#26085;&#26412;&#35486;</a>
+      <a href="./trailer-parking.html">Parking game</a>
+      <a href="https://www.instagram.com/trailerjourney.style" target="_blank" rel="noopener">Instagram</a>
+    </div>
+    <div class="fcopy">&copy; mono labo</div>
+  </div>
+</footer>
+
+<script>
+// スクロールで出現
+var io_ = new IntersectionObserver(function(es){
+  es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io_.unobserve(e.target); } });
+}, {threshold:0.12});
+document.querySelectorAll('.rv').forEach(function(el){ io_.observe(el); });
+
+// ヒーローの画面デモ: 傾いた状態から水平へ、を繰り返す
+(function(){
+  var st=document.getElementById('demo-status'), bb=document.getElementById('demo-bubble'),
+      pv=document.getElementById('demo-pv'), rv=document.getElementById('demo-rv');
+  if(!st) return;
+  var p=3.2, r=-1.8, t=0;
+  function cl(v,m){ return v<-m?-m:(v>m?m:v); }
+  setInterval(function(){
+    t+=1;
+    if(t<30){ p+=(0-p)*0.08; r+=(0-r)*0.08; }        // 水平へ寄せる
+    else if(t>46){ p=3.2; r=-1.8; t=0; }             // 少し見せてから戻す
+    var worst=Math.max(Math.abs(p),Math.abs(r)), ok=worst<=0.3;
+    var col=ok?'#22c55e':(worst<=2?'#f59e0b':'#ef4444');
+    bb.style.background=col;
+    bb.style.boxShadow='0 0 18px '+col;
+    bb.style.left=(50+cl(r/5,1)*39)+'%';
+    bb.style.top=(50+cl(p/5,1)*39)+'%';
+    st.textContent = ok?'\u2713 Level':'Adjust';
+    st.style.background = ok?'rgba(34,197,94,.25)':'#1f2937';
+    pv.textContent=(Math.abs(p)<0.05?0:p).toFixed(1);
+    rv.textContent=(Math.abs(r)<0.05?0:r).toFixed(1);
+  }, 100);
+})();
+</script>
+</body>
+</html>
