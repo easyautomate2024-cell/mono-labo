@@ -14,6 +14,96 @@
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-CT3HK859TJ"></script>
 <script>
+// ---- 日英の切り替え ----
+// ?lang=en / ?lang=ja で強制 (以後は保存)。指定が無ければブラウザの言語で判定。
+// T(キー, 日本語) は辞書にキーが無ければ日本語を返すので、訳し漏れでも画面は壊れない。
+// ※ STAGES[].name は記録のlocalStorageキーなので翻訳しない (日本語のまま識別子として使う)
+var LANG=(function(){
+  var q=(location.search.match(/[?&]lang=(en|ja)/)||[])[1];
+  if(q){try{localStorage.setItem('tpg_lang',q);}catch(e){} return q;}
+  try{var v=localStorage.getItem('tpg_lang'); if(v==='en'||v==='ja')return v;}catch(e){}
+  return (navigator.language||'').toLowerCase().indexOf('ja')===0?'ja':'en';
+})();
+var EN={
+  ttl:'Trailer Parking Game',
+  lead:"You have pulled into the campground. Back the trailer into the bay, then level it.",
+  tip1:'<b>\u25B2 Forward / \u25BC Reverse</b>: moves while you hold it',
+  tip2:'<b>\u25C0 \u25B6 Steering</b>: turns while you hold it (springs back when released)',
+  tip3:'<b>Tip</b>: when reversing, steer <b>away</b> from the direction you want the trailer to go',
+  tip4:'Clipping a neighbouring trailer or a tree flashes red and counts as a contact (it will not stop you)',
+  tip5:'Past 90\u00B0 of jackknife you cannot reverse any further. Pull forward to straighten out',
+  stage:'Stage', st1:'1 Campground', st2:'2 Roadside stop', st3:'3 SUN BASE', st4:'4 Angled bays',
+  steerLbl:'Steering', steerRet:'Springs back', steerHold:'Holds angle',
+  start:'Start', kbd:'On a computer you can also use the arrow keys',
+  credit:'Stage 3 was built with the help of <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>, a camper stopover in Inagi, Tokyo.',
+  reset:'Start over',
+  hudSw:'Pull-ups', hudCol:'Contacts', hudSteer:'Steer',
+  padL:'<span class="ic">\u25C0</span>Steer<small>left</small>',
+  padR:'<span class="ic">\u25B6</span>Steer<small>right</small>',
+  padB:'<span class="ic">\u25BC</span>Reverse',
+  padF:'<span class="ic">\u25B2</span>Forward',
+  lvTtl:'Parked. Now level it.',
+  lvLead:'The ground is not flat. Use the jockey wheel and the stabilisers to centre the bubble.',
+  lvAdj:'Adjust', lvOk:'\u2713 Level',
+  fwd:'\u25B2<br>FRONT', pitch:'Pitch', roll:'Roll',
+  lvUpF:'\u25B2 Raise the nose<br><small>jockey wheel</small>',
+  lvDnF:'\u25BC Lower the nose<br><small>jockey wheel</small>',
+  lvUpL:'\u25C0 Raise the left<br><small>stabiliser</small>',
+  lvUpR:'\u25B6 Raise the right<br><small>stabiliser</small>',
+  lvNote:'This screen is almost identical to the real TRAILER LEVEL display',
+  rTtl:'\u2713 Level. You will sleep well tonight.',
+  rTime:'Time', rSw:'Pull-ups', rCol:'Contacts',
+  again:'Try again', share:'Share result', prod:'This level is a real product \u2192',
+  hJack:'Jackknifed! Pull forward to straighten out',
+  hHit:'Contact!', hIn:'In the bay. Now stop...',
+  hCar:'Trailer is in. Now get the car in too',
+  hOut:'The trailer is sticking out of the bay',
+  mkBig:'LARGE', mkHere:'HERE',
+  'bldg_\u7269\u7523\u9928':'FARM SHOP', 'bldg_\u30B5\u30FC\u30D3\u30B9\u30A8\u30EA\u30A2':'SERVICE AREA',
+  tBest1:'\uD83C\uDFC6 Stage ', tBest2:' best: rank ', tBest3:'(', tBest4:' pull-ups, ', tBest5:' contacts)',
+  hTtl:'Your runs (stage ', hNow:'This run', hLast:'Last run', hAgoA:'', hAgo:' runs ago',
+  hSw:'P', hCol:'C',
+  mS:'First time, no fuss. Do you tow for a living?',
+  mA:'Nicely done. The kind of reversing that gets a round of applause.',
+  mB:'In safely. Your neighbours can relax.',
+  mC:'You made it. A little quicker next time \u2014 it is all practice.',
+  newBest:'\uD83C\uDFC6 New personal best!', pBest:'Personal best: rank ',
+  shA:'Trailer Parking Game stage ', shB:' \uD83D\uDE99 rank ', shC:',', shD:' pull-ups, ', shE:' contacts.',
+  shF:' \uD83C\uDFC6 new personal best!',
+  shG:' How fast can you get it in? #TrailerParkingGame #mono_labo',
+  copied:'Result copied',
+  docTitle:'Trailer Parking Game \u2014 back it into the bay, then level it | mono labo'
+};
+function T(k,ja){ return (LANG==='en'&&EN[k]!==undefined)?EN[k]:ja; }
+function applyLang(){
+ if(LANG==='en'){
+  document.documentElement.lang='en';
+  document.title=EN.docTitle;
+  document.querySelectorAll('[data-i]').forEach(function(e){
+    var v=EN[e.dataset.i]; if(v!==undefined)e.textContent=v; });
+  document.querySelectorAll('[data-ih]').forEach(function(e){
+    var v=EN[e.dataset.ih]; if(v!==undefined)e.innerHTML=v; });
+  document.querySelectorAll('[data-it]').forEach(function(e){
+    var v=EN[e.dataset.it]; if(v!==undefined)e.title=v; });
+ }
+ // 言語切替リンク (タイトル画面の末尾)
+  var host=document.getElementById('tCredit');
+  if(!host||!host.parentNode)return;
+  var a=document.createElement('div');
+  a.className='small';
+  a.innerHTML='<a href="#" style="color:#7aa2e8">'+(LANG==='en'?'\u65E5\u672C\u8A9E':'English')+'</a>';
+  a.querySelector('a').addEventListener('click',function(ev){
+    ev.preventDefault();
+    try{localStorage.setItem('tpg_lang',LANG==='en'?'ja':'en');}catch(e){}
+    location.href=location.pathname+location.search.replace(/([?&])lang=(en|ja)/,'$1').replace(/[?&]$/,'');
+  });
+  host.parentNode.insertBefore(a,host.nextSibling);
+}
+// このスクリプトは <head> にあるため、DOMができてから差し替える
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyLang);
+else applyLang();
+</script>
+<script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -99,85 +189,85 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 <div id="app">
   <div class="hud">
     <a class="brand" href="./index.html"><img src="./logo.png" alt="">mono labo</a>
-    <div class="stat"><span>⏱ <b id="hT">0.0</b>s</span><span>切り返し <b id="hS">0</b></span><span>接触 <b id="hC">0</b></span><span class="steer">舵 <b id="hW">0</b>°</span></div>
-    <button class="rst" id="bReset" title="やり直す">↺</button>
+    <div class="stat"><span>⏱ <b id="hT">0.0</b>s</span><span><span data-i="hudSw">切り返し</span> <b id="hS">0</b></span><span><span data-i="hudCol">接触</span> <b id="hC">0</b></span><span class="steer"><span data-i="hudSteer">舵</span> <b id="hW">0</b>°</span></div>
+    <button class="rst" id="bReset" title="やり直す" data-it="reset">↺</button>
   </div>
   <div id="stage"><canvas id="cv"></canvas>
     <div class="toast" id="hM" hidden></div>
     <!-- タイトル -->
     <div class="ov" id="ovTitle">
       <div class="panel">
-        <h1>トレーラー駐車ゲーム</h1>
-        <p>キャンプ場に着いた。区画にトレーラーをバックで入れて、最後に水平を出そう。</p>
+        <h1 data-i="ttl">トレーラー駐車ゲーム</h1>
+        <p data-i="lead">キャンプ場に着いた。区画にトレーラーをバックで入れて、最後に水平を出そう。</p>
         <div class="tips">
-          <div><b>▲ 前進 / ▼ 後退</b>: 押している間だけ動く</div>
-          <div><b>◀ ▶ ハンドル</b>: 押している間だけ切れる(離すと戻る)</div>
-          <div><b>コツ</b>: バックでは、トレーラーを向けたい方向と<b>逆</b>にハンドルを切る</div>
-          <div>隣のトレーラーや木に当たると赤く光って「接触」に数えられる(止まりはしない)</div>
-          <div>折れ角が90°を超えると後退できなくなる。前進して立て直そう</div>
+          <div data-ih="tip1"><b>▲ 前進 / ▼ 後退</b>: 押している間だけ動く</div>
+          <div data-ih="tip2"><b>◀ ▶ ハンドル</b>: 押している間だけ切れる(離すと戻る)</div>
+          <div data-ih="tip3"><b>コツ</b>: バックでは、トレーラーを向けたい方向と<b>逆</b>にハンドルを切る</div>
+          <div data-i="tip4">隣のトレーラーや木に当たると赤く光って「接触」に数えられる(止まりはしない)</div>
+          <div data-i="tip5">折れ角が90°を超えると後退できなくなる。前進して立て直そう</div>
         </div>
         <div class="seg" id="segStage" hidden>
-          <span>ステージ</span>
-          <button data-s="0" class="on">1 キャンプ場</button>
-          <button data-s="1">2 街道の休憩所</button>
-          <button data-s="2">3 SUN BASE</button>
-          <button data-s="3">4 高速の斜め枠</button>
+          <span data-i="stage">ステージ</span>
+          <button data-s="0" class="on" data-i="st1">1 キャンプ場</button>
+          <button data-s="1" data-i="st2">2 街道の休憩所</button>
+          <button data-s="2" data-i="st3">3 SUN BASE</button>
+          <button data-s="3" data-i="st4">4 高速の斜め枠</button>
         </div>
         <div class="seg" id="segSteer">
-          <span>ハンドル</span>
-          <button data-m="0" class="on">離すと戻る</button>
-          <button data-m="1">切ったまま保持</button>
+          <span data-i="steerLbl">ハンドル</span>
+          <button data-m="0" class="on" data-i="steerRet">離すと戻る</button>
+          <button data-m="1" data-i="steerHold">切ったまま保持</button>
         </div>
-        <button class="btn" id="bStart">スタート</button>
+        <button class="btn" id="bStart" data-i="start">スタート</button>
         <div class="small pb" id="tBest" hidden></div>
         <div class="hist" id="tHist" hidden></div>
-        <div class="small">PCならキーボードの矢印キーでも操作できます</div>
-        <div class="small" id="tCredit" hidden>ステージ3は、車中泊施設 <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>（東京都稲城市）さんの協力で作りました</div>
+        <div class="small" data-i="kbd">PCならキーボードの矢印キーでも操作できます</div>
+        <div class="small" id="tCredit" hidden data-ih="credit">ステージ3は、車中泊施設 <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>（東京都稲城市）さんの協力で作りました</div>
       </div>
     </div>
     <!-- 水平出し -->
     <div class="ov" id="ovLevel" hidden>
       <div class="panel">
-        <h2>駐車OK！ 次は水平出し</h2>
-        <p>区画の地面は傾いている。ジョッキーホイールとスタビライザーで気泡を真ん中に。</p>
+        <h2 data-i="lvTtl">駐車OK！ 次は水平出し</h2>
+        <p data-i="lvLead">区画の地面は傾いている。ジョッキーホイールとスタビライザーで気泡を真ん中に。</p>
         <div class="lv" style="margin-top:12px">
-          <div class="st" id="lvSt">調整してください</div>
-          <div class="gauge"><div class="r r1"></div><div class="r r2"></div><div class="ch"></div><div class="cv"></div><div class="fw">▲<br>車両前</div><div class="bub" id="bub"></div></div>
-          <div class="vals"><div><div class="l">前後 (pitch)</div><div class="v"><span id="lvP">0.0</span>°</div></div><div><div class="l">左右 (roll)</div><div class="v"><span id="lvR">0.0</span>°</div></div></div>
+          <div class="st" id="lvSt" data-i="lvAdj">調整してください</div>
+          <div class="gauge"><div class="r r1"></div><div class="r r2"></div><div class="ch"></div><div class="cv"></div><div class="fw" data-ih="fwd">▲<br>車両前</div><div class="bub" id="bub"></div></div>
+          <div class="vals"><div><div class="l" data-i="pitch">前後 (pitch)</div><div class="v"><span id="lvP">0.0</span>°</div></div><div><div class="l" data-i="roll">左右 (roll)</div><div class="v"><span id="lvR">0.0</span>°</div></div></div>
           <div class="jk">
-            <button data-p="-0.4">▲ 前を上げる<br><small>ジョッキーホイール</small></button>
-            <button data-p="0.4">▼ 前を下げる<br><small>ジョッキーホイール</small></button>
-            <button data-r="-0.4">◀ 左を上げる<br><small>スタビライザー</small></button>
-            <button data-r="0.4">▶ 右を上げる<br><small>スタビライザー</small></button>
+            <button data-p="-0.4" data-ih="lvUpF">▲ 前を上げる<br><small>ジョッキーホイール</small></button>
+            <button data-p="0.4" data-ih="lvDnF">▼ 前を下げる<br><small>ジョッキーホイール</small></button>
+            <button data-r="-0.4" data-ih="lvUpL">◀ 左を上げる<br><small>スタビライザー</small></button>
+            <button data-r="0.4" data-ih="lvUpR">▶ 右を上げる<br><small>スタビライザー</small></button>
           </div>
         </div>
-        <div class="small">この画面は、実際のTrailerLevelの水準器とほぼ同じです</div>
+        <div class="small" data-i="lvNote">この画面は、実際のTrailerLevelの水準器とほぼ同じです</div>
       </div>
     </div>
     <!-- 結果 -->
     <div class="ov" id="ovResult" hidden>
       <div class="panel">
-        <h2>✓ 水平です。今夜はぐっすり。</h2>
+        <h2 data-i="rTtl">✓ 水平です。今夜はぐっすり。</h2>
         <div class="rank" id="rRank">A</div>
         <div class="pbline" id="rBest" hidden></div>
         <div class="res">
-          <div><div class="l">タイム</div><div class="v" id="rT">--</div></div>
-          <div><div class="l">切り返し</div><div class="v" id="rS">--</div></div>
-          <div><div class="l">接触</div><div class="v" id="rC">--</div></div>
+          <div><div class="l" data-i="rTime">タイム</div><div class="v" id="rT">--</div></div>
+          <div><div class="l" data-i="rSw">切り返し</div><div class="v" id="rS">--</div></div>
+          <div><div class="l" data-i="rCol">接触</div><div class="v" id="rC">--</div></div>
         </div>
         <p id="rMsg"></p>
         <div class="hist" id="rHist" hidden></div>
-        <button class="btn" id="bAgain">もう一度</button>
-        <button class="btn ghost" id="bShare">結果をシェア</button>
-        <a class="btn green" id="bProduct" href="./trailerlevel.html">この水準器、本物があります →</a>
+        <button class="btn" id="bAgain" data-i="again">もう一度</button>
+        <button class="btn ghost" id="bShare" data-i="share">結果をシェア</button>
+        <a class="btn green" id="bProduct" href="./trailerlevel.html" data-i="prod">この水準器、本物があります →</a>
       </div>
     </div>
   </div>
   <div class="ctl">
-    <div class="pad" id="pL"><span class="ic">◀</span>ハンドル<small>左</small></div>
-    <div class="pad" id="pR"><span class="ic">▶</span>ハンドル<small>右</small></div>
-    <div class="pad rev" id="pB"><span class="ic">▼</span>後退</div>
-    <div class="pad" id="pF"><span class="ic">▲</span>前進</div>
+    <div class="pad" id="pL" data-ih="padL"><span class="ic">◀</span>ハンドル<small>左</small></div>
+    <div class="pad" id="pR" data-ih="padR"><span class="ic">▶</span>ハンドル<small>右</small></div>
+    <div class="pad rev" id="pB" data-ih="padB"><span class="ic">▼</span>後退</div>
+    <div class="pad" id="pF" data-ih="padF"><span class="ic">▲</span>前進</div>
   </div>
 </div>
 
@@ -514,11 +604,11 @@ function checkGoal(dt){
   // 枠に重なっている車体だけを指摘する (離れている間は何も出さない)
   S.outTr = !trIn && anySlot(trPoly());
   S.outCar = needCar && !carIn && anySlot(carPoly());
-  var hint = S.jack ? '折れすぎ！前進して立て直そう'
-           : S.contact ? '接触！'
-           : ok ? '枠に入った！止まって…'
-           : (trIn&&needCar&&!carIn) ? 'トレーラーはOK。車も枠内へ'
-           : S.outTr ? 'トレーラーが枠からはみ出している'
+  var hint = S.jack ? T('hJack','折れすぎ！前進して立て直そう')
+           : S.contact ? T('hHit','接触！')
+           : ok ? T('hIn','枠に入った！止まって…')
+           : (trIn&&needCar&&!carIn) ? T('hCar','トレーラーはOK。車も枠内へ')
+           : S.outTr ? T('hOut','トレーラーが枠からはみ出している')
            : '';
   toast(hint);
 }
@@ -564,7 +654,7 @@ function draw(){
         cx.fillStyle='#b9b2a4';cx.fillRect(o.x+.6,o.y+o.h-1.5,o.w-1.2,1.1);       // 軒
         cx.fillStyle='#8d7f6a';cx.fillRect(o.x+1.2,o.y+1.0,o.w-2.4,2.6);          // 屋根の帯
         cx.fillStyle='rgba(255,255,255,.9)';cx.font='bold 1.3px sans-serif';cx.textAlign='center';
-        cx.fillText(o.label,o.x+o.w/2,o.y+2.9);
+        cx.fillText(T('bldg_'+o.label,o.label),o.x+o.w/2,o.y+2.9);
       }
     });
     cx.fillStyle='#686d74';cx.fillRect(LANE.x,LANE.y,LANE.w,LANE.h);
@@ -598,14 +688,14 @@ function draw(){
     var sc=padC(SLOT);
     cx.save();cx.translate(sc.x,sc.y);cx.rotate(SLOT.a||0);cx.translate(0,SLOT.h*0.12);
     cx.fillStyle='rgba(255,255,255,.30)';cx.font='bold 1.5px sans-serif';cx.textAlign='center';
-    cx.fillText('大型車',0,0);cx.restore();
+    cx.fillText(T('mkBig','大型車'),0,0);cx.restore();
   }
   cx.setLineDash([.5,.35]);cx.lineWidth=.14;cx.strokeStyle='#fff';padPath(SLOT);cx.stroke();cx.setLineDash([]);
   {
     var sc2=padC(SLOT);
     cx.save();cx.translate(sc2.x,sc2.y);cx.rotate(SLOT.a||0);
     cx.fillStyle='rgba(255,255,255,.85)';cx.font='bold 1.1px sans-serif';cx.textAlign='center';
-    cx.fillText('ここ',0,(GROUND==='asphalt'&&!STAGES[STG].noSlotLabel)?-SLOT.h/2+2.2:.4);cx.restore();   // 「大型車」がある枠は上寄せ、無ければ上下中央
+    cx.fillText(T('mkHere','ここ'),0,(GROUND==='asphalt'&&!STAGES[STG].noSlotLabel)?-SLOT.h/2+2.2:.4);cx.restore();   // 「大型車」がある枠は上寄せ、無ければ上下中央
   }
   // 障害物
   OBST.forEach(function(o){
@@ -845,8 +935,8 @@ function renderLevel(){
   var b=document.getElementById('bub');var x=Math.max(-1,Math.min(1,r/5))*39,y=Math.max(-1,Math.min(1,p/5))*39;
   b.style.left=(50+x)+'%';b.style.top=(50+y)+'%';var c=col(w);b.style.background=c;b.style.boxShadow='0 0 18px '+c+'99';
   var st=document.getElementById('lvSt');
-  if(w<=0.3){st.textContent='✓ 水平です';st.className='st ok';setTimeout(finish,900);}
-  else{st.textContent='調整してください';st.className='st';}
+  if(w<=0.3){st.textContent=T('lvOk','✓ 水平です');st.className='st ok';setTimeout(finish,900);}
+  else{st.textContent=T('lvAdj','調整してください');st.className='st';}
 }
 document.querySelectorAll('.jk button').forEach(function(b){b.addEventListener('click',function(){
   if(S.phase!=='level')return;
@@ -869,14 +959,14 @@ function pushHist(rec){
 function showTitleBest(){
   var b=loadBest(),h=loadHist(),el=document.getElementById('tBest');
   if(!b){el.hidden=true;return;}
-  var s='🏆 ステージ'+(STG+1)+'の自己ベスト: ランク'+b.rank+' '+Number(b.t).toFixed(1)+'s (切り返し'+b.sw+'回・接触'+b.col+'回)';
+  var s=T('tBest1','🏆 ステージ')+(STG+1)+T('tBest2','の自己ベスト: ランク')+b.rank+' '+Number(b.t).toFixed(1)+'s ('+T('tBest3','切り返し')+b.sw+T('tBest4','回・接触')+b.col+T('tBest5','回)');
   el.hidden=false;el.textContent=s;
 }
 // タイトル画面にも履歴を出す (クリアしなくても過去の記録を確認できるように)
 function showTitleHist(){
   var h=loadHist();
   if(!h.length){document.getElementById('tHist').hidden=true;return;}
-  renderHist(h,'tHist','前回');
+  renderHist(h,'tHist',T('hLast','前回'));
 }
 // 直近の記録を並べる (結果画面=今回を先頭に / タイトル画面=前回を先頭に)
 function renderHist(h,elId,labelFirst){
@@ -887,13 +977,13 @@ function renderHist(h,elId,labelFirst){
   for(var k=1;k<h.length;k++){
     if(RANKV[h[k].rank]>RANKV[h[bi].rank]||(h[k].rank===h[bi].rank&&h[k].t<h[bi].t))bi=k;
   }
-  var first=labelFirst||'今回';
+  var first=labelFirst||T('hNow','今回');
   el.hidden=false;
-  el.innerHTML='<div class="hl">これまでの記録 (ステージ'+(STG+1)+')</div>'+h.slice(0,6).map(function(r,i){
-    var cls='hr'+(i===0&&first==='今回'?' now':'')+(i===bi?' bestrow':'');
-    return '<div class="'+cls+'"><span>'+(i===0?first:i+'回前')+'</span><b>'+(i===bi?'🏆':'')+r.rank+'</b>'
+  el.innerHTML='<div class="hl">'+T('hTtl','これまでの記録 (ステージ')+(STG+1)+')</div>'+h.slice(0,6).map(function(r,i){
+    var cls='hr'+(i===0&&first===T('hNow','今回')?' now':'')+(i===bi?' bestrow':'');
+    return '<div class="'+cls+'"><span>'+(i===0?first:T('hAgoA','')+i+T('hAgo','回前'))+'</span><b>'+(i===bi?'🏆':'')+r.rank+'</b>'
          + '<span class="t">'+Number(r.t).toFixed(1)+'s</span>'
-         + '<span class="d">切'+r.sw+' 接'+r.col+'</span></div>';
+         + '<span class="d">'+T('hSw','切')+r.sw+' '+T('hCol','接')+r.col+'</span></div>';
   }).join('');
 }
 // ステージ選択 (公開前の試遊用: URLに ?stages を付けたときだけ選択肢を表示)
@@ -931,17 +1021,17 @@ function finish(){
   var rank=(S.col===0&&S.sw<=2&&t<th.S)?'S':(S.col===0&&S.sw<=4&&t<th.A)?'A':(S.col<=1&&t<th.B)?'B':'C';
   document.getElementById('rRank').textContent=rank;
   document.getElementById('rT').textContent=t.toFixed(1)+'s';document.getElementById('rS').textContent=S.sw;document.getElementById('rC').textContent=S.col;
-  var msg={S:'一発。プロの牽引屋さんですか？',A:'上手い。キャンプ場で拍手が起きるレベル。',B:'無事に入った。隣の人も安心。',C:'入った！ 次はもう少し早く。慣れです。'}[rank];
+  var msg={S:T('mS','一発。プロの牽引屋さんですか？'),A:T('mA','上手い。キャンプ場で拍手が起きるレベル。'),B:T('mB','無事に入った。隣の人も安心。'),C:T('mC','入った！ 次はもう少し早く。慣れです。')}[rank];
   document.getElementById('rMsg').textContent=msg;
   var b=loadBest();
   S.newBest=!b || RANKV[rank]>RANKV[b.rank] || (rank===b.rank && t<b.t);
   S.lastRank=rank; S.lastT=t;
   var eb=document.getElementById('rBest'); eb.hidden=false;
   if(S.newBest){
-    eb.textContent='🏆 自己ベスト更新！';
+    eb.textContent=T('newBest','🏆 自己ベスト更新！');
     try{localStorage.setItem(bestKey(),JSON.stringify({t:t,rank:rank,sw:S.sw,col:S.col}));}catch(e){}
   } else {
-    eb.textContent='自己ベスト: ランク'+b.rank+' '+Number(b.t).toFixed(1)+'s';
+    eb.textContent=T('pBest','自己ベスト: ランク')+b.rank+' '+Number(b.t).toFixed(1)+'s';
   }
   renderHist(pushHist({t:t,rank:rank,sw:S.sw,col:S.col}));
   showTitleBest();showTitleHist();
@@ -949,12 +1039,12 @@ function finish(){
 }
 document.getElementById('bProduct').onclick=function(){trackProduct();};
 document.getElementById('bShare').onclick=function(){track('share');
-  var txt='トレーラー駐車ゲーム ステージ'+(STG+1)+' 🚙 ランク'+S.lastRank+' '+S.lastT.toFixed(1)+'s 切り返し'+S.sw+'回 接触'+S.col+'回'
-        +(S.newBest?' 🏆自己ベスト更新！':'')
-        +' 何秒で入れられる？ #トレーラー駐車ゲーム #mono_labo';
+  var txt=T('shA','トレーラー駐車ゲーム ステージ')+(STG+1)+T('shB',' 🚙 ランク')+S.lastRank+' '+S.lastT.toFixed(1)+'s '+T('shC','切り返し')+S.sw+T('shD','回 接触')+S.col+T('shE','回')
+        +(S.newBest?T('shF',' 🏆自己ベスト更新！'):'')
+        +T('shG',' 何秒で入れられる？ #トレーラー駐車ゲーム #mono_labo');
   var url=location.href.split('?')[0];
-  if(navigator.share){navigator.share({title:'トレーラー駐車ゲーム',text:txt,url:url}).catch(function(){});}
-  else if(navigator.clipboard){navigator.clipboard.writeText(txt+' '+url).then(function(){alert('結果をコピーしました');});}
+  if(navigator.share){navigator.share({title:T('ttl','トレーラー駐車ゲーム'),text:txt,url:url}).catch(function(){});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(txt+' '+url).then(function(){alert(T('copied','結果をコピーしました'));});}
 };
 // ゲーム内の操作は game_action（キーイベントではない）。tool_open は製品ページへ進む意思表示だけに使う
 function track(n){if(typeof gtag==='function')gtag('event','game_action',{action:n});}
