@@ -34,11 +34,13 @@ createServer(async (req, res) => {
   if (!from || !to) return res.writeHead(400, cors).end(JSON.stringify({ error: '出発地と目的地の両方が要ります' }));
 
   try {
+    const via = params.getAll('via').map((v) => v.trim()).filter(Boolean);
     const route = await provider.route(asWaypoint(from), asWaypoint(to), {
+      intermediates: via.map(asWaypoint),
       avoidTolls: params.get('avoidTolls') === '1',
       avoidHighways: params.get('avoidHighways') === '1',
     });
-    console.log(`[route] ${from} → ${to} : ${route.distanceMeters}m（Routes API 1 回）`);
+    console.log(`[route] ${from} → ${to}${via.length ? ` 経由${via.length}` : ''} : ${route.distanceMeters}m（Routes API 1 回）`);
     res.writeHead(200, cors).end(JSON.stringify({
       encodedPolyline: route.encodedPolyline,
       distanceMeters: route.distanceMeters,

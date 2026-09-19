@@ -51,6 +51,7 @@ export class GoogleRoutesProvider extends RouteProvider {
   /**
    * @param {[number,number]|string} origin [経度, 緯度] か住所文字列
    * @param {[number,number]|string} destination 同上
+   * @param {object} options intermediates に [経度, 緯度] の配列を渡すと経由点になる
    * @returns {{ coords: Array<[number,number]>, distanceMeters: number, duration: string }}
    */
   async route(origin, destination, options = {}) {
@@ -65,6 +66,11 @@ export class GoogleRoutesProvider extends RouteProvider {
       languageCode: options.languageCode ?? 'ja',
       units: 'METRIC',
     };
+    // 経由点。広い道の上に置いて、狭い道を迂回させるために使う。
+    // 並べ替えはさせない（こちらが順番に意味を持たせているため）
+    if (options.intermediates?.length) {
+      body.intermediates = options.intermediates.map(waypoint);
+    }
     if (options.avoidTolls || options.avoidHighways || options.avoidFerries) {
       body.routeModifiers = {
         avoidTolls: Boolean(options.avoidTolls),

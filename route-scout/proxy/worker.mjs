@@ -11,7 +11,7 @@
  *                   https://easyautomate2024-cell.github.io に絞ること
  *
  * 呼び出し:
- *   GET /?from=美瑛駅&to=43.5551,142.4695&avoidTolls=1
+ *   GET /?from=美瑛駅&to=43.5551,142.4695&via=43.56,142.47&avoidTolls=1
  *   → { encodedPolyline, distanceMeters, duration }
  */
 
@@ -62,6 +62,11 @@ export default {
       languageCode: 'ja',
       units: 'METRIC',
     };
+    // 経由点。広い道の上に置いて狭い道を迂回させるために使う
+    const via = params.getAll('via').map((v) => v.trim()).filter(Boolean);
+    if (via.length > 10) return json({ error: '経由点が多すぎます' }, 400, cors);
+    if (via.length) body.intermediates = via.map(waypoint);
+
     const avoidTolls = params.get('avoidTolls') === '1';
     const avoidHighways = params.get('avoidHighways') === '1';
     if (avoidTolls || avoidHighways) body.routeModifiers = { avoidTolls, avoidHighways };

@@ -43,6 +43,36 @@ export function mapUrl({ lat, lng, zoom = 18 }) {
   return `https://www.google.com/maps/@?${params.toString().replace(/%2C/g, ',')}`;
 }
 
+/**
+ * 決まった経路を Google マップに渡して、実際の案内はそちらに任せるための URL。
+ * 経由点を載せないと Google が最短経路に戻してしまうので、
+ * こちらが選んだ「広い道のルート」を再現させるには waypoints が要る。
+ *
+ * 注意: waypoints の数には上限がある（一次ソース未確認）。
+ * 上限を超える場合は呼び出し側で間引くこと。
+ */
+export function directionsUrl({ origin, destination, via = [], travelmode = 'driving' }) {
+  const params = new URLSearchParams({
+    api: '1',
+    origin: place(origin),
+    destination: place(destination),
+    travelmode,
+  });
+  if (via.length) params.set('waypoints', via.map(place).join('|'));
+
+  const url = `https://www.google.com/maps/dir/?${params.toString()}`
+    .replace(/%2C/g, ',')
+    .replace(/%7C/g, '|');
+  if (url.length > MAPS_URL_MAX_LENGTH) throw new Error('Maps URL が 2048 文字を超えた');
+  return url;
+}
+
+/** [経度, 緯度] は「緯度,経度」に。文字列はそのまま地名として渡す */
+function place(value) {
+  if (typeof value === 'string') return value;
+  return `${round(value[1], 6)},${round(value[0], 6)}`;
+}
+
 const METADATA_ENDPOINT = 'https://maps.googleapis.com/maps/api/streetview/metadata';
 
 /**

@@ -12,7 +12,8 @@ import {
 } from '../lib/geo.mjs';
 import * as polyline from '../lib/polyline.mjs';
 import { classify, widthLabel, SEVERITY, GsiVectorTileProvider } from '../lib/width.mjs';
-import { panoUrl, isStale } from '../lib/svlink.mjs';
+import { panoUrl, isStale, directionsUrl } from '../lib/svlink.mjs';
+import { widenRoute, scoreRoute, DEFAULT_WIDEN_OPTIONS } from '../lib/widen.mjs';
 import { scanRoute, SegmentIndex, tilesCovering } from '../lib/scout.mjs';
 import { GoogleRoutesProvider } from '../lib/routing.mjs';
 
@@ -436,6 +437,123 @@ check('routing: キーが無ければ作れない', () => {
     threw = true;
   }
   assert(threw, 'キー無しで例外');
+});
+
+// ---------------------------------------------------------------- 経路の受け渡し
+
+check('svlink: 経路を Google マップに渡す URL', () => {
+  const url = directionsUrl({
+    origin: [142.462, 43.5551],
+    destination: '○○キャンプ場',
+    via: [[142.475, 43.56], [142.48, 43.561]],
+  });
+  assert(url.startsWith('https://www.google.com/maps/dir/?'), 'ホスト');
+  assert(url.includes('api=1'), 'api=1');
+  assert(url.includes('origin=43.5551,142.462'), `origin: ${url}`);
+  assert(url.includes('waypoints=43.56,142.475|43.561,142.48'), `waypoints: ${url}`);
+  assert(url.includes('travelmode=driving'), 'travelmode');
+});
+
+// ---------------------------------------------------------------- 広い道へ寄せる
+
+/**
+ * 検証用の世界。
+ *   細い直通路（区分1）を挟んで、少し北に太い迂回路（区分3）があり、
+ *   両端が太い連絡路でつながっている。
+ */
+const NARROW_LAT = 43.5551;
+const WIDE_LAT = 43.5600;
+const WEST = 142.462;
+const EAST = 142.488;
+
+const WORLD_ROADS = [
+  { coords: [[142.460, NARROW_LAT], [142.490, NARROW_LAT]], props: { rnkWidth: 1, rdCtg: '市区町村道' } },
+  { coords: [[142.460, WIDE_LAT], [142.490, WIDE_LAT]], props: { rnkWidth: 3, rdCtg: '一般国道' } },
+  { coords: [[WEST, NARROW_LAT], [WEST, WIDE_LAT]], props: { rnkWidth: 3, rdCtg: '一般国道' } },
+  { coords: [[EAST, NARROW_LAT], [EAST, WIDE_LAT]], props: { rnkWidth: 3, rdCtg: '一般国道' } },
+];
+
+/** どのタイルでも同じ道路を返す。重複は SegmentIndex と候補のまとめが潰す */
+function worldWidthProvider(roads = WORLD_ROADS) {
+  return { attribution: 'テスト', async roadsInTile() { return roads; } };
+}
+
+/**
+ * Google の代わり。経由点が北の太い道の上にあれば、そこを通る経路を返す。
+ * 「経由点を置けば Google が道なりに繋いでくれる」という前提を模している。
+ */
+function worldRouteProvider() {
+  const provider = {
+    calls: 0,
+    async route(from, to, options = {}) {
+      provider.calls++;
+      const via = options.intermediates ?? [];
+      const useWide = via.some(([, lat]) => lat >= WIDE_LAT - 0.001);
+      const coords = useWide
+        ? [from, [from[0], WIDE_LAT], [to[0], WIDE_LAT], to]
+        : [from, to];
+      return { coords, distanceMeters: null, duration: '0s', encodedPolyline: '' };
+    },
+  };
+  return provider;
+}
+
+await checkAsync('widen: 狭い直通路を避けて太い道に寄せる', async () => {
+  const routeProvider = worldRouteProvider();
+  const result = await widenRoute({
+    from: [WEST, NARROW_LAT],
+    to: [EAST, NARROW_LAT],
+    routeProvider,
+    widthProvider: worldWidthProvider(),
+    scanOptions: { stepM: 10 },
+  });
+
+  assert(result.improved, '寄せられなかった');
+  assert(result.via.length === 1, `経由点 ${result.via.length} 個`);
+  assert(result.scan.runs.length === 0, `残った警告 ${result.scan.runs.length} 件`);
+  assert(result.score.total < result.history[0].score.total, '採点が改善していない');
+  assert(result.history[0].score.runCount === 1, '最初のルートには警告があるはず');
+  assert(routeProvider.calls === result.routeCalls, '呼び出し回数の記録が合わない');
+  assert(result.routeCalls <= 1 + DEFAULT_WIDEN_OPTIONS.maxRouteCalls, `呼び出し ${result.routeCalls} 回`);
+
+  // 経由点は太い道の上で、狭い区間からは離れていること
+  const [, viaLat] = result.via[0];
+  assert(viaLat >= WIDE_LAT - 0.001, `経由点が北の太い道に乗っていない: ${viaLat}`);
+});
+
+await checkAsync('widen: 太い道が無ければ引き直さない', async () => {
+  const onlyNarrow = [WORLD_ROADS[0]];
+  const routeProvider = worldRouteProvider();
+  const result = await widenRoute({
+    from: [WEST, NARROW_LAT],
+    to: [EAST, NARROW_LAT],
+    routeProvider,
+    widthProvider: worldWidthProvider(onlyNarrow),
+    scanOptions: { stepM: 10 },
+  });
+
+  assert(result.routeCalls === 1, `無駄な呼び出しをしている: ${result.routeCalls} 回`);
+  assert(result.improved === false, '寄せたことになっている');
+  assert(result.scan.runs.length === 1, '警告はそのまま残るはず');
+});
+
+check('widen: 遠回りが過ぎれば採用しない採点になっている', () => {
+  const fake = (runs, lengthM) => ({ runs, stats: { routeLengthM: lengthM } });
+  const base = 10000;
+
+  // 3m未満が 200m（重み3で 600）
+  const narrow = scoreRoute(fake([{ lengthM: 200, rnkWidth: 0 }], base), base);
+  near(narrow.total, 600, 1e-9, '狭い区間の採点');
+
+  // 5km の遠回りで狭い区間ゼロ → 500。こちらが良い
+  const shortDetour = scoreRoute(fake([], base + 5000), base);
+  near(shortDetour.total, 500, 1e-9, '短い迂回');
+  assert(shortDetour.total < narrow.total, '5km の迂回なら避けるべき');
+
+  // 10km の遠回り → 1000。狭いままのほうがまし
+  const longDetour = scoreRoute(fake([], base + 10000), base);
+  near(longDetour.total, 1000, 1e-9, '長い迂回');
+  assert(longDetour.total > narrow.total, '10km も遠回りするほどではない');
 });
 
 // ---------------------------------------------------------------- 結果
