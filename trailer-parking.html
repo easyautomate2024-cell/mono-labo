@@ -967,11 +967,16 @@ function drawPickup(){
   // キャビン後ろの黒帯 26.3-32.6%。左右端は22%まで後方に伸びる(写真実測)
   cx.fillStyle='#22262c';
   rr(P(.263),-W2+.09,P(.326)-P(.263),WD-.18,.05);cx.fill();
-  for(var bi=0;bi<2;bi++){                                   // 左右端は後方へ伸びる
+  // タイヤハウス: 後輪が荷台の中へ張り出す箱。三角形になる。写真実測:
+  //   前端は26.4%で一定。後端は車幅11%で19.5%、内側へ行くほど前へ寄り、
+  //   車幅25.5%で消える (幅16%で22.0 / 幅20%で23.5 / 幅24%で24.6)
+  cx.fillStyle='#23272d';
+  for(var bi=0;bi<2;bi++){
     var bs=bi?1:-1;
     cx.beginPath();
-    cx.moveTo(P(.263),WY(.14,bs));cx.lineTo(P(.220),WY(.16,bs));
-    cx.lineTo(P(.220),WY(.21,bs));cx.lineTo(P(.263),WY(.28,bs));
+    cx.moveTo(P(.195),WY(.110,bs));
+    cx.lineTo(P(.264),WY(.110,bs));
+    cx.lineTo(P(.264),WY(.255,bs));
     cx.closePath();cx.fill();
   }
 
