@@ -34,6 +34,7 @@ var EN={
   tip5:'Past 90\u00B0 of jackknife you cannot reverse any further. Pull forward to straighten out',
   stage:'Stage', st1:'1 Campground', st2:'2 Roadside stop', st3:'3 SUN BASE', st4:'4 Angled bays',
   steerLbl:'Steering', steerRet:'Springs back', steerHold:'Holds angle',
+  carLbl:'Tow vehicle', carSuv:'SUV', carPickup:'Pickup',
   start:'Start', kbd:'On a computer you can also use the arrow keys',
   credit:'Stage 3 was built with the help of <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>, a camper stopover in Inagi, Tokyo.',
   reset:'Start over',
@@ -214,6 +215,11 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
           <button data-s="1" data-i="st2">2 街道の休憩所</button>
           <button data-s="2" data-i="st3">3 SUN BASE</button>
           <button data-s="3" data-i="st4">4 高速の斜め枠</button>
+        </div>
+        <div class="seg" id="segCar">
+          <span data-i="carLbl">牽引車</span>
+          <button data-c="cx8" data-i="carSuv" class="on">SUV</button>
+          <button data-c="triton" data-i="carPickup">ピックアップ</button>
         </div>
         <div class="seg" id="segSteer">
           <span data-i="steerLbl">ハンドル</span>
@@ -456,7 +462,16 @@ function expandMoto(b){
   return out;
 }
 // 車(牽引車)とトレーラーの寸法
-var CAR={L:2.9,a:1.1,len:4.9,wid:1.9,front:3.9,rear:1.0,maxSteer:35*Math.PI/180};
+// 牽引車。L=ホイールベース, a=連結点(後軸より後ろ), front=後軸から前端, rear=後軸から後端
+// ピックアップはホイールベースが20cm長く連結点も後ろなので、同じ舵角でも曲がりが緩く、
+// トレーラーの振れは速い。数値だけで素直に難しくなる
+var CARS={
+  cx8:   {L:2.90, a:1.10, len:4.90, wid:1.90, front:3.90, rear:1.00, maxSteer:35*Math.PI/180, body:'suv'},
+  triton:{L:3.13, a:1.35, len:5.36, wid:1.93, front:4.06, rear:1.30, maxSteer:35*Math.PI/180, body:'pickup'}
+};
+var CARKEY='cx8';
+try{var _ck=localStorage.getItem('tpg_car'); if(CARS[_ck])CARKEY=_ck;}catch(e){}
+var CAR=CARS[CARKEY];
 // トレーラーはステージごとに切り替える。既定は495クラス、サービスエリアだけ660クラス
 var TR495={Lt:4.3,len:5.8,wid:2.3,bodyFront:1.2};   // 連結全長 約12.0m
 var TR660={Lt:5.0,len:6.6,wid:2.3,bodyFront:1.2};   // 連結全長 約12.8m
@@ -475,6 +490,16 @@ function reset(){
 var IN={l:false,r:false,f:false,b:false};
 var STEER_HOLD=false;
 try{STEER_HOLD=localStorage.getItem('tpg_steer')==='1';}catch(e){}
+document.querySelectorAll('#segCar button').forEach(function(b){
+  b.classList.toggle('on', b.dataset.c===CARKEY);
+  b.addEventListener('click',function(){
+    CARKEY=b.dataset.c; CAR=CARS[CARKEY];
+    document.querySelectorAll('#segCar button').forEach(function(x){x.classList.toggle('on',x===b);});
+    try{localStorage.setItem('tpg_car',CARKEY);}catch(e){}
+    reset(); draw();                     // 連結位置が変わるので引き直す
+    showTitleBest(); showTitleHist();    // 記録は車両ごとに分かれている
+  });
+});
 document.querySelectorAll('#segSteer button').forEach(function(b){
   if((b.dataset.m==='1')===STEER_HOLD)b.classList.add('on'); else b.classList.remove('on');
   b.addEventListener('click',function(){STEER_HOLD=b.dataset.m==='1';
@@ -794,7 +819,7 @@ function drawBigVehicle(o){
   cx.restore();
 }
 // 駐車中の普通車 (道の駅ステージ)。真上から見た形: ボディ+ガラス+ルーフ
-// 駐車中の白いSUV (CX-5風 4.55x1.85): 自車のCX-8と同じ描き方を白で
+// 駐車中の白いSUV (4.55x1.85): 自車のSUVと同じ描き方を白で
 var SUV={L:4.55,W:1.85}, KEI={L:3.4,W:1.48};
 function drawSuv(o){
   var L=SUV.L,Wd=SUV.W,L2=L/2,W2=Wd/2;
@@ -869,8 +894,159 @@ function drawDrawbar(h,psi){
   cx.fillStyle='#1f2937';cx.beginPath();cx.arc(0,0,.17,0,7);cx.fill();  // カプラー
   cx.restore();
 }
-// CX-8 風: マシングレー、長いボディ、ルーフレール、サンルーフ、ミラー、シャークフィン
+// SUV: マシングレー、長いボディ、ルーフレール、サンルーフ、ミラー、シャークフィン
+// ピックアップの上から見た絵。
+// 座標は全て実車の真上写真の実測値。位置=全長に対する%、張り出し=側面からのm。
+//   ※写真は5代目(全幅1.86m)、ゲームの当たり判定は現行6代目の1.93m。
+//     形は写真に合わせ、幅だけ現行値。そのぶん写真より約4%太い。
+//   後端 0.5-12%でなだらかに絞る / 前端 90%から絞るが100%でも幅0.83m残る(点にならない)
+//   荷台の黒 3-26.5% / 黒帯 26.3-32.6%、幅14-26%と74-86%では22%まで後方に伸びる
+//   ルーフ脇の黒帯 幅6-18%、後端35%、前端は斜め(外側68%→内側80.5%)=Aピラー
+//   フロントガラス 幅14-86%、後縁67.2→68.7(中央)、前縁80.7→82.1(中央)、色は黒
+//   オーバーフェンダー 後20-37%(+0.034) 前77-91%(+0.019)
+//   ミラー 68.8-73.8%、最大張り出し0.203m、69-70.3%は車体とのすき間で浮く
+// ヘッドライト・グリル・リアガラス・テールライトは垂直面にあり真上からは見えない。描かない。
+function drawPickup(){
+  var cxm=S.x+(CAR.front-CAR.rear)/2*Math.cos(S.th),cym=S.y+(CAR.front-CAR.rear)/2*Math.sin(S.th);
+  var L2=CAR.len/2,W2=CAR.wid/2,WD=CAR.wid;
+  function P(pc){return pc*CAR.len-L2;}
+  function WY(w,sg){return sg<0?-W2+w*WD:W2-w*WD;}   // 車幅%(0=上端)→y
+  cx.save();cx.translate(cxm,cym);cx.rotate(S.th);
+
+  // 輪郭。[位置%, 側面から内側への入り込みm] 写真実測
+  var NOSE=[[.90,.000],[.91,.027],[.92,.050],[.94,.073],[.95,.100],
+            [.96,.168],[.97,.226],[.98,.299],[.99,.372],[1.0,.513]];
+  var REAR=[[.120,.000],[.115,.031],[.100,.034],[.060,.038],[.050,.054],
+            [.040,.073],[.030,.092],[.025,.103],[.020,.134],[.015,.203],[.010,.237],[.005,.283]];
+  function bodyPath(dx,dy){
+    var i;
+    cx.beginPath();
+    cx.moveTo(P(.12)+dx,-W2+dy);
+    for(i=0;i<NOSE.length;i++)cx.lineTo(P(NOSE[i][0])+dx,-W2+NOSE[i][1]+dy);
+    cx.lineTo(P(1)+dx, W2-.513+dy);
+    for(i=NOSE.length-1;i>=0;i--)cx.lineTo(P(NOSE[i][0])+dx, W2-NOSE[i][1]+dy);
+    for(i=0;i<REAR.length;i++)cx.lineTo(P(REAR[i][0])+dx, W2-REAR[i][1]+dy);
+    cx.lineTo(P(.005)+dx,-W2+.283+dy);
+    for(i=REAR.length-1;i>=0;i--)cx.lineTo(P(REAR[i][0])+dx,-W2+REAR[i][1]+dy);
+    cx.closePath();
+  }
+  cx.fillStyle='rgba(0,0,0,.3)';bodyPath(.2,.25);cx.fill();
+  var g=cx.createLinearGradient(0,-W2,0,W2);g.addColorStop(0,'#fdfdfe');g.addColorStop(.5,'#eef0f3');g.addColorStop(1,'#ccd1d7');
+  cx.fillStyle=g;bodyPath(0,0);cx.fill();
+  cx.strokeStyle='#b4bac2';cx.lineWidth=.025;bodyPath(0,0);cx.stroke();
+
+  // 後端のバンパー。写真を元解像度で実測すると 0-2.15%がバンパー、2.2-3.0%がボディ色、
+  // 3.05%から荷台の黒。ボディ色の帯(0.85%=0.046m)を残す。
+  // バンパーは写真では灰色だが、白い車体では見えないので黒にする(指示)
+  cx.save();bodyPath(0,0);cx.clip();
+  cx.fillStyle='#21242a';cx.fillRect(P(.005)-.1,-W2-.1,P(.024)-P(.005)+.1,WD+.2);
+  cx.restore();
+
+  // オーバーフェンダー。写真の張り出しは後0.034m/前0.019m。車体側にも乗せてフチに見せる
+  cx.fillStyle='#3a3e44';
+  function fender(x0,x1,bl){
+    var a=P(x0),b=P(x1),rp=(b-a)*.34;        // 両端の寝かせ具合
+    for(var s=0;s<2;s++){
+      var sg=s?1:-1, yo=sg*(W2+bl), yi=sg*(W2-.012);
+      cx.beginPath();
+      cx.moveTo(a,yi);
+      cx.bezierCurveTo(a+rp*.5,yi,a+rp*.5,yo,a+rp,yo);
+      cx.lineTo(b-rp,yo);
+      cx.bezierCurveTo(b-rp*.5,yo,b-rp*.5,yi,b,yi);
+      cx.closePath();cx.fill();
+    }
+  }
+  fender(.20,.37,.034); fender(.77,.91,.019);
+
+  // 荷台 3-26.5%。写真のライナーは灰だが、白いトレーラーと区別するため黒を採る(指示)
+  cx.fillStyle='#21242a';rr(P(.032),-W2+.085,P(.265)-P(.032),WD-.17,.09);cx.fill();
+  cx.fillStyle='#3c424b';rr(P(.13),-W2+.20*WD,P(.26)-P(.13),WD*.60,.07);cx.fill();
+  cx.strokeStyle='rgba(255,255,255,.09)';cx.lineWidth=.022;      // 写真は細い前後リブ
+  for(var by=-W2+.24*WD;by<W2-.23*WD;by+=.085){cx.beginPath();cx.moveTo(P(.138),by);cx.lineTo(P(.252),by);cx.stroke();}
+
+  // キャビン後ろの黒帯 26.3-32.6%。左右端は22%まで後方に伸びる(写真実測)
+  cx.fillStyle='#22262c';
+  rr(P(.263),-W2+.09,P(.326)-P(.263),WD-.18,.05);cx.fill();
+  for(var bi=0;bi<2;bi++){                                   // 左右端は後方へ伸びる
+    var bs=bi?1:-1;
+    cx.beginPath();
+    cx.moveTo(P(.263),WY(.14,bs));cx.lineTo(P(.220),WY(.16,bs));
+    cx.lineTo(P(.220),WY(.21,bs));cx.lineTo(P(.263),WY(.28,bs));
+    cx.closePath();cx.fill();
+  }
+
+  // ルーフ脇の黒帯。前端は斜めに切れる = これがAピラー
+  // 写真の断面実測: 車幅6-8.5%がサイドガラス、13-15.5%がルーフレール、その間はボディ色
+  function band(w0,w1,x0,x1,col){
+    cx.fillStyle=col;
+    cx.fillRect(P(x0),-W2+w0*WD,P(x1)-P(x0),(w1-w0)*WD);
+    cx.fillRect(P(x0), W2-w1*WD,P(x1)-P(x0),(w1-w0)*WD);
+  }
+  // サイドガラス。前端はAピラーと同じ角度(車幅6.1%進むごとに前へ2.5%)で斜めに切る
+  cx.fillStyle='#8fc1ee';
+  for(var gi=0;gi<2;gi++){
+    var gs=gi?1:-1;
+    cx.beginPath();
+    cx.moveTo(P(.360),WY(.052,gs));
+    cx.lineTo(P(.741),WY(.052,gs));       // 外側の縁が一番前
+    cx.lineTo(P(.636),WY(.086,gs));       // 車幅1%につき約3%後ろへ下がる = Aピラー
+    cx.lineTo(P(.360),WY(.086,gs));
+    cx.closePath();cx.fill();
+  }
+  band(.128,.158,.350,.685,'rgba(0,0,0,.88)');   // ルーフレール
+  band(.158,.190,.350,.685,'rgba(0,0,0,.45)');   // レール内側の陰
+  cx.strokeStyle='rgba(0,0,0,.05)';cx.lineWidth=.03;cx.beginPath();   // ルーフの稜線(写真も薄い)
+  for(var ry=-.34;ry<=.35;ry+=.68){cx.moveTo(P(.40),ry);cx.lineTo(P(.62),ry);}
+  cx.stroke();
+
+  // フロントガラス。写真では黒。後縁も前縁も中央が前へ弓なりに反る
+  // 写真実測(縦の広がり): x=77%で車幅8.9-92.6% が最大。後縁は幅いっぱいまでほぼ
+  // まっすぐ届き、斜めに切れているのは前縁だけ。この斜めがAピラー。
+  //   前縁: 幅8.3%で77.4% → 幅14.5%で80.5% → 中央82.1%
+  //   後縁: 67.2% → 中央68.7%
+  // 写真実測: 幅9%で75.0-77.3 / 幅11%で68.7-79.5 / 幅16%で67.1-80.6 / 中央で68.7-82.1
+  // 外側(幅9-11%)で前後とも急に絞られる。この急な斜めがAピラーで、
+  // サイドガラスの前端と同じ傾き(車幅1%につき約3%)になる。
+  var yA=W2-.090*WD, yB=W2-.110*WD, yC=W2-.160*WD;
+  var rC=2*P(.687)-P(.674), fC=2*P(.821)-P(.806);
+  cx.fillStyle='#8fc1ee';cx.beginPath();
+  cx.moveTo(P(.750),-yA);
+  cx.lineTo(P(.687),-yB);                        // Aピラー(後側)
+  cx.lineTo(P(.674),-yC);
+  cx.quadraticCurveTo(rC,0,P(.674),yC);          // 後縁(中央が前へ反る)
+  cx.lineTo(P(.687),yB);
+  cx.lineTo(P(.750),yA);                         // Aピラー(後側)
+  cx.lineTo(P(.773),yA);
+  cx.lineTo(P(.795),yB);                         // Aピラー(前側)
+  cx.lineTo(P(.806),yC);
+  cx.quadraticCurveTo(fC,0,P(.806),-yC);         // 前縁(中央が前へ反る)
+  cx.lineTo(P(.795),-yB);
+  cx.lineTo(P(.773),-yA);                        // Aピラー(前側)
+  cx.closePath();cx.fill();
+
+  // ボンネットの稜線。写真実測: 83%で車幅20.5% → 95%で車幅23% (左右とも内へ寄る)
+  cx.strokeStyle='rgba(0,0,0,.16)';cx.lineWidth=.085;cx.beginPath();
+  cx.moveTo(P(.813),-W2+.205*WD);cx.lineTo(P(.95),-W2+.230*WD);
+  cx.moveTo(P(.813), W2-.205*WD);cx.lineTo(P(.95), W2-.230*WD);
+  cx.stroke();
+
+  // ドアミラー。写真の輪郭をそのままなぞる。69-70.3%は車体との間にすき間がある
+  var MO=[[.688,.150],[.692,.195],[.695,.203],[.700,.199],[.705,.191],[.710,.172],
+          [.715,.145],[.720,.119],[.725,.084],[.730,.061],[.735,.019],[.738,.000]];
+  var MI=[[.704,.000],[.700,.008],[.695,.057],[.690,.103]];
+  cx.fillStyle='#2f333a';
+  for(var mi=0;mi<2;mi++){
+    var sg=mi?1:-1, k;
+    cx.beginPath();
+    cx.moveTo(P(MO[0][0]),sg*(W2+MO[0][1]));
+    for(k=1;k<MO.length;k++)cx.lineTo(P(MO[k][0]),sg*(W2+MO[k][1]));
+    for(k=0;k<MI.length;k++)cx.lineTo(P(MI[k][0]),sg*(W2+MI[k][1]));
+    cx.closePath();cx.fill();
+  }
+  cx.restore();
+}
 function drawCar(){
+  if(CAR.body==='pickup')return drawPickup();
   var cxm=S.x+(CAR.front-CAR.rear)/2*Math.cos(S.th),cym=S.y+(CAR.front-CAR.rear)/2*Math.sin(S.th);
   var L2=CAR.len/2,W2=CAR.wid/2;
   cx.save();cx.translate(cxm,cym);cx.rotate(S.th);
@@ -949,8 +1125,10 @@ document.querySelectorAll('.jk button').forEach(function(b){b.addEventListener('
 var RANKV={S:4,A:3,B:2,C:1};
 // 記録のキーはステージ名で持つ (順番を入れ替えても記録が迷子にならない)。
 // ステージ1のベストだけは公開初期のキーをそのまま引き継ぐ
-function bestKey(){return STG===0?'tpg_best':'tpg_best_'+STAGES[STG].name;}
-function histKey(){return 'tpg_hist_'+STAGES[STG].name;}
+// 車両で難易度が変わるので記録も分ける。既定のSUVは接尾辞なし=従来のキーのまま
+function carSuf(){return CARKEY==='cx8'?'':'_'+CARKEY;}
+function bestKey(){return (STG===0?'tpg_best':'tpg_best_'+STAGES[STG].name)+carSuf();}
+function histKey(){return 'tpg_hist_'+STAGES[STG].name+carSuf();}
 function loadBest(){try{return JSON.parse(localStorage.getItem(bestKey())||'null');}catch(e){return null;}}
 function loadHist(){try{return JSON.parse(localStorage.getItem(histKey())||'[]');}catch(e){return [];}}
 function pushHist(rec){
