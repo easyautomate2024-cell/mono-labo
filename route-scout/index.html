@@ -170,10 +170,10 @@ footer .disclaimer{background:#fff8e6;border:1px solid #ffe2a8;border-radius:10p
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script type="module">
-import { GsiVectorTileProvider, SEVERITY } from './lib/width.mjs';
+import { GsiVectorTileProvider, SEVERITY, roadCategoryLabel } from './lib/width.mjs';
 import { widenRoute } from './lib/widen.mjs';
 import { OsrmRouteProvider } from './lib/routing-osrm.mjs';
-import { directionsUrl } from './lib/svlink.mjs';
+import { directionsUrl, MAPS_MAX_WAYPOINTS } from './lib/svlink.mjs';
 import * as polylineCodec from './lib/polyline.mjs';
 
 // 取得先の差し替え。提供実験の URL が変わったときや、手元で試すときの逃げ道
@@ -183,7 +183,11 @@ const basemap = params.get('basemap') ?? 'https://cyberjapandata.gsi.go.jp/xyz/p
 const PROXY_STORE = 'route-scout:proxy';
 
 // Maps URLs に載せられる経由点の数には上限がある（一次ソース未確認）
-const MAX_HANDOFF_VIA = 9;
+// Maps URLs の waypoints 上限はモバイルブラウザで 3、それ以外で 9（公式ドキュメントで確認済み）。
+// 出先ではスマホで開くので、画面の幅で切り替える。
+const MAX_HANDOFF_VIA = window.matchMedia('(max-width: 768px)').matches
+  ? MAPS_MAX_WAYPOINTS.mobile
+  : MAPS_MAX_WAYPOINTS.desktop;
 
 const map = L.map('map', { zoomControl: true }).setView([43.5551, 142.4695], 11);
 L.tileLayer(basemap, { maxZoom: 18, attribution: '国土地理院' }).addTo(map);
@@ -419,7 +423,7 @@ function render(result, from, to) {
         + `<span class="run-where">起点から ${fmt(run.startM)}</span>`
       + '</div>'
       + `<div class="run-meta">延長 ${Math.round(run.lengthM)}m / 幅員 ${run.widthLabel}`
-        + `${run.roadCategory ? ' / ' + run.roadCategory : ''}</div>`;
+        + `${roadCategoryLabel(run.roadCategory) ? ' / ' + roadCategoryLabel(run.roadCategory) : ''}</div>`;
 
     const links = document.createElement('div');
     links.className = 'run-links';

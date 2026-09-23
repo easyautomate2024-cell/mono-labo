@@ -48,9 +48,13 @@ export function mapUrl({ lat, lng, zoom = 18 }) {
  * 経由点を載せないと Google が最短経路に戻してしまうので、
  * こちらが選んだ「広い道のルート」を再現させるには waypoints が要る。
  *
- * 注意: waypoints の数には上限がある（一次ソース未確認）。
- * 上限を超える場合は呼び出し側で間引くこと。
+ * waypoints の上限（Maps URLs 公式ドキュメント「Get started」より、2026-09-24 確認）:
+ *   モバイルブラウザで開くと 3 箇所まで、それ以外は 9 箇所まで。
+ * 出先ではスマホで開くので、実質の上限は 3 と考えて呼び出し側で間引くこと。
+ * 超えたぶんを Google がどう扱うか（無視か、エラーか）は書かれていない。
  */
+export const MAPS_MAX_WAYPOINTS = { mobile: 3, desktop: 9 };
+
 export function directionsUrl({ origin, destination, via = [], travelmode = 'driving' }) {
   const params = new URLSearchParams({
     api: '1',

@@ -20,6 +20,44 @@ export const RNK_WIDTH_LABEL = {
   6: '不明',
 };
 
+/** rdCtg（道路種別）の意味。出典: 同上 */
+export const RD_CTG_LABEL = {
+  0: '国道',
+  1: '都道府県道',
+  2: '市区町村道',
+  3: '高速自動車国道等',
+  5: 'その他',
+  6: '不明',
+};
+
+/** 表示用。数値コードは名前に、すでに文字列ならそのまま */
+export function roadCategoryLabel(rdCtg) {
+  if (rdCtg === null || rdCtg === undefined) return null;
+  if (typeof rdCtg === 'string') return rdCtg;
+  return RD_CTG_LABEL[rdCtg] ?? null;
+}
+
+/**
+ * road レイヤのうち「車が走る道路中心線」だけを通す。
+ *
+ * 実タイル（ZL16）を読んで分かったこと: road レイヤには道路中心線（ftCode 27xx）のほかに
+ * 道路縁（22xx、ZL17 表示用のオーバーズーム分）やトンネル内の道路（24xx）も入っていて、
+ * 件数では道路縁のほうが多い。道路縁は中心線と平行に数 m 離れて走り、rnkWidth を持たない。
+ * これを候補に含めるとルートの 1 割ほどが道路縁に吸着して「データなし」になった
+ * （美瑛駅→白金温泉 20km で 2,030 サンプル中 189）。
+ *
+ * 27xx のうち 01〜04 が通常部（通常/雪覆い/橋・高架/トンネル）。11〜14 は庭園路、
+ * 21〜24 は徒歩道、31〜34 は石段で、いずれも牽引車が走る道ではないので外す。
+ * ftCode が無いフィーチャは仕様外なので、落とさずに通す（データを黙って捨てない）。
+ * 出典: 地理院地図Vector データ仕様 ZL14〜16（地物）
+ */
+export function isDrivableCenterline(props) {
+  const code = props?.ftCode;
+  if (code === undefined || code === null) return true;
+  const n = Number(code);
+  return n >= 2701 && n <= 2704;
+}
+
 export const SEVERITY = {
   AVOID: 'avoid',     // 回避推奨
   WARN: 'warn',       // 要確認
@@ -133,6 +171,7 @@ export class GsiVectorTileProvider extends WidthProvider {
     const roads = [];
     for (const feature of layer.features()) {
       if (feature.type !== 2) continue; // LINESTRING 以外は道路中心線ではない
+      if (!isDrivableCenterline(feature.properties)) continue; // 道路縁・徒歩道などを除く
       for (const line of feature.geometry) {
         if (line.length < 2) continue;
         roads.push({

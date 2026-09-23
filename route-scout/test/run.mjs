@@ -11,7 +11,7 @@ import {
   lngLatToTileFraction, lngLatToTile, tileCoordToLngLat, tileBounds, lineLength,
 } from '../lib/geo.mjs';
 import * as polyline from '../lib/polyline.mjs';
-import { classify, widthLabel, SEVERITY, GsiVectorTileProvider } from '../lib/width.mjs';
+import { classify, widthLabel, SEVERITY, GsiVectorTileProvider, isDrivableCenterline, roadCategoryLabel } from '../lib/width.mjs';
 import { panoUrl, isStale, directionsUrl } from '../lib/svlink.mjs';
 import { widenRoute, scoreRoute, DEFAULT_WIDEN_OPTIONS } from '../lib/widen.mjs';
 import { OsrmRouteProvider, parseLatLng } from '../lib/routing-osrm.mjs';
@@ -216,6 +216,27 @@ check('width: 幅員区分の重大度', () => {
 });
 
 // ---------------------------------------------------------------- SV リンク
+
+check('width: 道路縁・徒歩道は候補にしない（実タイルで道路縁への吸着があった）', () => {
+  assert(isDrivableCenterline({ ftCode: 2701 }), '通常部');
+  assert(isDrivableCenterline({ ftCode: 2703 }), '橋・高架');
+  assert(isDrivableCenterline({ ftCode: 2704 }), 'トンネル');
+  assert(!isDrivableCenterline({ ftCode: 2201 }), '道路縁（ZL17 用のオーバーズーム分）');
+  assert(!isDrivableCenterline({ ftCode: 2221 }), '庭園路の縁');
+  assert(!isDrivableCenterline({ ftCode: 2411 }), 'トンネル内の道路');
+  assert(!isDrivableCenterline({ ftCode: 2711 }), '庭園路');
+  assert(!isDrivableCenterline({ ftCode: 2721 }), '徒歩道');
+  assert(!isDrivableCenterline({ ftCode: 2731 }), '石段');
+  assert(isDrivableCenterline({}), 'ftCode が無ければ捨てない');
+});
+
+check('width: 道路種別の表示名', () => {
+  assert(roadCategoryLabel(0) === '国道', '0');
+  assert(roadCategoryLabel(2) === '市区町村道', '2');
+  assert(roadCategoryLabel('市区町村道') === '市区町村道', '文字列はそのまま');
+  assert(roadCategoryLabel(null) === null, 'null');
+  assert(roadCategoryLabel(42) === null, '未知のコードは出さない');
+});
 
 check('svlink: パノラマ URL', () => {
   const url = panoUrl({ lat: 43.5551, lng: 142.4695, heading: 91.4 });
