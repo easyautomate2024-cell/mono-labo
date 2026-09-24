@@ -73,7 +73,7 @@ var EN={
   shF:' \uD83C\uDFC6 new personal best!',
   shG:' How fast can you get it in? #TrailerParkingGame #mono_labo',
   copied:'Result copied',
-  rkTtl:'Global ranking', rkPh:'Nickname (up to 20 chars)', rkPinPh:'4-digit PIN', rkPinNote:'The PIN lets you use the same nickname in another browser and stops others from using it', rkPinBad:'Enter a 4-digit PIN', rkTaken:'That nickname is already used with a different PIN', rkPost:'Submit', rkNote:'Only the nickname is shown publicly',
+  rkTtl:'Global ranking', rkEye:'Show', rkPh:'Nickname (up to 20 chars)', rkPinPh:'4-digit PIN', rkPinNote:'The PIN lets you use the same nickname in another browser and stops others from using it', rkPinBad:'Enter a 4-digit PIN', rkTaken:'That nickname is already used with a different PIN', rkPost:'Submit', rkNote:'Only the nickname is shown publicly',
   rkPosted:'You are #', rkOut:'Not in the top 50 this time', rkErr:'Could not submit. Try again later', rkWait:'Please wait a moment and try again',
   rankLbl:'Records', rankMine:'Mine only', rankOpen:'Global ranking',
   rkMore:'Show more (top 20)', rkLess:'Show less', rkNameLbl:'Nickname', rkPhT:'Nickname for submissions (up to 20 chars)',
@@ -179,6 +179,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .rk input:disabled{opacity:.6}
 .rk button{background:var(--bl);color:#fff;border:0;border-radius:10px;padding:0 14px;font-size:13px;font-weight:700;white-space:nowrap}
 .rk button:disabled{background:#1f2937;color:var(--mut)}
+.rk button.eye{background:var(--dk);border:1px solid var(--bd);color:var(--mut);font-weight:600;padding:0 10px;font-size:12px}
+.rk button.eye.on{color:var(--tx);border-color:var(--bl)}
 .rk .msg{font-size:12px;color:var(--am);min-height:1.2em;margin:2px 0 6px}
 .rk .hr{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);padding:4px 9px;border-radius:9px}
 .rk .hr b{color:var(--tx);font-size:13px;width:2.2em;text-align:right}
@@ -259,7 +261,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
         <div class="small pb" id="tBest" hidden></div>
         <div class="hist" id="tHist" hidden></div>
         <div class="rk" id="rkTitle" hidden><div class="hl" id="rkTitleTtl"></div>
-          <div class="in"><span class="small" style="margin:0;align-self:center;white-space:nowrap" data-i="rkNameLbl">呼び名</span><input id="rkNameT" maxlength="20" autocomplete="off" placeholder="登録に使う呼び名 (20文字まで)" data-ip="rkPhT"><input id="rkPinT" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="暗証4桁" data-ip="rkPinPh" style="flex:0 0 6.2em"></div>
+          <div class="in"><span class="small" style="margin:0;align-self:center;white-space:nowrap" data-i="rkNameLbl">呼び名</span><input id="rkNameT" maxlength="20" autocomplete="off" placeholder="登録に使う呼び名 (20文字まで)" data-ip="rkPhT"><input id="rkPinT" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="暗証4桁" data-ip="rkPinPh" style="flex:0 0 5.6em"><button type="button" class="eye" data-for="rkPinT" data-i="rkEye" title="表示">表示</button></div>
           <div class="small" style="margin:-2px 0 6px" data-i="rkPinNote">暗証番号は、別のブラウザでも同じ呼び名を使うため・他の人に呼び名を使われないための4桁です</div>
           <div id="rkTitleList"></div></div>
         <div class="small" data-i="kbd">PCならキーボードの矢印キーでも操作できます</div>
@@ -303,7 +305,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
         <div class="hist" id="rHist" hidden></div>
         <div class="rk" id="rkBox">
           <div class="hl" id="rkTtl"></div>
-          <div class="in"><input id="rkName" maxlength="20" autocomplete="off" placeholder="呼び名 (20文字まで)" data-ip="rkPh"><input id="rkPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="暗証4桁" data-ip="rkPinPh" style="flex:0 0 6.2em"><button id="bPost" data-i="rkPost">登録</button></div>
+          <div class="in"><input id="rkName" maxlength="20" autocomplete="off" placeholder="呼び名 (20文字まで)" data-ip="rkPh"><input id="rkPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="暗証4桁" data-ip="rkPinPh" style="flex:0 0 5.6em"><button type="button" class="eye" data-for="rkPin" data-i="rkEye" title="表示">表示</button><button id="bPost" data-i="rkPost">登録</button></div>
           <div class="msg" id="rkMsg"></div>
           <div id="rkList"></div>
           <div class="small" data-i="rkNote" style="margin-top:4px">公開されるのは呼び名だけです</div>
@@ -1350,6 +1352,8 @@ function rkPrep(){
   inp.disabled=false;b.disabled=false;document.getElementById('rkMsg').textContent='';
   rkLoad();
 }
+document.querySelectorAll('.rk button.eye').forEach(function(b){b.addEventListener('click',function(){   // 暗証番号を見る/隠す
+  var f=document.getElementById(b.dataset.for),show=f.type==='password';f.type=show?'text':'password';b.classList.toggle('on',show);});});
 document.getElementById('rkNameT').addEventListener('input',function(){try{localStorage.setItem('tpg_name',this.value.trim());}catch(e){}});
 document.getElementById('rkPinT').addEventListener('input',function(){try{localStorage.setItem('tpg_pin',this.value.replace(/[^0-9]/g,''));}catch(e){}});
 document.getElementById('bPost').onclick=function(){
