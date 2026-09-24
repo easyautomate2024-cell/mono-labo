@@ -73,7 +73,7 @@ var EN={
   shF:' \uD83C\uDFC6 new personal best!',
   shG:' How fast can you get it in? #TrailerParkingGame #mono_labo',
   copied:'Result copied',
-  rkTtl:'Global ranking', rkPh:'Nickname (up to 20 chars)', rkPost:'Submit', rkNote:'Only the nickname is shown publicly',
+  rkTtl:'Global ranking', rkPh:'Nickname (up to 20 chars)', rkPinPh:'4-digit PIN', rkPinNote:'The PIN lets you use the same nickname in another browser and stops others from using it', rkPinBad:'Enter a 4-digit PIN', rkTaken:'That nickname is already used with a different PIN', rkPost:'Submit', rkNote:'Only the nickname is shown publicly',
   rkPosted:'You are #', rkOut:'Not in the top 50 this time', rkErr:'Could not submit. Try again later', rkWait:'Please wait a moment and try again',
   rankLbl:'Records', rankMine:'Mine only', rankOpen:'Global ranking',
   rkMore:'Show more (top 20)', rkLess:'Show less', rkNameLbl:'Nickname', rkPhT:'Nickname for submissions (up to 20 chars)',
@@ -259,7 +259,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
         <div class="small pb" id="tBest" hidden></div>
         <div class="hist" id="tHist" hidden></div>
         <div class="rk" id="rkTitle" hidden><div class="hl" id="rkTitleTtl"></div>
-          <div class="in"><span class="small" style="margin:0;align-self:center;white-space:nowrap" data-i="rkNameLbl">呼び名</span><input id="rkNameT" maxlength="20" autocomplete="off" placeholder="登録に使う呼び名 (20文字まで)" data-ip="rkPhT"></div>
+          <div class="in"><span class="small" style="margin:0;align-self:center;white-space:nowrap" data-i="rkNameLbl">呼び名</span><input id="rkNameT" maxlength="20" autocomplete="off" placeholder="登録に使う呼び名 (20文字まで)" data-ip="rkPhT"><input id="rkPinT" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="暗証4桁" data-ip="rkPinPh" style="flex:0 0 6.2em"></div>
+          <div class="small" style="margin:-2px 0 6px" data-i="rkPinNote">暗証番号は、別のブラウザでも同じ呼び名を使うため・他の人に呼び名を使われないための4桁です</div>
           <div id="rkTitleList"></div></div>
         <div class="small" data-i="kbd">PCならキーボードの矢印キーでも操作できます</div>
         <div class="small" id="tCredit" hidden data-ih="credit">ステージ3は、車中泊施設 <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>（東京都稲城市）さんの協力で作りました</div>
@@ -302,7 +303,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
         <a class="btn green" id="bProduct" href="./trailerlevel.html" data-i="prod">この水準器、本物があります →</a>
         <div class="rk" id="rkBox">
           <div class="hl" id="rkTtl"></div>
-          <div class="in"><input id="rkName" maxlength="20" autocomplete="off" placeholder="呼び名 (20文字まで)" data-ip="rkPh"><button id="bPost" data-i="rkPost">登録</button></div>
+          <div class="in"><input id="rkName" maxlength="20" autocomplete="off" placeholder="呼び名 (20文字まで)" data-ip="rkPh"><input id="rkPin" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="暗証4桁" data-ip="rkPinPh" style="flex:0 0 6.2em"><button id="bPost" data-i="rkPost">登録</button></div>
           <div class="msg" id="rkMsg"></div>
           <div id="rkList"></div>
           <div class="small" data-i="rkNote" style="margin-top:4px">公開されるのは呼び名だけです</div>
@@ -1323,7 +1324,7 @@ function rkTitle(){
   var box=document.getElementById('rkTitle'),tb=document.getElementById('tBest'),th=document.getElementById('tHist');
   if(RANK_ON)tb.parentNode.insertBefore(box,tb); else th.parentNode.insertBefore(box,th.nextSibling);   // みんなのランキング優先: 自分の記録より上に置く
   box.hidden=!RANK_ON; if(!RANK_ON)return;
-  var nt=document.getElementById('rkNameT'); try{nt.value=localStorage.getItem('tpg_name')||'';}catch(e){}
+  var nt=document.getElementById('rkNameT'); try{nt.value=localStorage.getItem('tpg_name')||'';document.getElementById('rkPinT').value=localStorage.getItem('tpg_pin')||'';}catch(e){}
   document.getElementById('rkTitleTtl').textContent=rkTitleStr();
   var el=document.getElementById('rkTitleList'),st=STG,car=CARKEY;
   el.innerHTML='<div class="hr"><span class="n">'+T('rkLoading','読み込み中...')+'</span></div>';
@@ -1343,23 +1344,26 @@ function rkPrep(){
   document.getElementById('rkBox').hidden=!RANK_ON;
   if(!RANK_ON)return;
   var inp=document.getElementById('rkName'),b=document.getElementById('bPost');
-  try{inp.value=localStorage.getItem('tpg_name')||'';}catch(e){}
+  try{inp.value=localStorage.getItem('tpg_name')||'';document.getElementById('rkPin').value=localStorage.getItem('tpg_pin')||'';}catch(e){}
   inp.disabled=false;b.disabled=false;document.getElementById('rkMsg').textContent='';
   rkLoad();
 }
 document.getElementById('rkNameT').addEventListener('input',function(){try{localStorage.setItem('tpg_name',this.value.trim());}catch(e){}});
+document.getElementById('rkPinT').addEventListener('input',function(){try{localStorage.setItem('tpg_pin',this.value.replace(/[^0-9]/g,''));}catch(e){}});
 document.getElementById('bPost').onclick=function(){
   if(S.phase!=='done'||S.posted)return;
   var inp=document.getElementById('rkName'),b=document.getElementById('bPost'),msg=document.getElementById('rkMsg');
   var name=(inp.value||'').trim(); if(!name){inp.focus();return;}
-  try{localStorage.setItem('tpg_name',name);}catch(e){}
+  var pinEl=document.getElementById('rkPin'),pin=(pinEl.value||'').replace(/[^0-9]/g,'');
+  if(pin.length!==4){msg.textContent=T('rkPinBad','暗証番号は4桁の数字を入れてください');pinEl.focus();return;}
+  try{localStorage.setItem('tpg_name',name);localStorage.setItem('tpg_pin',pin);}catch(e){}
   b.disabled=true;inp.disabled=true;msg.textContent='...';
-  fetch(RANK_API+'/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage:STG,car:CARKEY,name:name,t:S.lastT,rank:S.lastRank,sw:S.sw,col:S.col,uid:rkUid()})})
+  fetch(RANK_API+'/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage:STG,car:CARKEY,name:name,t:S.lastT,rank:S.lastRank,sw:S.sw,col:S.col,pin:pin})})
     .then(function(r){return r.json().then(function(d){d._s=r.status;return d;});})
     .then(function(d){
       if(d.ok){S.posted=true;RK.list=d.top||[];RK.mine=d.top&&d.top[(d.pos||0)-1]||null;
         msg.textContent=d.kept?(T('rkKept','自己ベストではないので前の記録のまま (')+d.pos+T('rkKept2','位)')):(d.pos?(T('rkPosted','いま')+d.pos+(LANG==='en'?'':'位です！')):T('rkOut','今回は50位以内に入りませんでした'));rkRender();track('rank_post');}
-      else{b.disabled=false;inp.disabled=false;msg.textContent=(d._s===429)?T('rkWait','少し待ってからもう一度'):T('rkErr','登録できませんでした');}
+      else{b.disabled=false;inp.disabled=false;msg.textContent=(d._s===429)?T('rkWait','少し待ってからもう一度'):(d._s===409)?T('rkTaken','その呼び名は別の暗証番号で使われています。別の呼び名にしてください'):T('rkErr','登録できませんでした');}
     }).catch(function(){b.disabled=false;inp.disabled=false;msg.textContent=T('rkErr','登録できませんでした');});
 };
 function finish(){
