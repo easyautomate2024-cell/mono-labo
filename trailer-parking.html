@@ -37,7 +37,7 @@ var EN={
   carLbl:'Tow vehicle', carSuv:'SUV', carPickup:'Pickup',
   start:'Start', kbd:'On a computer you can also use the arrow keys',
   credit:'Stage 3 was built with the help of <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>, a camper stopover in Inagi, Tokyo.',
-  reset:'Start over',
+  reset:'Back to title (change stage / vehicle)',
   hudSw:'Pull-ups', hudCol:'Contacts', hudSteer:'Steer',
   padL:'<span class="ic">\u25C0</span>Steer<small>left</small>',
   padR:'<span class="ic">\u25B6</span>Steer<small>right</small>',
@@ -134,8 +134,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .pad.on{background:#1e3a8a;border-color:var(--bl)}
 .pad.rev.on{background:#7c2d12;border-color:#ea580c}
 .pad small{font-size:10px;color:var(--mut);font-weight:500}
-.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(11,18,32,.72);backdrop-filter:blur(6px)}
-.panel{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:22px 20px;width:min(100%,380px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.ov{position:absolute;inset:0;display:flex;padding:18px;background:rgba(11,18,32,.72);backdrop-filter:blur(6px);overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y}   /* パネルが画面より高いときは上下にスクロール (中央寄せは margin:auto で) */
+.panel{margin:auto;background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:22px 20px;width:min(100%,380px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .panel h1{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
 .panel h2{font-size:18px;font-weight:700;margin-bottom:6px}
 .panel p{font-size:13px;color:var(--mut);line-height:1.7}
@@ -193,7 +193,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
   <div class="hud">
     <a class="brand" href="./index.html"><img src="./logo.png" alt="">mono labo</a>
     <div class="stat"><span>⏱ <b id="hT">0.0</b>s</span><span><span data-i="hudSw">切り返し</span> <b id="hS">0</b></span><span><span data-i="hudCol">接触</span> <b id="hC">0</b></span><span class="steer"><span data-i="hudSteer">舵</span> <b id="hW">0</b>°</span></div>
-    <button class="rst" id="bReset" title="やり直す" data-it="reset">↺</button>
+    <button class="rst" id="bReset" title="タイトルに戻る (ステージ・車を変える)" data-it="reset">↺</button>
   </div>
   <div id="stage"><canvas id="cv"></canvas>
     <div class="toast" id="hM" hidden></div>
@@ -1143,7 +1143,7 @@ requestAnimationFrame(loop);
 function show(id){['ovTitle','ovLevel','ovResult'].forEach(function(k){document.getElementById(k).hidden=(k!==id);});}
 document.getElementById('bStart').onclick=function(){reset();S.phase='drive';show(null);track('start');};
 document.getElementById('bAgain').onclick=function(){reset();S.phase='drive';show(null);track('again');};
-document.getElementById('bReset').onclick=function(){if(S.phase==='title')return;reset();S.phase='drive';show(null);toast('');};
+document.getElementById('bReset').onclick=function(){if(S.phase==='title')return;reset();show('ovTitle');toast('');showTitleBest();showTitleHist();};   // タイトルへ戻る (ステージ・車を変えられる)
 
 // 水平出し
 function startLevel(){
