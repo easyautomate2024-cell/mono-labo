@@ -297,10 +297,10 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
           <div><div class="l" data-i="rCol">接触</div><div class="v" id="rC">--</div></div>
         </div>
         <p id="rMsg"></p>
-        <div class="hist" id="rHist" hidden></div>
         <button class="btn" id="bAgain" data-i="again">もう一度</button>
         <button class="btn ghost" id="bShare" data-i="share">結果をシェア</button>
         <a class="btn green" id="bProduct" href="./trailerlevel.html" data-i="prod">この水準器、本物があります →</a>
+        <div class="hist" id="rHist" hidden></div>
         <div class="rk" id="rkBox">
           <div class="hl" id="rkTtl"></div>
           <div class="in"><input id="rkName" maxlength="20" autocomplete="off" placeholder="呼び名 (20文字まで)" data-ip="rkPh"><input id="rkPin" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="暗証4桁" data-ip="rkPinPh" style="flex:0 0 6.2em"><button id="bPost" data-i="rkPost">登録</button></div>
@@ -1341,8 +1341,8 @@ function rkLoad(){
     .catch(function(){el.innerHTML='<div class="hr"><span class="n">'+T('rkOff','ランキングは今つながりません')+'</span></div>';});
 }
 function rkPrep(){
-  var box=document.getElementById('rkBox'),rh=document.getElementById('rHist');
-  if(RANK_ON)rh.parentNode.insertBefore(box,rh);   // みんなのランキング優先: 結果画面でも自分の記録より上に
+  var box=document.getElementById('rkBox'),ba=document.getElementById('bAgain');
+  if(RANK_ON)ba.parentNode.insertBefore(box,ba);   // みんなのランキングは結果のすぐ下 (これまでの記録は製品ボタンの下)
   box.hidden=!RANK_ON;
   if(!RANK_ON)return;
   var inp=document.getElementById('rkName'),b=document.getElementById('bPost');
