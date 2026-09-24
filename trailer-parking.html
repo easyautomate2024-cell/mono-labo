@@ -73,7 +73,7 @@ var EN={
   shF:' \uD83C\uDFC6 new personal best!',
   shG:' How fast can you get it in? #TrailerParkingGame #mono_labo',
   copied:'Result copied',
-  rkTtl:'Global ranking', rkPh:'Nickname (up to 12 chars)', rkPost:'Submit', rkNote:'Only the nickname is shown publicly',
+  rkTtl:'Global ranking', rkPh:'Nickname (up to 20 chars)', rkPost:'Submit', rkNote:'Only the nickname is shown publicly',
   rkPosted:'You are #', rkOut:'Not in the top 50 this time', rkErr:'Could not submit. Try again later', rkWait:'Please wait a moment and try again',
   rkLink:'Global ranking: view / submit →', rkView:'Global ranking', rkBack:'Back', rkLast:'Submit your last run: ',
   rkNone:'No entries yet. Be the first!', rkLoading:'Loading...', rkOff:'Ranking is offline', rkCar:' / ',
@@ -280,7 +280,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
       <div class="panel rk" style="margin:auto">
         <h2 id="rkTtl" style="text-align:center;font-size:16px"></h2>
         <div class="small" id="rkLast" style="margin:0 0 6px"></div>
-        <div class="in" id="rkIn"><input id="rkName" maxlength="12" autocomplete="off" placeholder="呼び名 (12文字まで)" data-ip="rkPh"><button id="bPost" data-i="rkPost">登録</button></div>
+        <div class="in" id="rkIn"><input id="rkName" maxlength="20" autocomplete="off" placeholder="呼び名 (20文字まで)" data-ip="rkPh"><button id="bPost" data-i="rkPost">登録</button></div>
         <div class="msg" id="rkMsg"></div>
         <div id="rkList"></div>
         <div class="small" data-i="rkNote" style="margin-top:6px;text-align:center">公開されるのは呼び名だけです</div>
