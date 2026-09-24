@@ -75,6 +75,7 @@ var EN={
   copied:'Result copied',
   rkTtl:'Global ranking', rkPh:'Nickname (up to 12 chars)', rkPost:'Submit', rkNote:'Only the nickname is shown publicly',
   rkPosted:'You are #', rkOut:'Not in the top 50 this time', rkErr:'Could not submit. Try again later', rkWait:'Please wait a moment and try again',
+  rankLbl:'Records', rankMine:'Mine only', rankOpen:'Global ranking',
   rkNone:'No entries yet. Be the first!', rkLoading:'Loading...', rkOff:'Ranking is offline', rkCar:' / ',
   docTitle:'Trailer Parking Game \u2014 back it into the bay, then level it | mono labo'
 };
@@ -241,6 +242,11 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
           <span data-i="carLbl">牽引車</span>
           <button data-c="cx8" data-i="carSuv" class="on">SUV</button>
           <button data-c="triton" data-i="carPickup">ピックアップ</button>
+        </div>
+        <div class="seg" id="segRank">
+          <span data-i="rankLbl">記録</span>
+          <button data-r="0" data-i="rankMine">自分だけ</button>
+          <button data-r="1" class="on" data-i="rankOpen">みんなのランキング</button>
         </div>
         <div class="seg" id="segSteer">
           <span data-i="steerLbl">ハンドル</span>
@@ -1273,6 +1279,14 @@ document.querySelectorAll('#segStage button').forEach(function(b){
 // ---- みんなのランキング: Cloudflare Worker (C:/Claude/ranking-worker) に登録・取得。呼び名だけを送る
 var RANK_API=(location.search.indexOf('rkdev')>=0)?'http://192.168.0.132:8787':'https://tpg-ranking.tpg-ranking.workers.dev';   // ?rkdev で PC 内の wrangler dev につなぐ
 var RK={list:[],mine:null};
+var RANK_ON=true;                                   // 「自分だけ」を選ぶとランキング枠を出さず、通信もしない
+try{RANK_ON=localStorage.getItem('tpg_rank')!=='0';}catch(e){}
+document.querySelectorAll('#segRank button').forEach(function(b){
+  b.classList.toggle('on',(b.dataset.r==='1')===RANK_ON);
+  b.addEventListener('click',function(){RANK_ON=b.dataset.r==='1';
+    document.querySelectorAll('#segRank button').forEach(function(x){x.classList.toggle('on',x===b);});
+    try{localStorage.setItem('tpg_rank',RANK_ON?'1':'0');}catch(e){}});
+});
 function rkCar(){return CARKEY==='cx8'?T('carSuv','SUV'):T('carPickup','ピックアップ');}
 function rkRender(){
   var el=document.getElementById('rkList'),h=RK.list;
@@ -1293,6 +1307,8 @@ function rkLoad(){
     .catch(function(){el.innerHTML='<div class="hr"><span class="n">'+T('rkOff','ランキングは今つながりません')+'</span></div>';});
 }
 function rkPrep(){
+  document.getElementById('rkBox').hidden=!RANK_ON;
+  if(!RANK_ON)return;
   var inp=document.getElementById('rkName'),b=document.getElementById('bPost');
   try{inp.value=localStorage.getItem('tpg_name')||'';}catch(e){}
   inp.disabled=false;b.disabled=false;document.getElementById('rkMsg').textContent='';
