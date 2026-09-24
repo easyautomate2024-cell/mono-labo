@@ -1341,7 +1341,9 @@ function rkLoad(){
     .catch(function(){el.innerHTML='<div class="hr"><span class="n">'+T('rkOff','ランキングは今つながりません')+'</span></div>';});
 }
 function rkPrep(){
-  document.getElementById('rkBox').hidden=!RANK_ON;
+  var box=document.getElementById('rkBox'),rh=document.getElementById('rHist');
+  if(RANK_ON)rh.parentNode.insertBefore(box,rh);   // みんなのランキング優先: 結果画面でも自分の記録より上に
+  box.hidden=!RANK_ON;
   if(!RANK_ON)return;
   var inp=document.getElementById('rkName'),b=document.getElementById('bPost');
   try{inp.value=localStorage.getItem('tpg_name')||'';document.getElementById('rkPin').value=localStorage.getItem('tpg_pin')||'';}catch(e){}
