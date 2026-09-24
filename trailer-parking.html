@@ -1317,7 +1317,9 @@ function rkTitleDraw(){
 }
 // スタート画面: 「みんなのランキング」のときは、選んでいるステージ・車種の上位5件をその場に出す
 function rkTitle(){
-  var box=document.getElementById('rkTitle'); box.hidden=!RANK_ON; if(!RANK_ON)return;
+  var box=document.getElementById('rkTitle'),tb=document.getElementById('tBest'),th=document.getElementById('tHist');
+  if(RANK_ON)tb.parentNode.insertBefore(box,tb); else th.parentNode.insertBefore(box,th.nextSibling);   // みんなのランキング優先: 自分の記録より上に置く
+  box.hidden=!RANK_ON; if(!RANK_ON)return;
   var nt=document.getElementById('rkNameT'); try{nt.value=localStorage.getItem('tpg_name')||'';}catch(e){}
   document.getElementById('rkTitleTtl').textContent=rkTitleStr();
   var el=document.getElementById('rkTitleList'),st=STG,car=CARKEY;
