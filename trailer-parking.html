@@ -76,6 +76,7 @@ var EN={
   rkTtl:'Global ranking', rkPh:'Nickname (up to 20 chars)', rkPost:'Submit', rkNote:'Only the nickname is shown publicly',
   rkPosted:'You are #', rkOut:'Not in the top 50 this time', rkErr:'Could not submit. Try again later', rkWait:'Please wait a moment and try again',
   rankLbl:'Records', rankMine:'Mine only', rankOpen:'Global ranking',
+  rkMore:'Show more (top 20)', rkLess:'Show less', rkNameLbl:'Nickname', rkPhT:'Nickname for submissions (up to 20 chars)',
   rkNone:'No entries yet. Be the first!', rkLoading:'Loading...', rkOff:'Ranking is offline', rkCar:' / ',
   docTitle:'Trailer Parking Game \u2014 back it into the bay, then level it | mono labo'
 };
@@ -256,6 +257,9 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
         <button class="btn" id="bStart" data-i="start">スタート</button>
         <div class="small pb" id="tBest" hidden></div>
         <div class="hist" id="tHist" hidden></div>
+        <div class="rk" id="rkTitle" hidden><div class="hl" id="rkTitleTtl"></div>
+          <div class="in"><span class="small" style="margin:0;align-self:center;white-space:nowrap" data-i="rkNameLbl">呼び名</span><input id="rkNameT" maxlength="20" autocomplete="off" placeholder="登録に使う呼び名 (20文字まで)" data-ip="rkPhT"></div>
+          <div id="rkTitleList"></div></div>
         <div class="small" data-i="kbd">PCならキーボードの矢印キーでも操作できます</div>
         <div class="small" id="tCredit" hidden data-ih="credit">ステージ3は、車中泊施設 <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>（東京都稲城市）さんの協力で作りました</div>
       </div>
@@ -531,7 +535,7 @@ document.querySelectorAll('#segCar button').forEach(function(b){
     document.querySelectorAll('#segCar button').forEach(function(x){x.classList.toggle('on',x===b);});
     try{localStorage.setItem('tpg_car',CARKEY);}catch(e){}
     reset(); draw();                     // 連結位置が変わるので引き直す
-    showTitleBest(); showTitleHist();    // 記録は車両ごとに分かれている
+    showTitleBest(); showTitleHist(); rkTitle();    // 記録は車両ごとに分かれている
   });
 });
 document.querySelectorAll('#segSteer button').forEach(function(b){
@@ -1181,7 +1185,7 @@ requestAnimationFrame(loop);
 function show(id){['ovTitle','ovLevel','ovResult'].forEach(function(k){document.getElementById(k).hidden=(k!==id);});}
 document.getElementById('bStart').onclick=function(){reset();S.phase='drive';show(null);track('start');};
 document.getElementById('bAgain').onclick=function(){reset();S.phase='drive';show(null);track('again');};
-document.getElementById('bReset').onclick=function(){if(S.phase==='title')return;reset();show('ovTitle');toast('');showTitleBest();showTitleHist();};   // タイトルへ戻る (ステージ・車を変えられる)
+document.getElementById('bReset').onclick=function(){if(S.phase==='title')return;reset();show('ovTitle');toast('');showTitleBest();showTitleHist();rkTitle();};   // タイトルへ戻る (ステージ・車を変えられる)
 
 // 水平出し
 function startLevel(){
@@ -1277,7 +1281,7 @@ document.querySelectorAll('#segStage button').forEach(function(b){
   b.addEventListener('click',function(){
     loadStage(parseInt(b.dataset.s,10));
     document.querySelectorAll('#segStage button').forEach(function(x){x.classList.toggle('on',x===b);});
-    showTitleBest();showTitleHist();
+    showTitleBest();showTitleHist();rkTitle();
   });
 });
 // ---- みんなのランキング: Cloudflare Worker (C:/Claude/ranking-worker) に登録・取得。呼び名だけを送る
@@ -1289,18 +1293,38 @@ document.querySelectorAll('#segRank button').forEach(function(b){
   b.classList.toggle('on',(b.dataset.r==='1')===RANK_ON);
   b.addEventListener('click',function(){RANK_ON=b.dataset.r==='1';
     document.querySelectorAll('#segRank button').forEach(function(x){x.classList.toggle('on',x===b);});
-    try{localStorage.setItem('tpg_rank',RANK_ON?'1':'0');}catch(e){}});
+    try{localStorage.setItem('tpg_rank',RANK_ON?'1':'0');}catch(e){}
+    rkTitle();});
 });
 function rkCar(){return CARKEY==='cx8'?T('carSuv','SUV'):T('carPickup','ピックアップ');}
-function rkRender(){
-  var el=document.getElementById('rkList'),h=RK.list;
-  document.getElementById('rkTtl').textContent=T('rkTtl','みんなのランキング')+' ('+T('stage','ステージ')+(STG+1)+T('rkCar','・')+rkCar()+')';
-  if(!h.length){el.innerHTML='<div class="hr"><span class="n">'+T('rkNone','まだ記録がありません。最初の1人になろう')+'</span></div>';return;}
-  el.innerHTML=h.slice(0,10).map(function(r,i){
-    var me=(RK.mine&&r.ts===RK.mine.ts&&r.n===RK.mine.n);
+function rkTitleStr(){return T('rkTtl','みんなのランキング')+' ('+T('stage','ステージ')+(STG+1)+T('rkCar','・')+rkCar()+')';}
+function rkRows(h,n,mine){
+  if(!h.length)return '<div class="hr"><span class="n">'+T('rkNone','まだ記録がありません。最初の1人になろう')+'</span></div>';
+  return h.slice(0,n).map(function(r,i){
+    var me=(mine&&r.ts===mine.ts&&r.n===mine.n);
     return '<div class="hr'+(i===0?' r1':'')+(me?' me':'')+'"><b>'+(i+1)+'</b><span class="n">'+esc(r.n)+'</span><b style="width:1.4em;text-align:center">'+r.r+'</b>'
          + '<span class="t">'+Number(r.t).toFixed(1)+'s</span><span class="d">'+T('hSw','切')+r.sw+' '+T('hCol','接')+r.col+'</span></div>';
   }).join('');
+}
+function rkRender(){
+  document.getElementById('rkTtl').textContent=rkTitleStr();
+  document.getElementById('rkList').innerHTML=rkRows(RK.list,10,RK.mine);
+}
+function rkTitleDraw(){
+  var el=document.getElementById('rkTitleList'),h=RK.title||[];
+  el.innerHTML=rkRows(h,RK.more?20:5,null)+(h.length>5?'<div class="small" style="text-align:center;margin-top:4px"><a href="#" id="rkMoreLnk" style="color:#7aa2e8">'+(RK.more?T('rkLess','閉じる'):T('rkMore','もっと見る (20位まで)'))+'</a></div>':'');
+  var a=document.getElementById('rkMoreLnk'); if(a)a.onclick=function(e){e.preventDefault();RK.more=!RK.more;rkTitleDraw();};
+}
+// スタート画面: 「みんなのランキング」のときは、選んでいるステージ・車種の上位5件をその場に出す
+function rkTitle(){
+  var box=document.getElementById('rkTitle'); box.hidden=!RANK_ON; if(!RANK_ON)return;
+  var nt=document.getElementById('rkNameT'); try{nt.value=localStorage.getItem('tpg_name')||'';}catch(e){}
+  document.getElementById('rkTitleTtl').textContent=rkTitleStr();
+  var el=document.getElementById('rkTitleList'),st=STG,car=CARKEY;
+  el.innerHTML='<div class="hr"><span class="n">'+T('rkLoading','読み込み中...')+'</span></div>';
+  fetch(RANK_API+'/top?stage='+st+'&car='+encodeURIComponent(car),{cache:'no-store'}).then(function(r){return r.json();})
+    .then(function(d){if(st!==STG||car!==CARKEY)return;RK.title=d.top||[];RK.more=false;rkTitleDraw();})
+    .catch(function(){el.innerHTML='<div class="hr"><span class="n">'+T('rkOff','ランキングは今つながりません')+'</span></div>';});
 }
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function rkLoad(){
@@ -1318,6 +1342,7 @@ function rkPrep(){
   inp.disabled=false;b.disabled=false;document.getElementById('rkMsg').textContent='';
   rkLoad();
 }
+document.getElementById('rkNameT').addEventListener('input',function(){try{localStorage.setItem('tpg_name',this.value.trim());}catch(e){}});
 document.getElementById('bPost').onclick=function(){
   if(S.phase!=='done'||S.posted)return;
   var inp=document.getElementById('rkName'),b=document.getElementById('bPost'),msg=document.getElementById('rkMsg');
@@ -1352,7 +1377,7 @@ function finish(){
     eb.textContent=T('pBest','自己ベスト: ランク')+b.rank+' '+Number(b.t).toFixed(1)+'s';
   }
   renderHist(pushHist({t:t,rank:rank,sw:S.sw,col:S.col}));
-  showTitleBest();showTitleHist();
+  showTitleBest();showTitleHist();rkTitle();
   S.posted=false;rkPrep();
   show('ovResult');track('clear_'+rank);
 }
@@ -1369,7 +1394,7 @@ document.getElementById('bShare').onclick=function(){track('share');
 function track(n){if(typeof gtag==='function')gtag('event','game_action',{action:n});}
 function trackProduct(){if(typeof gtag==='function')gtag('event','tool_open',{tool_name:'parking-game-to-product'});}
 window.__G={IN:IN,S:function(){return S;},step:step,draw:draw,hud:hud,view:function(sc,x,y){SC=sc;OX=cv.width/2-x*sc;OY=cv.height/2-y*sc;draw();},resetView:resize,stage:function(){return {STG:STG,SLOT:SLOT,obstN:OBST.length};}};
-showTitleBest();showTitleHist();
+showTitleBest();showTitleHist();rkTitle();
 reset();
 })();
 </script>
