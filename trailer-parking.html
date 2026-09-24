@@ -245,8 +245,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
         </div>
         <div class="seg" id="segRank">
           <span data-i="rankLbl">記録</span>
-          <button data-r="0" data-i="rankMine">自分だけ</button>
-          <button data-r="1" class="on" data-i="rankOpen">みんなのランキング</button>
+          <button data-r="0" class="on" data-i="rankMine">自分だけ</button>
+          <button data-r="1" data-i="rankOpen">みんなのランキング</button>
         </div>
         <div class="seg" id="segSteer">
           <span data-i="steerLbl">ハンドル</span>
@@ -1283,8 +1283,8 @@ document.querySelectorAll('#segStage button').forEach(function(b){
 // ---- みんなのランキング: Cloudflare Worker (C:/Claude/ranking-worker) に登録・取得。呼び名だけを送る
 var RANK_API=(location.search.indexOf('rkdev')>=0)?'http://192.168.0.132:8787':'https://tpg-ranking.tpg-ranking.workers.dev';   // ?rkdev で PC 内の wrangler dev につなぐ
 var RK={list:[],mine:null};
-var RANK_ON=true;                                   // 「自分だけ」を選ぶとランキング枠を出さず、通信もしない
-try{RANK_ON=localStorage.getItem('tpg_rank')!=='0';}catch(e){}
+var RANK_ON=false;                                  // 初期値は「自分だけ」(ランキング枠を出さず、通信もしない)。選ぶと端末に保存
+try{RANK_ON=localStorage.getItem('tpg_rank')==='1';}catch(e){}
 document.querySelectorAll('#segRank button').forEach(function(b){
   b.classList.toggle('on',(b.dataset.r==='1')===RANK_ON);
   b.addEventListener('click',function(){RANK_ON=b.dataset.r==='1';
