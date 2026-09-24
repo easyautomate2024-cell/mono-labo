@@ -1352,8 +1352,14 @@ function rkPrep(){
   inp.disabled=false;b.disabled=false;document.getElementById('rkMsg').textContent='';
   rkLoad();
 }
-document.querySelectorAll('.rk button.eye').forEach(function(b){b.addEventListener('click',function(){   // 暗証番号を見る/隠す
-  var f=document.getElementById(b.dataset.for),show=f.type==='password';f.type=show?'text':'password';b.classList.toggle('on',show);});});
+document.querySelectorAll('.rk button.eye').forEach(function(b){   // 暗証番号は押している間だけ見える
+  var f=document.getElementById(b.dataset.for);
+  var show=function(e){e.preventDefault();f.type='text';b.classList.add('on');};
+  var hide=function(){f.type='password';b.classList.remove('on');};
+  b.addEventListener('pointerdown',show);b.addEventListener('touchstart',show,{passive:false});
+  ['pointerup','pointerleave','pointercancel','touchend','touchcancel'].forEach(function(ev){b.addEventListener(ev,hide);});
+  b.addEventListener('contextmenu',function(e){e.preventDefault();});
+});
 document.getElementById('rkNameT').addEventListener('input',function(){try{localStorage.setItem('tpg_name',this.value.trim());}catch(e){}});
 document.getElementById('rkPinT').addEventListener('input',function(){try{localStorage.setItem('tpg_pin',this.value.replace(/[^0-9]/g,''));}catch(e){}});
 document.getElementById('bPost').onclick=function(){
