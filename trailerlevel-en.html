@@ -20,7 +20,18 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-CT3HK859TJ');
+  // 内部トラフィック: 本番ドメイン以外(ローカル開発サーバー等) と、?internal=1 を一度開いた端末は除外する(?internal=0 で解除)
+  (function () {
+    var internal = location.hostname !== 'easyautomate2024-cell.github.io';
+    try {
+      var q = new URLSearchParams(location.search).get('internal');
+      if (q === '1') localStorage.setItem('ml_internal', '1');
+      else if (q === '0') localStorage.removeItem('ml_internal');
+      if (localStorage.getItem('ml_internal') === '1') internal = true;
+    } catch (e) {}
+    if (internal) gtag('set', { traffic_type: 'internal' });
+    gtag('config', 'G-CT3HK859TJ', internal ? { traffic_type: 'internal' } : {});
+  })();
 </script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
