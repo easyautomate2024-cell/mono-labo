@@ -26,7 +26,7 @@ var LANG=(function(){
 })();
 var EN={
   ttl:'Trailer Parking Game',
-  lead:"You have pulled into the campground. Back the trailer into the bay, then level it.",
+  lead:"Back the trailer into the marked spot.",
   tip1:'<b>\u25B2 Forward / \u25BC Reverse</b>: moves while you hold it',
   tip2:'<b>\u25C0 \u25B6 Steering</b>: turns while you hold it (springs back when released)',
   tip3:'<b>Tip</b>: when reversing, steer <b>away</b> from the direction you want the trailer to go',
@@ -36,7 +36,13 @@ var EN={
   steerLbl:'Steering', steerRet:'Springs back', steerHold:'Holds angle',
   carLbl:'Tow vehicle', carSuv:'SUV', carPickup:'Pickup',
   start:'Start', kbd:'On a computer you can also use the arrow keys',
-  credit:'Stage 3 was built with the help of <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>, a camper stopover in Inagi, Tokyo.',
+  credit:'With the help of <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a> (stage 3) and <a href="https://www.viagainvillage.com/" target="_blank" rel="noopener">Vi-again Village</a> (stage 4).',
+  howto:'How to play', carSemiTxt:'Tractor + semi-trailer (this stage only)',
+  stD1:'<b>1 Campground</b><br>Back into the bay, then level the trailer.',
+  stD2:'<b>2 Roadside stop</b><br>Trucks and buses line up. Fit the whole rig into a large-vehicle bay.',
+  stD3:'<b>3 SUN BASE</b> (camper stopover in Inagi, Tokyo)<br>Back in from the narrow lane into the plot.<div class="cr">With the help of <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a></div>',
+  stD4:'<b>4 Vi-again Village</b> (campground in Gotemba, Shizuoka)<br>Straight into the bay beside the warehouse, rig and all.<div class="cr">With the help of <a href="https://www.viagainvillage.com/" target="_blank" rel="noopener">Vi-again Village</a></div>',
+  stD6:'<b>5 Driving school</b> (towing licence: direction change)<br>Training tractor and semi-trailer, into the bay behind on the left. No levelling.',
   carSemi:'Semi-trailer', rigNote:'This stage uses a training tractor with a semi-trailer', kyRoof:'L',
   kyProd:'For levelling a camping trailer: TRAILER LEVEL \u2192', kyProd2:'For levelling a camping trailer:<br>TRAILER LEVEL \u2192', kyTtl:'✓ Direction change complete', kyS:'Passed first time. The instructor nods.', kyA:'Pass. A calm, steady reverse.', kyB:'A pass. Next time, no contact.', kyC:'You made it. Now cut the contacts.',
   kyFailTtl:'✕ Failed', kyFail4:'That was your 4th correction. Get it in within 3.', kyStraight:'Straighten the tractor and trailer', kyWheel:'Wheel off the course!', kyIn:'In the bay! Stop…', kyOut:'The trailer is sticking out of the bay', kyExit:'Bay done! Drive forward and leave the way you came (down)',
@@ -226,7 +232,10 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .seg{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:4px;font-size:12px;color:var(--mut)}
 .seg button{background:var(--dk);border:1px solid var(--bd);color:var(--mut);border-radius:10px;padding:8px 10px;font-size:12px;font-weight:600}
 .seg button.on{background:#1e3a8a;border-color:var(--bl);color:#fff}
-#segStage{flex-wrap:wrap;row-gap:6px}#segStage button{white-space:nowrap}
+#segStage{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}#segStage>span{grid-column:1/-1;justify-self:start}#segStage button{width:100%;margin:0;white-space:nowrap}   /* ステージは同じ幅の2列 (2026-10-10 案A) */
+#stDesc{background:var(--dk);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin:8px 0 6px;font-size:13px;line-height:1.55;color:#cbd5e1;text-align:left}#stDesc b{color:var(--tx)}#stDesc .cr{font-size:11.5px;color:var(--mut);margin-top:4px}#stDesc a{color:#7aa2e8}
+details.howto{margin-top:10px;text-align:left}details.howto summary{list-style:none;cursor:pointer;color:#7aa2e8;font-size:13px;text-align:center}details.howto summary::-webkit-details-marker{display:none}details.howto summary::after{content:' \25B8'}details.howto[open] summary::after{content:' \25BE'}
+#carSemiTxt{color:var(--tx);font-weight:600;padding:8px 4px}#tCredit a{color:#7aa2e8}   /* いちばん下の協力の1行のリンクは、暗い背景でも読める色に */
 .hud .steer{font-variant-numeric:tabular-nums}
 @media(min-width:700px){.ctl{max-width:560px;margin:0 auto;width:100%}}
 </style>
@@ -244,14 +253,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
     <div class="ov" id="ovTitle">
       <div class="panel">
         <h1 data-i="ttl">トレーラー駐車ゲーム</h1>
-        <p data-i="lead">キャンプ場に着いた。区画にトレーラーをバックで入れて、最後に水平を出そう。</p>
-        <div class="tips">
-          <div data-ih="tip1"><b>▲ 前進 / ▼ 後退</b>: 押している間だけ動く</div>
-          <div data-ih="tip2"><b>◀ ▶ ハンドル</b>: 押している間だけ切れる(離すと戻る)</div>
-          <div data-ih="tip3"><b>コツ</b>: バックでは、トレーラーを向けたい方向と<b>逆</b>にハンドルを切る</div>
-          <div data-i="tip4">隣のトレーラーや木に当たると赤く光って「接触」に数えられる(止まりはしない)</div>
-          <div data-i="tip5">折れ角が90°を超えると後退できなくなる。前進して立て直そう</div>
-        </div>
+        <p data-i="lead">トレーラーをバックで、決められた場所へ入れよう。</p>
         <div class="seg" id="segStage" hidden>
           <span data-i="stage">ステージ</span>
           <button data-s="0" class="on" data-i="st1">1 キャンプ場</button>
@@ -261,10 +263,12 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
           <!-- <button data-s="4" data-i="st5">5 高速の斜め枠</button>  いったん出さない (2026-09-27) -->
           <button data-s="5" data-i="st6">5 教習所</button>
         </div>
+        <div id="stDesc" hidden></div>   <!-- 選んだステージの説明 (協力のリンクもここ) -->
         <div class="seg" id="segCar">
           <span data-i="carLbl">牽引車</span>
           <button data-c="cx8" data-i="carSuv" class="on">SUV</button>
           <button data-c="triton" data-i="carPickup">ピックアップ</button>
+          <span id="carSemiTxt" hidden data-i="carSemiTxt">トラクタ＋セミトレーラー（教習所専用）</span>
         </div>
         <div class="small" id="rigNote" hidden data-i="rigNote">このステージは教習用のトラクタ＋セミトレーラーで走ります</div>
         <div class="seg" id="segRank">
@@ -278,15 +282,23 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
           <button data-m="1" data-i="steerHold">切ったまま保持</button>
         </div>
         <button class="btn" id="bStart" data-i="start">スタート</button>
+        <details class="howto"><summary data-i="howto">遊び方</summary>
+        <div class="tips">
+          <div data-ih="tip1"><b>▲ 前進 / ▼ 後退</b>: 押している間だけ動く</div>
+          <div data-ih="tip2"><b>◀ ▶ ハンドル</b>: 押している間だけ切れる(離すと戻る)</div>
+          <div data-ih="tip3"><b>コツ</b>: バックでは、トレーラーを向けたい方向と<b>逆</b>にハンドルを切る</div>
+          <div data-i="tip4">隣のトレーラーや木に当たると赤く光って「接触」に数えられる(止まりはしない)</div>
+          <div data-i="tip5">折れ角が90°を超えると後退できなくなる。前進して立て直そう</div>
+        </div>
+        <div class="small" data-i="kbd">PCならキーボードの矢印キーでも操作できます</div>
+        </details>
         <div class="small pb" id="tBest" hidden></div>
         <div class="hist" id="tHist" hidden></div>
         <div class="rk" id="rkTitle" hidden><div class="hl" id="rkTitleTtl"></div>
           <div class="in"><span class="small" style="margin:0;align-self:center;white-space:nowrap" data-i="rkNameLbl">呼び名</span><input id="rkNameT" maxlength="20" autocomplete="off" placeholder="登録に使う呼び名 (20文字まで)" data-ip="rkPhT"><input id="rkPinT" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="暗証4桁" data-ip="rkPinPh" style="flex:0 0 5.6em"><button type="button" class="eye" data-for="rkPinT" data-i="rkEye" title="表示">表示</button></div>
           <div class="small" style="margin:-2px 0 6px" data-i="rkPinNote">暗証番号は、別のブラウザでも同じ呼び名を使うため・他の人に呼び名を使われないための4桁です</div>
           <div id="rkTitleList"></div></div>
-        <div class="small" data-i="kbd">PCならキーボードの矢印キーでも操作できます</div>
-        <div class="small" id="tCredit" hidden data-ih="credit">ステージ3は、車中泊施設 <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>（東京都稲城市）さんの協力で作りました</div>
-        <div class="small" id="tCredit4" hidden data-ih="credit4">ステージ4は、キャンプ場 <a href="https://www.viagainvillage.com/" target="_blank" rel="noopener">Vi-again Village</a>（静岡県御殿場市）さんの協力で作りました</div>
+        <div class="small" id="tCredit" hidden data-ih="credit">協力: <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>（ステージ3）・<a href="https://www.viagainvillage.com/" target="_blank" rel="noopener">Vi-again Village</a>（ステージ4）</div>
       </div>
     </div>
     <!-- 水平出し -->
@@ -2045,7 +2057,14 @@ var RANKV={S:4,A:3,B:2,C:1};
 function stageNo(){return STAGES[STG].no||STG+1;}
 function carSuf(){if(STAGES[STG].rig==='semi')return '';return CARKEY==='cx8'?'':'_'+CARKEY;}
 // 教習所 (セミトレーラー専用) では牽引車の選択を隠して説明を出す。ランキングはステージ別なので、サーバーへは今ある車種キー cx8 で送る
-function rigUI(){var sm=STAGES[STG].rig==='semi';document.getElementById('segCar').hidden=sm;document.getElementById('rigNote').hidden=!sm;}
+// 牽引車の行: 教習所 (セミトレーラー専用) ではボタンの代わりに説明を出す。選んだステージの説明の枠もここで切り替える (2026-10-10 案A)
+function rigUI(){var sm=STAGES[STG].rig==='semi';document.querySelectorAll('#segCar button').forEach(function(b){b.hidden=sm;});document.getElementById('carSemiTxt').hidden=!sm;stDescUpd();}
+var STDESC={0:['stD1','<b>1 キャンプ場</b><br>区画にバックで入れて、最後に水平を出そう。'],
+  1:['stD2','<b>2 街道の休憩所</b><br>トラックやバスが並ぶ休憩所。大型車の枠に、牽引車ごと収めよう。'],
+  2:['stD3','<b>3 SUN BASE</b>（東京都稲城市の車中泊施設）<br>奥への細い道からバックで区画へ。<div class="cr">協力: <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a> さん</div>'],
+  3:['stD4','<b>4 Vi-again Village</b>（静岡県御殿場市のキャンプ場）<br>倉庫の横の枠へ、牽引車ごとまっすぐ。<div class="cr">協力: <a href="https://www.viagainvillage.com/" target="_blank" rel="noopener">Vi-again Village</a> さん</div>'],
+  5:['stD6','<b>5 教習所</b>（けん引免許の方向変換）<br>教習用のトラクタ＋セミトレーラーで、左後ろの車庫へ。水平出しはなし。']};
+function stDescUpd(){var el=document.getElementById('stDesc'),d=STDESC[STG];if(!el)return;el.innerHTML=d?T(d[0],d[1]):'';el.hidden=!d||document.getElementById('segStage').hidden;}
 function rkKey(){return STAGES[STG].rig==='semi'?'cx8':CARKEY;}
 function bestKey(){return (STG===0?'tpg_best':'tpg_best_'+STAGES[STG].name)+carSuf();}
 function histKey(){return 'tpg_hist_'+STAGES[STG].name+carSuf();}
@@ -2108,8 +2127,8 @@ function stageOpen(i){
   });
   if(open>1)document.getElementById('segStage').hidden=false;   // 2つ以上あるときだけ選択肢を出す
   if(stageOpen(2))document.getElementById('tCredit').hidden=false;   // SUN BASE の協力クレジット
-  if(stageOpen(3))document.getElementById('tCredit4').hidden=false;   // Vi-again Village の協力クレジット
 })();
+rigUI();   // 選んでいるステージの説明と牽引車の行を合わせる
 document.querySelectorAll('#segStage button').forEach(function(b){
   b.addEventListener('click',function(){
     loadStage(parseInt(b.dataset.s,10));rigUI();
