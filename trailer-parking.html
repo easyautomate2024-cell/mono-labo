@@ -32,11 +32,14 @@ var EN={
   tip3:'<b>Tip</b>: when reversing, steer <b>away</b> from the direction you want the trailer to go',
   tip4:'Clipping a neighbouring trailer or a tree flashes red and counts as a contact (it will not stop you)',
   tip5:'Past 90\u00B0 of jackknife you cannot reverse any further. Pull forward to straighten out',
-  stage:'Stage', st1:'1 Campground', st2:'2 Roadside stop', st3:'3 SUN BASE', st4:'4 Vi-again Village', st5:'5 Angled bays',
+  stage:'Stage', st1:'1 Campground', st2:'2 Roadside stop', st3:'3 SUN BASE', st4:'4 Vi-again Village', st5:'5 Angled bays', st6:'5 Driving school',
   steerLbl:'Steering', steerRet:'Springs back', steerHold:'Holds angle',
   carLbl:'Tow vehicle', carSuv:'SUV', carPickup:'Pickup',
   start:'Start', kbd:'On a computer you can also use the arrow keys',
   credit:'Stage 3 was built with the help of <a href="https://www.instagram.com/sun_base_/" target="_blank" rel="noopener">SUN BASE</a>, a camper stopover in Inagi, Tokyo.',
+  carSemi:'Semi-trailer', rigNote:'This stage uses a training tractor with a semi-trailer', kyRoof:'L',
+  kyProd:'For levelling a camping trailer: TRAILER LEVEL \u2192', kyProd2:'For levelling a camping trailer:<br>TRAILER LEVEL \u2192', kyTtl:'✓ Direction change complete', kyS:'Passed first time. The instructor nods.', kyA:'Pass. A calm, steady reverse.', kyB:'A pass. Next time, no contact.', kyC:'You made it. Now cut the contacts.',
+  kyFailTtl:'✕ Failed', kyFail4:'That was your 4th correction. Get it in within 3.', kyStraight:'Straighten the tractor and trailer', kyWheel:'Wheel off the course!', kyIn:'In the bay! Stop…', kyOut:'The trailer is sticking out of the bay', kyExit:'Bay done! Drive forward and leave the way you came (down)',
   credit4:'Stage 4 was built with the help of <a href="https://www.viagainvillage.com/" target="_blank" rel="noopener">Vi-again Village</a>, a campground in Gotemba, Shizuoka.',
   reset:'Back to title (change stage / vehicle)',
   hudSw:'Pull-ups', hudCol:'Contacts', hudSteer:'Steer',
@@ -97,6 +100,7 @@ function applyLang(){
     var v=EN[e.dataset.ip]; if(v!==undefined)e.placeholder=v; });
   var pb=document.getElementById('bProduct');
   if(pb)pb.href='./trailerlevel-en.html';   // 製品ページも英語版へ
+  var ps=document.querySelector('#bProductS a');if(ps)ps.href='./trailerlevel-en.html';
  }
  // 言語切替リンク (タイトル画面の末尾)
   var host=document.getElementById('tCredit4')||document.getElementById('tCredit');   // 協力クレジットの最後の行の後ろに付ける
@@ -255,12 +259,14 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
           <button data-s="2" data-i="st3">3 SUN BASE</button>
           <button data-s="3" data-i="st4">4 Vi-again Village</button>
           <!-- <button data-s="4" data-i="st5">5 高速の斜め枠</button>  いったん出さない (2026-09-27) -->
+          <button data-s="5" data-i="st6">5 教習所</button>
         </div>
         <div class="seg" id="segCar">
           <span data-i="carLbl">牽引車</span>
           <button data-c="cx8" data-i="carSuv" class="on">SUV</button>
           <button data-c="triton" data-i="carPickup">ピックアップ</button>
         </div>
+        <div class="small" id="rigNote" hidden data-i="rigNote">このステージは教習用のトラクタ＋セミトレーラーで走ります</div>
         <div class="seg" id="segRank">
           <span data-i="rankLbl">記録</span>
           <button data-r="0" class="on" data-i="rankMine">自分だけ</button>
@@ -305,7 +311,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
     <!-- 結果 -->
     <div class="ov" id="ovResult" hidden>
       <div class="panel">
-        <h2 data-i="rTtl">✓ 水平です。今夜はぐっすり。</h2>
+        <h2 id="rTtl" data-i="rTtl">✓ 水平です。今夜はぐっすり。</h2>
         <div class="rank" id="rRank">A</div>
         <div class="pbline" id="rBest" hidden></div>
         <div class="res">
@@ -317,6 +323,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
         <a class="btn green" id="bProduct" href="./trailerlevel.html" data-i="prod">この水準器、本物があります →</a>
         <button class="btn" id="bAgain" data-i="again">もう一度</button>
         <button class="btn ghost" id="bShare" data-i="share">結果をシェア</button>
+        <div class="small" id="bProductS" hidden style="text-align:center;margin-top:12px"><a href="./trailerlevel.html" style="color:#7aa2e8">キャンピングトレーラーの水平出しに TRAILER LEVEL →</a></div>
         <div class="hist" id="rHist" hidden></div>
         <div class="rk" id="rkBox">
           <div class="hl" id="rkTtl"></div>
@@ -874,7 +881,186 @@ var STAGES=[
    deco:[{t:'bldg',x:7.0,y:0.8,w:20,h:5.4,label:'サービスエリア'},
          {t:'green',x:0,y:6.6,w:34,h:1.2},
          {t:'green',x:0,y:39.5,w:34,h:4.5}],
-   start:{x:10,y:18,th:0}, th:{S:120,A:190,B:290}}
+   start:{x:10,y:18,th:0}, th:{S:120,A:190,B:290}},
+  // 教習所 (けん引免許の方向変換、2026-10-04): 教習用トラクタ+セミトレーラーで、左後ろの車庫にバックで入れ、来た方向 (下) へ出る。水平出しはなし
+  //   コースは道路交通法施行規則 別表第三の大型の方向変換コース (通路6m・車庫幅5m・奥行10m・すみ切り2.5m)。車の寸法は仮
+  {name:'教習所', no:5, ground:'asphalt', common:false, rig:'semi', mode:'henkan', wheelHit:true, noSlotMark:true, noSlotLabel:true, key:'kyoshu2610', clipWorld:true,
+   worldW:40, worldH:50, view:{w:26,h:34}, exitY:28.0,
+   lane:{x:-99,y:-99,w:1,h:1},
+   slot:{x:7.0,y:20.0,w:10.0,h:5.0},
+   pads:[],
+   obst:[
+     {t:'poly',pts:[[0.00,0.00],[17.00,0.00],[17.00,17.50],[0.00,17.50]],c:'#6f8f4a',pat:'lawn'},
+     {t:'poly',pts:[[0.00,17.50],[14.50,17.50],[14.50,20.00],[0.00,20.00]],c:'#6f8f4a',pat:'lawn'},
+     {t:'poly',pts:[[14.50,17.50],[17.00,17.50],[16.96,17.93],[16.85,18.36],[16.67,18.75],[16.42,19.11],[16.11,19.42],[15.75,19.67],[15.36,19.85],[14.93,19.96],[14.50,20.00]],c:'#6f8f4a',pat:'lawn'},
+     {t:'poly',pts:[[0.00,20.00],[7.00,20.00],[7.00,25.00],[0.00,25.00]],c:'#6f8f4a',pat:'lawn'},
+     {t:'poly',pts:[[0.00,25.00],[14.50,25.00],[14.50,27.50],[0.00,27.50]],c:'#6f8f4a',pat:'lawn'},
+     {t:'poly',pts:[[14.50,27.50],[14.50,25.00],[14.93,25.04],[15.36,25.15],[15.75,25.33],[16.11,25.58],[16.42,25.89],[16.67,26.25],[16.85,26.64],[16.96,27.07],[17.00,27.50]],c:'#6f8f4a',pat:'lawn'},
+     {t:'poly',pts:[[0.00,27.50],[17.00,27.50],[17.00,50.00],[0.00,50.00]],c:'#6f8f4a',pat:'lawn'},
+     {t:'poly',pts:[[26.00,0.00],[40.00,0.00],[40.00,50.00],[26.00,50.00]],c:'#6f8f4a',pat:'lawn'},
+     {t:'wall',x:8.400,y:8.600,w:17.500,h:0.300,a:1.5708,c:'#c9cdd3',pass:true},
+     {t:'wall',x:16.627,y:17.554,w:0.410,h:0.300,a:1.6581,c:'#c9cdd3',pass:true},
+     {t:'wall',x:16.556,y:17.956,w:0.410,h:0.300,a:1.8326,c:'#c9cdd3',pass:true},
+     {t:'wall',x:16.417,y:18.339,w:0.410,h:0.300,a:2.0071,c:'#c9cdd3',pass:true},
+     {t:'wall',x:16.213,y:18.693,w:0.410,h:0.300,a:2.1817,c:'#c9cdd3',pass:true},
+     {t:'wall',x:15.951,y:19.005,w:0.410,h:0.300,a:2.3562,c:'#c9cdd3',pass:true},
+     {t:'wall',x:15.638,y:19.268,w:0.410,h:0.300,a:2.5307,c:'#c9cdd3',pass:true},
+     {t:'wall',x:15.285,y:19.472,w:0.410,h:0.300,a:2.7053,c:'#c9cdd3',pass:true},
+     {t:'wall',x:14.901,y:19.611,w:0.410,h:0.300,a:2.8798,c:'#c9cdd3',pass:true},
+     {t:'wall',x:14.499,y:19.682,w:0.410,h:0.300,a:3.0543,c:'#c9cdd3',pass:true},
+     {t:'wall',x:7.000,y:19.700,w:7.500,h:0.300,a:3.1416,c:'#c9cdd3',pass:true},
+     {t:'wall',x:4.350,y:22.350,w:5.000,h:0.300,a:1.5708,c:'#c9cdd3',pass:true},
+     {t:'wall',x:7.000,y:25.000,w:7.500,h:0.300,a:0.0000,c:'#c9cdd3',pass:true},
+     {t:'wall',x:14.499,y:25.018,w:0.410,h:0.300,a:0.0873,c:'#c9cdd3',pass:true},
+     {t:'wall',x:14.901,y:25.089,w:0.410,h:0.300,a:0.2618,c:'#c9cdd3',pass:true},
+     {t:'wall',x:15.285,y:25.228,w:0.410,h:0.300,a:0.4363,c:'#c9cdd3',pass:true},
+     {t:'wall',x:15.638,y:25.432,w:0.410,h:0.300,a:0.6109,c:'#c9cdd3',pass:true},
+     {t:'wall',x:15.951,y:25.695,w:0.410,h:0.300,a:0.7854,c:'#c9cdd3',pass:true},
+     {t:'wall',x:16.213,y:26.007,w:0.410,h:0.300,a:0.9599,c:'#c9cdd3',pass:true},
+     {t:'wall',x:16.417,y:26.361,w:0.410,h:0.300,a:1.1345,c:'#c9cdd3',pass:true},
+     {t:'wall',x:16.556,y:26.744,w:0.410,h:0.300,a:1.3090,c:'#c9cdd3',pass:true},
+     {t:'wall',x:16.627,y:27.146,w:0.410,h:0.300,a:1.4835,c:'#c9cdd3',pass:true},
+     {t:'wall',x:5.900,y:38.600,w:22.500,h:0.300,a:1.5708,c:'#c9cdd3',pass:true},
+     {t:'wall',x:0.850,y:24.850,w:50.000,h:0.300,a:1.5708,c:'#c9cdd3',pass:true},
+     {t:'wall',x:8.150,y:8.675,w:17.500,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:16.854,y:17.651,w:0.453,h:0.150,a:1.6581,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:16.775,y:18.095,w:0.453,h:0.150,a:1.8326,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:16.621,y:18.520,w:0.453,h:0.150,a:2.0071,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:16.395,y:18.911,w:0.453,h:0.150,a:2.1817,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:16.105,y:19.256,w:0.453,h:0.150,a:2.3562,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:15.759,y:19.547,w:0.453,h:0.150,a:2.5307,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:15.368,y:19.772,w:0.453,h:0.150,a:2.7053,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:14.944,y:19.927,w:0.453,h:0.150,a:2.8798,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:14.499,y:20.005,w:0.453,h:0.150,a:3.0543,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:7.000,y:20.025,w:7.500,h:0.150,a:3.1416,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:4.600,y:22.425,w:5.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:7.000,y:24.825,w:7.500,h:0.150,a:0.0000,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:14.499,y:24.845,w:0.453,h:0.150,a:0.0873,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:14.944,y:24.923,w:0.453,h:0.150,a:0.2618,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:15.368,y:25.078,w:0.453,h:0.150,a:0.4363,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:15.759,y:25.303,w:0.453,h:0.150,a:0.6109,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:16.105,y:25.594,w:0.453,h:0.150,a:0.7854,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:16.395,y:25.939,w:0.453,h:0.150,a:0.9599,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:16.621,y:26.330,w:0.453,h:0.150,a:1.1345,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:16.775,y:26.755,w:0.453,h:0.150,a:1.3090,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:16.854,y:27.199,w:0.453,h:0.150,a:1.4835,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:5.650,y:38.675,w:22.500,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:1.100,y:24.925,w:50.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'poly',pts:[[29.50,0.00],[36.50,0.00],[36.50,50.00],[29.50,50.00]],c:'#5d6167',pass:true,tex:'asph'},
+     {t:'wall',x:4.350,y:24.850,w:50.000,h:0.300,a:-1.5708,c:'#c9cdd3',pass:true},
+     {t:'wall',x:4.600,y:24.925,w:50.000,h:0.150,a:-1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:11.650,y:24.850,w:50.000,h:0.300,a:1.5708,c:'#c9cdd3',pass:true},
+     {t:'wall',x:11.400,y:24.925,w:50.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:32.000,y:1.925,w:2.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:32.000,y:5.925,w:2.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:32.000,y:17.925,w:2.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:32.000,y:21.925,w:2.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:32.000,y:25.925,w:2.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:32.000,y:29.925,w:2.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:32.000,y:33.925,w:2.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:32.000,y:45.925,w:2.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:32.000,y:49.925,w:2.000,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:30.07,y:9.00,w:0.45,h:3.00,c:'rgba(255,255,255,.88)',pass:true},
+     {t:'wall',x:30.97,y:9.00,w:0.45,h:3.00,c:'rgba(255,255,255,.88)',pass:true},
+     {t:'wall',x:31.88,y:9.00,w:0.45,h:3.00,c:'rgba(255,255,255,.88)',pass:true},
+     {t:'wall',x:32.77,y:9.00,w:0.45,h:3.00,c:'rgba(255,255,255,.88)',pass:true},
+     {t:'wall',x:33.67,y:9.00,w:0.45,h:3.00,c:'rgba(255,255,255,.88)',pass:true},
+     {t:'wall',x:34.58,y:9.00,w:0.45,h:3.00,c:'rgba(255,255,255,.88)',pass:true},
+     {t:'wall',x:35.48,y:9.00,w:0.45,h:3.00,c:'rgba(255,255,255,.88)',pass:true},
+     {t:'wall',x:29.750,y:13.300,w:3.150,h:0.400,a:0.0000,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:33.100,y:7.300,w:3.150,h:0.400,a:0.0000,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'signal',x:28.10,y:8.30,pass:true},
+     {t:'signal',x:37.90,y:12.70,pass:true},
+     {t:'wall',x:27.30,y:37.15,w:1.90,h:2.70,c:'#8f8b85',pass:true},
+     {t:'wall',x:27.50,y:37.40,w:0.22,h:2.20,c:'#6e5a48',pass:true},
+     {t:'wall',x:28.10,y:37.40,w:0.22,h:2.20,c:'#6e5a48',pass:true},
+     {t:'wall',x:28.70,y:37.40,w:0.22,h:2.20,c:'#6e5a48',pass:true},
+     {t:'wall',x:36.80,y:37.15,w:2.20,h:2.70,c:'#8f8b85',pass:true},
+     {t:'wall',x:37.00,y:37.40,w:0.22,h:2.20,c:'#6e5a48',pass:true},
+     {t:'wall',x:37.60,y:37.40,w:0.22,h:2.20,c:'#6e5a48',pass:true},
+     {t:'wall',x:38.20,y:37.40,w:0.22,h:2.20,c:'#6e5a48',pass:true},
+     {t:'wall',x:29.50,y:37.35,w:7.00,h:2.30,c:'#7b7f85',pass:true},
+     {t:'wall',x:29.350,y:38.480,w:2.300,h:0.040,a:1.5708,c:'rgba(0,0,0,.25)',pass:true},
+     {t:'wall',x:30.350,y:38.480,w:2.300,h:0.040,a:1.5708,c:'rgba(0,0,0,.25)',pass:true},
+     {t:'wall',x:31.350,y:38.480,w:2.300,h:0.040,a:1.5708,c:'rgba(0,0,0,.25)',pass:true},
+     {t:'wall',x:32.350,y:38.480,w:2.300,h:0.040,a:1.5708,c:'rgba(0,0,0,.25)',pass:true},
+     {t:'wall',x:33.350,y:38.480,w:2.300,h:0.040,a:1.5708,c:'rgba(0,0,0,.25)',pass:true},
+     {t:'wall',x:34.350,y:38.480,w:2.300,h:0.040,a:1.5708,c:'rgba(0,0,0,.25)',pass:true},
+     {t:'wall',x:27.300,y:37.900,w:11.700,h:0.100,a:0.0000,c:'#c0c6ce',pass:true},
+     {t:'wall',x:27.300,y:39.000,w:11.700,h:0.100,a:0.0000,c:'#c0c6ce',pass:true},
+     {t:'wall',x:29.750,y:41.450,w:3.150,h:0.400,a:0.0000,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:33.100,y:35.150,w:3.150,h:0.400,a:0.0000,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'sign',x:28.10,y:41.45,w:1.5,h:0.8,s:'踏切',bg:'#facc15',bd:'#111827',fg:'#111827',size:0.45,pass:true},
+     {t:'sign',x:37.90,y:35.55,w:1.5,h:0.8,s:'踏切',bg:'#facc15',bd:'#111827',fg:'#111827',size:0.45,pass:true},
+     {t:'poly',pts:[[11.50,0.00],[11.50,9.50],[4.50,9.50],[4.50,29.00],[14.00,29.00],[14.00,40.00],[1.50,40.00],[1.50,6.50],[8.50,6.50],[8.50,0.00]],c:'#5d6167',pass:true,tex:'asph'},
+     {t:'wall',x:6.750,y:4.750,w:9.800,h:0.300,a:1.5708,c:'#c9cdd3',pass:true},
+     {t:'wall',x:4.500,y:9.500,w:7.300,h:0.300,a:3.1416,c:'#c9cdd3',pass:true},
+     {t:'wall',x:-5.100,y:19.100,w:19.500,h:0.300,a:1.5708,c:'#c9cdd3',pass:true},
+     {t:'wall',x:4.500,y:28.700,w:9.800,h:0.300,a:0.0000,c:'#c9cdd3',pass:true},
+     {t:'wall',x:8.350,y:34.350,w:11.600,h:0.300,a:1.5708,c:'#c9cdd3',pass:true},
+     {t:'wall',x:1.200,y:40.000,w:13.100,h:0.300,a:3.1416,c:'#c9cdd3',pass:true},
+     {t:'wall',x:-15.700,y:23.100,w:34.100,h:0.300,a:-1.5708,c:'#c9cdd3',pass:true},
+     {t:'wall',x:1.200,y:6.200,w:7.300,h:0.300,a:0.0000,c:'#c9cdd3',pass:true},
+     {t:'wall',x:5.100,y:3.100,w:6.500,h:0.300,a:-1.5708,c:'#c9cdd3',pass:true},
+     {t:'wall',x:6.663,y:4.662,w:9.475,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:4.325,y:9.325,w:7.150,h:0.150,a:3.1416,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:-5.525,y:19.175,w:19.850,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:4.325,y:29.025,w:9.650,h:0.150,a:0.0000,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:8.425,y:34.425,w:10.950,h:0.150,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:1.525,y:39.825,w:12.450,h:0.150,a:3.1416,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:-15.125,y:23.175,w:33.450,h:0.150,a:-1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:1.525,y:6.525,w:7.150,h:0.150,a:0.0000,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:5.262,y:3.262,w:6.675,h:0.150,a:-1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:1.475,y:37.015,w:5.350,h:0.120,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:3.875,y:37.015,w:5.350,h:0.120,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:6.275,y:37.015,w:5.350,h:0.120,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'wall',x:8.675,y:37.015,w:5.350,h:0.120,a:1.5708,c:'rgba(255,255,255,.92)',pass:true},
+     {t:'car',x:2.90,y:37.10,a:-1.5708,c:'#f3f4f6',pass:true},
+     {t:'sign',x:2.90,y:37.10,w:0.75,h:0.42,s:'教習',bg:'#facc15',bd:'#a16207',fg:'#1f2937',size:0.26,pass:true},
+     {t:'car',x:5.35,y:37.10,a:-1.5708,c:'#f3f4f6',pass:true},
+     {t:'sign',x:5.35,y:37.10,w:0.75,h:0.42,s:'教習',bg:'#facc15',bd:'#a16207',fg:'#1f2937',size:0.26,pass:true},
+     {t:'car',x:12.60,y:37.10,a:-1.5708,c:'#f3f4f6',pass:true},
+     {t:'sign',x:12.60,y:37.10,w:0.75,h:0.42,s:'教習',bg:'#facc15',bd:'#a16207',fg:'#1f2937',size:0.26,pass:true},
+     {t:'car',x:6.00,y:8.00,a:3.1416,c:'#f3f4f6',pass:true},
+     {t:'sign',x:6.00,y:8.00,w:0.75,h:0.42,s:'教習',bg:'#facc15',bd:'#a16207',fg:'#1f2937',size:0.26,pass:true},
+     {t:'car',x:31.25,y:44.45,a:-1.5708,c:'#f3f4f6',pass:true},
+     {t:'sign',x:31.25,y:44.45,w:0.75,h:0.42,s:'教習',bg:'#facc15',bd:'#a16207',fg:'#1f2937',size:0.26,pass:true},
+     {t:'car',x:34.75,y:21.00,a:1.5708,c:'#f3f4f6',pass:true},
+     {t:'sign',x:34.75,y:21.00,w:0.75,h:0.42,s:'教習',bg:'#facc15',bd:'#a16207',fg:'#1f2937',size:0.26,pass:true},
+     {t:'wall',x:1.5,y:40.6,w:12.5,h:8.7,c:'#d9d4c7',pass:true},
+     {t:'wall',x:2.1,y:41.2,w:11.3,h:7.5,c:'#cfc9bb',pass:true},
+     {t:'wall',x:2.80,y:46.60,w:1.40,h:1.30,c:'#a9a497',pass:true},
+     {t:'wall',x:2.92,y:46.72,w:1.16,h:1.06,c:'#bdb8ab',pass:true},
+     {t:'wall',x:4.60,y:46.60,w:1.40,h:1.30,c:'#a9a497',pass:true},
+     {t:'wall',x:4.72,y:46.72,w:1.16,h:1.06,c:'#bdb8ab',pass:true},
+     {t:'wall',x:2.80,y:41.90,w:2.00,h:1.40,c:'#a9a497',pass:true},
+     {t:'wall',x:2.92,y:42.02,w:1.76,h:1.16,c:'#bdb8ab',pass:true},
+     {t:'text',x:10.6,y:45.2,s:'教習所',c:'rgba(30,26,20,.75)',size:1.1,pass:true},
+     {t:'pole',x:14.50,y:19.50,pass:true},
+     {t:'pole',x:14.50,y:25.50,pass:true},
+     {t:'pole',x:6.50,y:19.50,pass:true},
+     {t:'pole',x:6.50,y:25.50,pass:true},
+     {t:'sign',x:14.6,y:13.9,w:2.4,h:0.85,s:'方向変換',bg:'#1d4ed8',bd:'#e5e7eb',fg:'#ffffff',size:0.42,pass:true},
+     {t:'sign',x:6.4,y:11.3,w:2.0,h:0.8,s:'クランク',bg:'#1d4ed8',bd:'#e5e7eb',fg:'#ffffff',size:0.4,pass:true},
+     {t:'sign',x:27.10,y:11.00,w:0.95,h:0.95,s:'12',size:0.55,pass:true},
+     {t:'sign',x:27.10,y:30.00,w:0.95,h:0.95,s:'13',size:0.55,pass:true},
+     {t:'sign',x:15.40,y:32.50,w:0.95,h:0.95,s:'14',size:0.55,pass:true},
+     {t:'sign',x:15.40,y:9.00,w:0.95,h:0.95,s:'11',size:0.55,pass:true},
+     {t:'sign',x:37.50,y:20.00,w:0.95,h:0.95,s:'7',size:0.55,pass:true},
+     {t:'sign',x:12.80,y:3.20,w:0.95,h:0.95,s:'9',size:0.55,pass:true},
+     {t:'wall',x:-24.850,y:24.950,w:50.000,h:0.100,a:1.5708,c:'#3f4a3c',pass:true},
+     {t:'wall',x:14.850,y:24.950,w:50.000,h:0.100,a:1.5708,c:'#3f4a3c',pass:true},
+     {t:'tree',x:27.8,y:46.0,r:1.0},
+     {t:'tree',x:38.5,y:6.0,r:1.2},
+     {t:'tree',x:38.6,y:27.0,r:1.3},
+     {t:'tree',x:38.4,y:44.0,r:1.1},
+     {t:'tree',x:5.6,y:3.0,r:1.2},
+     {t:'tree',x:14.2,y:5.2,r:1.1},
+     {t:'tree',x:7.6,y:13.6,r:1.0},
+     {t:'tree',x:15.4,y:43.4,r:0.9},
+     {t:'tree',x:15.4,y:47.6,r:0.8}],
+   deco:[{t:'text',x:21.5,y:9.0,s:'方向変換',c:'rgba(255,255,255,.75)',size:1.3},{t:'text',x:21.5,y:47.0,s:'↓ 出口',c:'rgba(255,255,255,.75)',size:1.1}],
+   start:{x:21.50,y:40,th:-Math.PI/2}, th:{S:150,A:220,B:330}}
 ];
 var STG=0, LANE, SLOT, SITES, OBST, GROUND='grass', DECO=[];
 var IMGS={};   // 路面標示に使う画像のキャッシュ
@@ -889,7 +1075,8 @@ function loadStage(i){
         .concat([].concat.apply([],(st.motoBlocks||[]).map(expandMoto)));
   GROUND=st.ground||'grass';
   DECO=st.deco||[];
-  TR=(st.trailer==='660')?TR660:TR495;   // サービスエリアだけ長いトレーラー
+  TR=(st.rig==='semi')?TRSEMI:(st.trailer==='660')?TR660:TR495;   // サービスエリアだけ長いトレーラー、教習所はセミトレーラー
+  if(typeof CARS==='object'&&CARS)CAR=(st.rig==='semi')?CARS.semi:CARS[CARKEY];   // 教習所は教習用トラクタ (選んだ牽引車は変えない)
   W=st.worldW||28;                       // 舗装ステージは横に広い (右まで振り出せるように)
   H=st.worldH||44;
   if(typeof cv!=='undefined'&&cv)resize();
@@ -928,7 +1115,9 @@ function expandMoto(b){
 // トレーラーの振れは速い。数値だけで素直に難しくなる
 var CARS={
   cx8:   {L:2.90, a:1.10, len:4.90, wid:1.90, front:3.90, rear:1.00, maxSteer:35*Math.PI/180, body:'suv'},
-  triton:{L:3.13, a:1.35, len:5.36, wid:1.93, front:4.06, rear:1.30, maxSteer:35*Math.PI/180, body:'pickup'}
+  triton:{L:3.13, a:1.35, len:5.36, wid:1.93, front:4.06, rear:1.30, maxSteer:35*Math.PI/180, body:'pickup'},
+  // 教習用トラクタ (教習所ステージ専用・仮の寸法): 長さ6.0m、ホイールベース3.3m、第5輪 (連結点) は後軸の0.3m前 (a がマイナス)
+  semi:  {L:3.30, a:-0.30, len:6.00, wid:2.49, front:4.30, rear:1.70, maxSteer:40*Math.PI/180, body:'tractor'}
 };
 var CARKEY='cx8';
 try{var _ck=localStorage.getItem('tpg_car'); if(CARS[_ck])CARKEY=_ck;}catch(e){}
@@ -936,6 +1125,7 @@ var CAR=CARS[CARKEY];
 // トレーラーはステージごとに切り替える。既定は495クラス、サービスエリアだけ660クラス
 var TR495={Lt:4.3,len:5.8,wid:2.3,bodyFront:1.2};   // 連結全長 約12.0m
 var TR660={Lt:5.0,len:6.6,wid:2.3,bodyFront:1.2};   // 連結全長 約12.8m
+var TRSEMI={Lt:5.5,len:7.5,wid:2.49,bodyFront:-1.0,semi:true};   // 教習用セミトレーラー (仮): 長さ7.5m、荷台はキングピンの1.0m前から、車軸はキングピンの5.5m後ろ。連結全長 約10.5m
 var TR=TR495;
 // 状態
 var S={};
@@ -954,7 +1144,7 @@ try{STEER_HOLD=localStorage.getItem('tpg_steer')==='1';}catch(e){}
 document.querySelectorAll('#segCar button').forEach(function(b){
   b.classList.toggle('on', b.dataset.c===CARKEY);
   b.addEventListener('click',function(){
-    CARKEY=b.dataset.c; CAR=CARS[CARKEY];
+    CARKEY=b.dataset.c; CAR=(STAGES[STG].rig==='semi')?CARS.semi:CARS[CARKEY];
     document.querySelectorAll('#segCar button').forEach(function(x){x.classList.toggle('on',x===b);});
     try{localStorage.setItem('tpg_car',CARKEY);}catch(e){}
     reset(); draw();                     // 連結位置が変わるので引き直す
@@ -996,7 +1186,10 @@ function step(dt){
   var acc=4*dt;
   if(S.v<vt)S.v=Math.min(vt,S.v+acc); else if(S.v>vt)S.v=Math.max(vt,S.v-acc);
   var dir=S.v>0.05?1:(S.v<-0.05?-1:0);
-  if(dir&&S.lastDir&&dir!==S.lastDir)S.sw++;
+  if(dir&&S.lastDir&&dir!==S.lastDir){
+    if(STAGES[STG].mode==='henkan'){if(!S.garaged&&dir>0){S.sw++;if(S.sw>=4){failRun(T('kyFail4','切り返しが4回になりました。3回までに入れよう'));return;}}}   // 方向変換: 車庫に入れる前の「後退→前進」だけ数える。4回目で不合格
+    else S.sw++;
+  }
   if(dir)S.lastDir=dir;
   if(Math.abs(S.v)<0.01){checkGoal(dt);return;}   // 停止中もゴール判定(止まって0.8秒で成立)
   var prev={x:S.x,y:S.y,th:S.th,psi:S.psi};
@@ -1031,6 +1224,16 @@ function outside(st){
 }
 function carPoly(){var cx=S.x+(CAR.front-CAR.rear)/2*Math.cos(S.th),cy=S.y+(CAR.front-CAR.rear)/2*Math.sin(S.th);return rectPoly(cx,cy,CAR.len,CAR.wid,S.th);}
 function trPoly(){var h=hitch(S);var d=TR.bodyFront+TR.len/2;var cx=h.x-d*Math.cos(S.psi),cy=h.y-d*Math.sin(S.psi);return rectPoly(cx,cy,TR.len,TR.wid,S.psi);}
+// タイヤの四角 (トラクタ前後・トレーラーの2軸、左右)。描くタイヤと同じ位置と大きさ
+function wheelPolys(){var c=Math.cos(S.th),s=Math.sin(S.th),h=hitch(S),cp=Math.cos(S.psi),sp=Math.sin(S.psi),tw=(CAR.wid-.35)/2,tt=(TR.wid-.35)/2,out=[];
+  [0,CAR.L].forEach(function(u){var x=S.x+c*u,y=S.y+s*u;[-1,1].forEach(function(k){out.push(rectPoly(x-s*tw*k,y+c*tw*k,.7,.26,S.th));});});
+  [TR.Lt-.65,TR.Lt+.65].forEach(function(q){var x=h.x-cp*q,y=h.y-sp*q;[-1,1].forEach(function(k){out.push(rectPoly(x-sp*tt*k,y+cp*tt*k,.7,.26,S.psi));});});
+  return out;}
+function collideWheels(){var Wp=wheelPolys(),C=carPoly(),T=trPoly();
+  for(var i=0;i<OBST.length;i++){var o=OBST[i];if(o.pass)continue;
+    if(o.t==='poly'){var Pg=o.pts.map(function(q){return {x:q[0],y:q[1]};});for(var j=0;j<Wp.length;j++)if(polyHit(Wp[j],Pg))return true;}
+    else if(o.t==='tree'){var hr=o.hit||o.r;if(circHit(C,o.x,o.y,hr)||circHit(T,o.x,o.y,hr))return true;}}
+  return false;}
 function polyHit(A,B){ // 分離軸(凸四角形)
   var ps=[A,B];
   for(var k=0;k<2;k++){var P=ps[k];for(var i=0;i<P.length;i++){var p1=P[i],p2=P[(i+1)%P.length];var nx=p2.y-p1.y,ny=p1.x-p2.x;
@@ -1047,6 +1250,7 @@ function circHit(P,cx,cy,r){ // 円と凸多角形
   return inside;
 }
 function collide(){
+  if(STAGES[STG].wheelHit)return collideWheels();
   var C=carPoly(),T=trPoly();
   for(var i=0;i<OBST.length;i++){var o=OBST[i];
     if(o.pass)continue;   // 見た目だけで当たらない (段差のない歩道など)
@@ -1081,6 +1285,7 @@ function inSlot(P){   // 4隅すべてが目標枠の中か (斜め枠にも対�
   return true;
 }
 function checkGoal(dt){
+  if(STAGES[STG].mode==='henkan')return checkHenkan(dt);
   // 判定は「枠に収まっているか」だけ。向きは見ない
   // (枠幅が車体幅+1m程度しかないので、曲がっていればそもそも収まらない)
   var trIn=inSlot(trPoly());
@@ -1104,6 +1309,33 @@ function checkGoal(dt){
   toast(hint);
 }
 function toast(t){var el=document.getElementById('hM');el.textContent=t;el.hidden=!t;}
+// 方向変換 (教習所): トレーラーが車庫の中で、トラクタとまっすぐ (6°以内) に止まったら車庫入れ完了。そのあと連結車ぜんぶが車庫の口より下へ、頭を下に向けて出たら完了
+function checkHenkan(dt){
+  var st=STAGES[STG],hint='';
+  if(!S.garaged){
+    var trIn=inSlot(trPoly()),straight=Math.abs(norm(S.psi-S.th))<6*Math.PI/180,ok=trIn&&straight;
+    if(ok&&Math.abs(S.v)<0.05){S.stopT+=dt;if(S.stopT>0.8){S.garaged=true;S.stopT=0;track('parked');}} else S.stopT=0;
+    S.outTr=!trIn&&anySlot(trPoly());S.outCar=false;
+    hint=S.jack?T('hJack','折れすぎ！前進して立て直そう'):S.contact?T('kyWheel','脱輪！'):(trIn&&!straight)?T('kyStraight','トラクタとトレーラーをまっすぐに'):ok?T('kyIn','車庫に入った！止まって…'):S.outTr?T('kyOut','トレーラーが車庫からはみ出している'):'';
+  } else {
+    S.outTr=S.outCar=false;
+    var all=carPoly().concat(trPoly()),out=all.every(function(p){return p.y>st.exitY;}),down=Math.cos(S.th-Math.PI/2)>0.9;
+    if(out&&down){toast('');S.phase='level';finish();return;}   // 水平出しはなし
+    hint=S.jack?T('hJack','折れすぎ！前進して立て直そう'):S.contact?T('kyWheel','脱輪！'):T('kyExit','車庫入れOK！ 前進して、来た方向（下）へ出よう');
+  }
+  toast(hint);
+}
+// 不合格 (切り返し4回目など): 結果画面に不合格と出す。ランキングには登録しない
+function failRun(msg){
+  if(S.phase!=='drive')return;S.phase='done';IN.f=IN.b=IN.l=IN.r=false;S.v=0;toast('');
+  document.getElementById('rTtl').textContent=T('kyFailTtl','✕ 不合格');
+  document.getElementById('rRank').hidden=true;
+  document.getElementById('rT').textContent=(Math.round(S.t*10)/10).toFixed(1)+'s';document.getElementById('rS').textContent=S.sw;document.getElementById('rC').textContent=S.col;
+  document.getElementById('rMsg').textContent=msg;
+  document.getElementById('rBest').hidden=true;document.getElementById('rkBox').hidden=true;
+  document.getElementById('bProduct').hidden=true;var _ps=document.getElementById('bProductS');_ps.hidden=false;_ps.querySelector('a').textContent=T('kyProd','キャンピングトレーラーの水平出しに TRAILER LEVEL →');   // もう一度が先。製品は小さく
+  show('ovResult');track('fail');
+}
 
 // ---------- 描画 ----------
 var cv=document.getElementById('cv'),cx=cv.getContext('2d'),SC=10,OX=0,OY=0,DPR=1;
@@ -1170,7 +1402,7 @@ function drawBg(){   // 地面・区画・障害物 (動かないもの)
     cx.fillStyle='#686d74';cx.fillRect(LANE.x,LANE.y,LANE.w,LANE.h);
     cx.strokeStyle='rgba(255,255,255,.55)';cx.lineWidth=.11;
     SITES.forEach(function(s){padPath(s);cx.stroke();});
-    cx.fillStyle=(GROUND==='concrete')?'#c6c4c3':'#575b61';padPath(SLOT);cx.fill();if(GROUND==='concrete'){cx.save();padPath(SLOT);cx.clip();drawTex('conc',-12,-12,W+12,H+12);cx.restore();}
+    if(!STAGES[STG].noSlotMark){cx.fillStyle=(GROUND==='concrete')?'#c6c4c3':'#575b61';padPath(SLOT);cx.fill();}if(GROUND==='concrete'){cx.save();padPath(SLOT);cx.clip();drawTex('conc',-12,-12,W+12,H+12);cx.restore();}
     // 路面標示: 白線 (line) とオレンジの標示 (mark)。車道の上に描く
     DECO.forEach(function(o){
       if(o.t==='line'){cx.strokeStyle=o.c||'#fff';cx.lineWidth=o.w||0.15;cx.setLineDash(o.dash||[]);
@@ -1200,8 +1432,8 @@ function drawBg(){   // 地面・区画・障害物 (動かないもの)
     cx.fillStyle='rgba(255,255,255,.30)';cx.font='bold 1.5px sans-serif';cx.textAlign='center';
     cx.fillText(T('mkBig','大型車'),0,0);cx.restore();
   }
-  cx.setLineDash([.5,.35]);cx.lineWidth=.14;cx.strokeStyle='#fff';padPath(SLOT);cx.stroke();cx.setLineDash([]);
-  {
+  if(!STAGES[STG].noSlotMark){cx.setLineDash([.5,.35]);cx.lineWidth=.14;cx.strokeStyle='#fff';padPath(SLOT);cx.stroke();cx.setLineDash([]);}
+  if(!STAGES[STG].noSlotMark){
     var sc2=padC(SLOT);
     cx.save();cx.translate(sc2.x,sc2.y);cx.rotate(SLOT.a||0);
     cx.fillStyle='rgba(255,255,255,.85)';cx.font='bold 1.1px sans-serif';cx.textAlign='center';
@@ -1243,6 +1475,9 @@ function drawBg(){   // 地面・区画・障害物 (動かないもの)
     else if(o.t==='shade'){cx.fillStyle=o.c||'rgba(0,0,0,.3)';cx.beginPath();o.polys.forEach(function(P){P.forEach(function(q,i){if(i)cx.lineTo(q[0],q[1]);else cx.moveTo(q[0],q[1]);});cx.closePath();});cx.fill();}
     else if(o.t==='img'){var im=IMGS[o.src];if(!im){im=new Image();im.onload=function(){BGKEY='';};im.src=o.src;IMGS[o.src]=im;}   // 路面に描いた画像 (ロゴなど)。背景を1枚にしているステージは、読み込めたら描き直す
       if(im.complete&&im.naturalWidth){var ih=o.h||o.w*im.naturalHeight/im.naturalWidth;cx.save();cx.translate(o.x,o.y);cx.rotate(o.rot||0);cx.globalAlpha=o.alpha||0.85;cx.drawImage(im,-o.w/2,-ih/2,o.w,ih);cx.restore();}}
+    else if(o.t==='pole'){cx.fillStyle='rgba(0,0,0,.25)';cx.beginPath();cx.arc(o.x+.12,o.y+.14,.22,0,7);cx.fill();cx.fillStyle='#ffffff';cx.beginPath();cx.arc(o.x,o.y,.22,0,7);cx.fill();cx.strokeStyle='#dc2626';cx.lineWidth=.09;cx.beginPath();cx.arc(o.x,o.y,.15,0,7);cx.stroke();cx.fillStyle='#dc2626';cx.beginPath();cx.arc(o.x,o.y,.06,0,7);cx.fill();}
+    else if(o.t==='sign'){cx.save();cx.translate(o.x,o.y);cx.fillStyle=o.bg||'#ffffff';cx.fillRect(-o.w/2,-o.h/2,o.w,o.h);cx.strokeStyle=o.bd||'#1f2937';cx.lineWidth=.06;cx.strokeRect(-o.w/2,-o.h/2,o.w,o.h);cx.fillStyle=o.fg||'#111827';cx.font='bold '+(o.size||.5)+'px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(o.s,0,.03);cx.restore();}
+    else if(o.t==='signal'){cx.fillStyle='#374151';cx.beginPath();cx.arc(o.x,o.y+.55,.12,0,7);cx.fill();cx.fillStyle='#1f2937';rr(o.x-.7,o.y-.24,1.4,.48,.12);cx.fill();[['#22c55e',-.42],['#3f3f1f',0],['#3f1f1f',.42]].forEach(function(l){cx.fillStyle=l[0];cx.beginPath();cx.arc(o.x+l[1],o.y,.14,0,7);cx.fill();});}
     else if(o.t==='grate'){drawGrate(o);}
     else if(o.t==='poly'){cx.fillStyle=o.c;cx.beginPath();o.pts.forEach(function(q,i){if(i)cx.lineTo(q[0],q[1]);else cx.moveTo(q[0],q[1]);});cx.closePath();cx.fill();if(o.tex)drawPolyTex(o);if(o.pat==='lawn')drawLawn(o);else if(o.pat)drawRoofPat(o);}
     else{drawTrailerBody(o.x+o.w/2,o.y+o.h/2,o.h,o.w,o.a,'#d9dde3',true);}
@@ -1252,6 +1487,12 @@ function drawFg(){   // 自分の車・上に重なる屋根・枠の表示 (毎
   // 自分のトレーラーと車
   var h=hitch(S);
   var d=TR.bodyFront+TR.len/2;
+  if(TR.semi){
+    wheelPair(S.x,S.y,S.th,CAR.wid-.35,0);wheelPair(S.x+CAR.L*Math.cos(S.th),S.y+CAR.L*Math.sin(S.th),S.th,CAR.wid-.35,S.st);
+    drawCar();
+    [TR.Lt-.65,TR.Lt+.65].forEach(function(q){wheelPair(h.x-q*Math.cos(S.psi),h.y-q*Math.sin(S.psi),S.psi,TR.wid-.35,0);});
+    drawSemiTrailer(h.x-d*Math.cos(S.psi),h.y-d*Math.sin(S.psi),TR.len,TR.wid,S.psi);
+  } else {
   drawDrawbar(h,S.psi);
   // 車輪(トレーラー)
   wheelPair(h.x-TR.Lt*Math.cos(S.psi),h.y-TR.Lt*Math.sin(S.psi),S.psi,TR.wid+.1,0);
@@ -1260,6 +1501,7 @@ function drawFg(){   // 自分の車・上に重なる屋根・枠の表示 (毎
   wheelPair(S.x,S.y,S.th,CAR.wid-.2,0);
   wheelPair(S.x+CAR.L*Math.cos(S.th),S.y+CAR.L*Math.sin(S.th),S.th,CAR.wid-.2,S.st);
   drawCar();
+  }
   // 上に重なる屋根 (庇など、下を車が通れるもの): 車の上に半透明で描く
   OBST.forEach(function(o){if(!o.over)return;cx.save();
     if(o.a){var _ox=o.x+o.w/2,_oy=o.y+o.h/2;cx.translate(_ox,_oy);cx.rotate(o.a);cx.translate(-_ox,-_oy);}
@@ -1469,6 +1711,43 @@ function drawTrailerBody(x,y,len,wid,a,color,ghost){
   cx.fillStyle=ghost?'#c0c5cc':'#cbd5e1';rr(-.3,-.25,.5,.5,.08);cx.fill();  // ベント
   // 前面: ガスボックス(ドローバー上)は drawbar 側で描く。後面: 窓
   cx.fillStyle=ghost?'#9fb3c8':'#93c5fd';cx.fillRect(-L2+.05,-.7,.12,1.4);
+  cx.restore();
+}
+// 教習用トラクタ (真上から): 白いキャブ (前2.2m)、屋根に「教習」の表示、後ろはシャシーと第5輪
+function drawTractor(){
+  var cxm=S.x+(CAR.front-CAR.rear)/2*Math.cos(S.th),cym=S.y+(CAR.front-CAR.rear)/2*Math.sin(S.th);
+  var L2=CAR.len/2,W2=CAR.wid/2,ax=-L2+CAR.rear;   // ax = 後軸の位置 (車体中心からの前後)
+  cx.save();cx.translate(cxm,cym);cx.rotate(S.th);
+  var _so=shOff(.2,.25,S.th);cx.fillStyle='rgba(0,0,0,.3)';rr(-L2+_so[0],-W2+_so[1],CAR.len,CAR.wid,.3);cx.fill();
+  cx.fillStyle='#374151';rr(-L2,-.62,CAR.len-2.0,1.24,.1);cx.fill();                       // シャシー (2本のフレーム)
+  cx.fillStyle='#1f2937';cx.fillRect(-L2,-W2+.25,.18,CAR.wid-.5);                           // 後ろのバンパー
+  cx.fillStyle='#4b5563';cx.beginPath();cx.arc(ax-CAR.a,0,.62,0,6.2832);cx.fill();          // 第5輪 (カプラー)
+  cx.fillStyle='#9ca3af';cx.beginPath();cx.arc(ax-CAR.a,0,.18,0,6.2832);cx.fill();
+  cx.fillStyle='#111827';cx.fillRect(-L2+.4,-W2+.05,.9,.2);cx.fillRect(-L2+.4,W2-.25,.9,.2);  // 泥よけ
+  // キャブ
+  cx.fillStyle='#f8fafc';rr(L2-2.25,-W2,2.25,CAR.wid,.3);cx.fill();
+  cx.strokeStyle='#94a3b8';cx.lineWidth=.06;rr(L2-2.25,-W2,2.25,CAR.wid,.3);cx.stroke();
+  cx.fillStyle='#16a34a';cx.fillRect(L2-2.25,-W2+.02,2.25,.22);cx.fillRect(L2-2.25,W2-.24,2.25,.22);   // 横の帯
+  cx.fillStyle='#1e3a5f';rr(L2-.42,-W2+.18,.3,CAR.wid-.36,.08);cx.fill();                  // フロントガラス
+  cx.fillStyle='#fde047';rr(L2-1.7,-.55,.7,1.1,.1);cx.fill();                               // 屋根の「教習」表示
+  cx.save();cx.translate(L2-1.35,0);cx.rotate(Math.PI/2);cx.fillStyle='#1f2937';cx.font='bold .38px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(T('kyRoof','教習'),0,0);cx.restore();
+  cx.fillStyle='#4b5563';rr(L2-.95,-W2-.28,.3,.26,.05);cx.fill();rr(L2-.95,W2+.02,.3,.26,.05);cx.fill();   // ミラー
+  cx.fillStyle='#fef3c7';rr(L2-.12,-W2+.15,.1,.45,.04);cx.fill();rr(L2-.12,W2-.6,.1,.45,.04);cx.fill();      // ライト
+  cx.restore();
+}
+// 教習用セミトレーラー (真上から): 平らな荷台 (板張り)、前の鳥居、重りのブロック2つ
+function drawSemiTrailer(x,y,len,wid,a){
+  cx.save();cx.translate(x,y);cx.rotate(a);
+  var L2=len/2,W2=wid/2;
+  var _so=shOff(.25,.3,a);cx.fillStyle='rgba(0,0,0,.28)';rr(-L2+_so[0],-W2+_so[1],len,wid,.15);cx.fill();
+  cx.fillStyle='#a8875e';rr(-L2,-W2,len,wid,.15);cx.fill();                                   // 板張りの荷台
+  cx.strokeStyle='rgba(60,40,20,.35)';cx.lineWidth=.04;cx.beginPath();
+  for(var k=1;k<8;k++){var v=-W2+wid*k/8;cx.moveTo(-L2+.1,v);cx.lineTo(L2-.1,v);}cx.stroke();
+  cx.strokeStyle='#4b5563';cx.lineWidth=.12;rr(-L2,-W2,len,wid,.15);cx.stroke();              // 枠 (あおり)
+  cx.fillStyle='#374151';cx.fillRect(L2-.25,-W2,.25,wid);                                     // 前の鳥居
+  cx.fillStyle='#9ca3af';rr(-.9,-.75,1.2,1.5,.08);cx.fill();rr(-3.0,-.75,1.2,1.5,.08);cx.fill();   // 重りのブロック
+  cx.strokeStyle='#6b7280';cx.lineWidth=.05;rr(-.9,-.75,1.2,1.5,.08);cx.stroke();rr(-3.0,-.75,1.2,1.5,.08);cx.stroke();
+  cx.fillStyle='#ef4444';rr(-L2+.02,-W2+.15,.1,.45,.04);cx.fill();rr(-L2+.02,W2-.6,.1,.45,.04);cx.fill();   // テールランプ
   cx.restore();
 }
 function drawDrawbar(h,psi){
@@ -1682,6 +1961,7 @@ function drawPickup(){
 }
 function drawCar(){
   if(CAR.body==='pickup')return drawPickup();
+  if(CAR.body==='tractor')return drawTractor();
   var cxm=S.x+(CAR.front-CAR.rear)/2*Math.cos(S.th),cym=S.y+(CAR.front-CAR.rear)/2*Math.sin(S.th);
   var L2=CAR.len/2,W2=CAR.wid/2;
   cx.save();cx.translate(cxm,cym);cx.rotate(S.th);
@@ -1762,7 +2042,11 @@ var RANKV={S:4,A:3,B:2,C:1};
 // 記録のキーはステージ名で持つ (順番を入れ替えても記録が迷子にならない)。
 // ステージ1のベストだけは公開初期のキーをそのまま引き継ぐ
 // 車両で難易度が変わるので記録も分ける。既定のSUVは接尾辞なし=従来のキーのまま
-function carSuf(){return CARKEY==='cx8'?'':'_'+CARKEY;}
+function stageNo(){return STAGES[STG].no||STG+1;}
+function carSuf(){if(STAGES[STG].rig==='semi')return '';return CARKEY==='cx8'?'':'_'+CARKEY;}
+// 教習所 (セミトレーラー専用) では牽引車の選択を隠して説明を出す。ランキングはステージ別なので、サーバーへは今ある車種キー cx8 で送る
+function rigUI(){var sm=STAGES[STG].rig==='semi';document.getElementById('segCar').hidden=sm;document.getElementById('rigNote').hidden=!sm;}
+function rkKey(){return STAGES[STG].rig==='semi'?'cx8':CARKEY;}
 function bestKey(){return (STG===0?'tpg_best':'tpg_best_'+STAGES[STG].name)+carSuf();}
 function histKey(){return 'tpg_hist_'+STAGES[STG].name+carSuf();}
 function loadBest(){try{return JSON.parse(localStorage.getItem(bestKey())||'null');}catch(e){return null;}}
@@ -1775,7 +2059,7 @@ function pushHist(rec){
 function showTitleBest(){
   var b=loadBest(),h=loadHist(),el=document.getElementById('tBest');
   if(!b){el.hidden=true;return;}
-  var s=T('tBest1','🏆 ステージ')+(STG+1)+T('tBest2','の自己ベスト: ランク')+b.rank+' '+Number(b.t).toFixed(1)+'s ('+T('tBest3','切り返し')+b.sw+T('tBest4','回・接触')+b.col+T('tBest5','回)');
+  var s=T('tBest1','🏆 ステージ')+stageNo()+T('tBest2','の自己ベスト: ランク')+b.rank+' '+Number(b.t).toFixed(1)+'s ('+T('tBest3','切り返し')+b.sw+T('tBest4','回・接触')+b.col+T('tBest5','回)');
   el.hidden=false;el.textContent=s;
 }
 // タイトル画面にも履歴を出す (クリアしなくても過去の記録を確認できるように)
@@ -1795,7 +2079,7 @@ function renderHist(h,elId,labelFirst){
   }
   var first=labelFirst||T('hNow','今回');
   el.hidden=false;
-  el.innerHTML='<div class="hl">'+T('hTtl','これまでの記録 (ステージ')+(STG+1)+')</div>'+h.slice(0,6).map(function(r,i){
+  el.innerHTML='<div class="hl">'+T('hTtl','これまでの記録 (ステージ')+stageNo()+')</div>'+h.slice(0,6).map(function(r,i){
     var cls='hr'+(i===0&&first===T('hNow','今回')?' now':'')+(i===bi?' bestrow':'');
     return '<div class="'+cls+'"><span>'+(i===0?first:T('hAgoA','')+i+T('hAgo','回前'))+'</span><b>'+(i===bi?'🏆':'')+r.rank+'</b>'
          + '<span class="t">'+Number(r.t).toFixed(1)+'s</span>'
@@ -1809,7 +2093,8 @@ var RELEASE=[0,
              Date.parse('2026-09-13T20:00:00+09:00'),   // 2 街道の休憩所
              Date.parse('2026-09-15T20:00:00+09:00'),   // 3 SUN BASE (それまでは合言葉 ?k= でだけ開く)
              Date.parse('2026-10-01T19:00:00+09:00'),   // 4 Vi-again Village (それまでは合言葉 ?k= でだけ開く)
-             Infinity];                                  // 5 高速の斜め枠 (解禁日は未定)
+             Infinity,                                   // 5 高速の斜め枠 (解禁日は未定)
+             Date.parse('2026-10-10T18:00:00+09:00')];   // 6 教習所 (それまでは合言葉 ?k=kyoshu2610 でだけ開く)
 var PREVIEW=location.search.indexOf('stages')>=0;
 var KEY=(location.search.match(/[?&]k=([^&]+)/)||[])[1]||'';   // 合言葉 (先方に試してもらう用)
 function stageOpen(i){
@@ -1827,7 +2112,7 @@ function stageOpen(i){
 })();
 document.querySelectorAll('#segStage button').forEach(function(b){
   b.addEventListener('click',function(){
-    loadStage(parseInt(b.dataset.s,10));
+    loadStage(parseInt(b.dataset.s,10));rigUI();
     document.querySelectorAll('#segStage button').forEach(function(x){x.classList.toggle('on',x===b);});
     showTitleBest();showTitleHist();rkTitle();
   });
@@ -1846,8 +2131,8 @@ document.querySelectorAll('#segRank button').forEach(function(b){
 });
 // 同じ人は1件だけにするための端末の ID (呼び名と合わせて同一人物の判定に使う。個人を特定する情報ではない)
 function rkUid(){var u='';try{u=localStorage.getItem('tpg_uid')||'';if(!u){u=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('tpg_uid',u);}}catch(e){}return u;}
-function rkCar(){return CARKEY==='cx8'?T('carSuv','SUV'):T('carPickup','ピックアップ');}
-function rkTitleStr(){return T('rkTtl','みんなのランキング')+' ('+T('stage','ステージ')+(STG+1)+T('rkCar','・')+rkCar()+')';}
+function rkCar(){if(STAGES[STG].rig==='semi')return T('carSemi','セミトレーラー');return CARKEY==='cx8'?T('carSuv','SUV'):T('carPickup','ピックアップ');}
+function rkTitleStr(){return T('rkTtl','みんなのランキング')+' ('+T('stage','ステージ')+stageNo()+T('rkCar','・')+rkCar()+')';}
 function rkRows(h,n,mine){
   if(!h.length)return '<div class="hr"><span class="n">'+T('rkNone','まだ記録がありません。最初の1人になろう')+'</span></div>';
   return h.slice(0,n).map(function(r,i){
@@ -1874,18 +2159,18 @@ function rkTitle(){
   box.hidden=!RANK_ON; if(!RANK_ON)return;
   var nt=document.getElementById('rkNameT'); try{nt.value=localStorage.getItem('tpg_name')||'';document.getElementById('rkPinT').value=localStorage.getItem('tpg_pin')||'';}catch(e){}
   document.getElementById('rkTitleTtl').textContent=rkTitleStr();
-  var el=document.getElementById('rkTitleList'),st=STG,car=CARKEY;
+  var el=document.getElementById('rkTitleList'),st=STG,car=rkKey();
   el.innerHTML='<div class="hr"><span class="n">'+T('rkLoading','読み込み中...')+'</span></div>';
   fetch(RANK_API+'/top?stage='+st+'&car='+encodeURIComponent(car),{cache:'no-store'}).then(function(r){return r.json();})
-    .then(function(d){if(st!==STG||car!==CARKEY)return;RK.title=d.top||[];RK.more=false;rkTitleDraw();})
+    .then(function(d){if(st!==STG||car!==rkKey())return;RK.title=d.top||[];RK.more=false;rkTitleDraw();})
     .catch(function(){el.innerHTML='<div class="hr"><span class="n">'+T('rkOff','ランキングは今つながりません')+'</span></div>';});
 }
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function rkLoad(){
-  document.getElementById('rkTtl').textContent=T('rkTtl','みんなのランキング')+' ('+T('stage','ステージ')+(STG+1)+T('rkCar','・')+rkCar()+')';
+  document.getElementById('rkTtl').textContent=T('rkTtl','みんなのランキング')+' ('+T('stage','ステージ')+stageNo()+T('rkCar','・')+rkCar()+')';
   var el=document.getElementById('rkList');el.innerHTML='<div class="hr"><span class="n">'+T('rkLoading','読み込み中...')+'</span></div>';
   RK.list=[];RK.mine=null;RK.rmore=false;
-  fetch(RANK_API+'/top?stage='+STG+'&car='+encodeURIComponent(CARKEY),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){RK.list=d.top||[];rkRender();})
+  fetch(RANK_API+'/top?stage='+STG+'&car='+encodeURIComponent(rkKey()),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){RK.list=d.top||[];rkRender();})
     .catch(function(){el.innerHTML='<div class="hr"><span class="n">'+T('rkOff','ランキングは今つながりません')+'</span></div>';});
 }
 function rkPrep(){
@@ -1916,7 +2201,7 @@ document.getElementById('bPost').onclick=function(){
   if(pin.length!==4){msg.textContent=T('rkPinBad','暗証番号は4桁の数字を入れてください');pinEl.focus();return;}
   try{localStorage.setItem('tpg_name',name);localStorage.setItem('tpg_pin',pin);}catch(e){}
   b.disabled=true;inp.disabled=true;msg.textContent='...';
-  fetch(RANK_API+'/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage:STG,car:CARKEY,name:name,t:S.lastT,rank:S.lastRank,sw:S.sw,col:S.col,pin:pin})})
+  fetch(RANK_API+'/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage:STG,car:rkKey(),name:name,t:S.lastT,rank:S.lastRank,sw:S.sw,col:S.col,pin:pin})})
     .then(function(r){return r.json().then(function(d){d._s=r.status;return d;});})
     .then(function(d){
       if(d.ok){S.posted=true;RK.list=d.top||[];RK.mine=d.top&&d.top[(d.pos||0)-1]||null;
@@ -1931,7 +2216,10 @@ function finish(){
   var rank=(S.col===0&&S.sw<=2&&t<th.S)?'S':(S.col===0&&S.sw<=4&&t<th.A)?'A':(S.col<=1&&t<th.B)?'B':'C';
   document.getElementById('rRank').textContent=rank;
   document.getElementById('rT').textContent=t.toFixed(1)+'s';document.getElementById('rS').textContent=S.sw;document.getElementById('rC').textContent=S.col;
-  var msg={S:T('mS','一発。プロの牽引屋さんですか？'),A:T('mA','上手い。キャンプ場で拍手が起きるレベル。'),B:T('mB','無事に入った。隣の人も安心。'),C:T('mC','入った！ 次はもう少し早く。慣れです。')}[rank];
+  var _hk=STAGES[STG].mode==='henkan';
+  document.getElementById('rTtl').textContent=_hk?T('kyTtl','✓ 方向変換、完了'):T('rTtl','✓ 水平です。今夜はぐっすり。');
+  var _pb=document.getElementById('bProduct');if(_hk)_pb.innerHTML=T('kyProd2','キャンピングトレーラーの水平出しに<br>TRAILER LEVEL →');else _pb.textContent=T('prod','この水準器、本物があります →');_pb.hidden=false;document.getElementById('bProductS').hidden=true;document.getElementById('rRank').hidden=false;   // 教習所では水平出しをしないので、キャンピングトレーラーの水平出しの道具として案内
+  var msg=_hk?{S:T('kyS','一発合格。教官もうなずいている。'),A:T('kyA','合格。落ち着いたバックでした。'),B:T('kyB','合格ライン。次は接触ゼロで。'),C:T('kyC','完走。まずは接触を減らそう。')}[rank]:{S:T('mS','一発。プロの牽引屋さんですか？'),A:T('mA','上手い。キャンプ場で拍手が起きるレベル。'),B:T('mB','無事に入った。隣の人も安心。'),C:T('mC','入った！ 次はもう少し早く。慣れです。')}[rank];
   document.getElementById('rMsg').textContent=msg;
   var b=loadBest();
   S.newBest=!b || RANKV[rank]>RANKV[b.rank] || (rank===b.rank && t<b.t);
@@ -1948,9 +2236,10 @@ function finish(){
   S.posted=false;rkPrep();
   show('ovResult');track('clear_'+rank);
 }
-document.getElementById('bProduct').onclick=function(){trackProduct();};
+document.getElementById('bProduct').onclick=function(){trackProduct(STAGES[STG].mode==='henkan'?'parking-game-kyoshu-to-product':'parking-game-to-product');};
+document.querySelector('#bProductS a').onclick=function(){trackProduct('parking-game-kyoshu-fail-to-product');};
 document.getElementById('bShare').onclick=function(){track('share');
-  var txt=T('shA','トレーラー駐車ゲーム ステージ')+(STG+1)+T('shB',' 🚙 ランク')+S.lastRank+' '+S.lastT.toFixed(1)+'s '+T('shC','切り返し')+S.sw+T('shD','回 接触')+S.col+T('shE','回')
+  var txt=T('shA','トレーラー駐車ゲーム ステージ')+stageNo()+T('shB',' 🚙 ランク')+S.lastRank+' '+S.lastT.toFixed(1)+'s '+T('shC','切り返し')+S.sw+T('shD','回 接触')+S.col+T('shE','回')
         +(S.newBest?T('shF',' 🏆自己ベスト更新！'):'')
         +T('shG',' 何秒で入れられる？ #トレーラー駐車ゲーム #mono_labo');
   var url=location.href.split('?')[0];
@@ -1958,8 +2247,8 @@ document.getElementById('bShare').onclick=function(){track('share');
   else if(navigator.clipboard){navigator.clipboard.writeText(txt+' '+url).then(function(){alert(T('copied','結果をコピーしました'));});}
 };
 // ゲーム内の操作は game_action（キーイベントではない）。tool_open は製品ページへ進む意思表示だけに使う
-function track(n){if(typeof gtag==='function')gtag('event','game_action',{action:n});}
-function trackProduct(){if(typeof gtag==='function')gtag('event','tool_open',{tool_name:'parking-game-to-product'});}
+function track(n){if(typeof gtag==='function')gtag('event','game_action',{action:n,stage:STAGES[STG].name});}   // stage: どのステージか (2026-10-04)
+function trackProduct(src){if(typeof gtag==='function')gtag('event','tool_open',{tool_name:src||'parking-game-to-product',stage:STAGES[STG].name});}
 window.__G={IN:IN,S:function(){return S;},step:step,draw:draw,hud:hud,view:function(sc,x,y){SC=sc;OX=cv.width/2-x*sc;OY=cv.height/2-y*sc;draw();},resetView:resize,stage:function(){return {STG:STG,SLOT:SLOT,obstN:OBST.length};}};
 showTitleBest();showTitleHist();rkTitle();
 reset();
