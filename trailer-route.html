@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>牽引ルート（開発中）— けん引した時の高速代・時間・坂をルートごとに | mono labo</title>
+<meta name="description" content="行き先を入れるだけで、キャンピングトレーラーをけん引した時の高速代（中型車の料金）・着く時刻・燃料代・坂を、ルートごとに出すツール。試してくれる人を募集しています。">
+<meta property="og:title" content="牽引ルート（開発中）— 試してくれる人を募集しています">
+<meta property="og:description" content="けん引した時の高速代・着く時刻・燃料代・坂を、ルートごとに。キャンピングトレーラーをけん引する方に試してもらいたいツールです。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="mono labo">
+<meta property="og:image" content="https://easyautomate2024-cell.github.io/mono-labo/og_route.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CT3HK859TJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  // 内部トラフィック: 本番ドメイン以外(ローカル開発サーバー等) と、?internal=1 を一度開いた端末は除外する(?internal=0 で解除)
+  (function () {
+    var internal = location.hostname !== 'easyautomate2024-cell.github.io';
+    try {
+      var q = new URLSearchParams(location.search).get('internal');
+      if (q === '1') localStorage.setItem('ml_internal', '1');
+      else if (q === '0') localStorage.removeItem('ml_internal');
+      if (localStorage.getItem('ml_internal') === '1') internal = true;
+    } catch (e) {}
+    if (internal) gtag('set', { traffic_type: 'internal' });
+    gtag('config', 'G-CT3HK859TJ', internal ? { traffic_type: 'internal' } : {});
+  })();
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{
+  --bg:#f5f5f7;--bg-white:#ffffff;
+  --text:#1d1d1f;--muted:#6e6e73;
+  --accent:#0071e3;--green:#34c759;--red:#ff3b30;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,"Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg-white);color:var(--text);line-height:1.6;overflow-x:hidden}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 48px}
+.nav-inner{max-width:1100px;margin:0 auto;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--muted);font-size:14px}
+.nav-logo img{width:24px;height:auto}
+.nav-logo span{color:var(--muted)}
+.nav-logo .sep{margin:0 6px;opacity:.4}
+.nav-logo strong{color:var(--text)}
+.nav-links{display:flex;align-items:center;gap:20px}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{background:var(--accent);color:#fff!important;font-size:13px;font-weight:600;padding:8px 18px;border-radius:980px;transition:filter .2s}
+.nav-cta:hover{filter:brightness(1.1)}
+
+/* HERO */
+.hero{background:linear-gradient(180deg,#fff 0%,#f0f4ff 100%);border-bottom:1px solid var(--border);padding:80px 24px 72px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,113,227,0.08);border:1px solid rgba(0,113,227,0.2);color:var(--accent);font-size:12px;font-weight:600;padding:5px 14px;border-radius:980px;margin-bottom:24px;letter-spacing:.4px}
+.hero h1{font-size:clamp(28px,5vw,56px);font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:16px}
+.hero h1 span{color:var(--accent)}
+.hero-sub{font-size:clamp(15px,1.8vw,19px);color:var(--muted);max-width:600px;margin:0 auto 36px;line-height:1.65}
+.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-p{background:var(--accent);color:#fff;font-size:15px;font-weight:600;padding:14px 32px;border-radius:980px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:filter .2s;border:0;cursor:pointer;font-family:inherit}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-p:disabled{opacity:.45;cursor:default;filter:none}
+.btn-s{background:transparent;border:1px solid var(--border2);color:var(--text);font-size:15px;font-weight:500;padding:14px 32px;border-radius:980px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .2s}
+.btn-s:hover{background:var(--bg)}
+
+/* SECTIONS */
+section{padding:80px 24px}
+.inner{max-width:1100px;margin:0 auto}
+.sec-eyebrow{font-size:12px;font-weight:600;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:10px}
+.sec-title{font-size:clamp(22px,3vw,38px);font-weight:700;letter-spacing:-.02em;margin-bottom:10px}
+.sec-sub{font-size:16px;color:var(--muted);margin-bottom:40px;line-height:1.6}
+
+/* こんな事ありませんか？ */
+.pain-sec{background:var(--bg)}
+.pain-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.pain{background:var(--bg-white);border:1px solid var(--border);border-radius:16px;padding:24px}
+.pain-num{width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.pain-q{font-size:17px;font-weight:700;margin-bottom:10px}
+.pain-a{font-size:13.5px;color:var(--muted);line-height:1.7}
+.pain-a b{color:var(--text)}
+
+/* 画面 */
+.ss-sec{background:var(--bg-white)}
+.ss-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media(max-width:900px){.ss-grid{grid-template-columns:1fr 1fr}}
+.ss-label{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px}
+.ss-img{width:100%;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,0.1);border:1px solid var(--border);display:block}
+.credit{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.7}
+
+/* 募集 */
+.join-sec{background:var(--bg)}
+.steps{display:flex;flex-direction:column;gap:0;max-width:800px}
+.step{display:grid;grid-template-columns:64px 1fr;gap:20px;padding:24px 0;border-bottom:1px solid var(--border);align-items:start}
+.step:last-child{border-bottom:none}
+.step-num{width:48px;height:48px;border-radius:12px;background:var(--accent);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center}
+.step-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.step-desc{font-size:14px;color:var(--muted);line-height:1.75}
+
+/* 欲しい機能（投票） */
+.poll-sec{background:var(--bg-white)}
+.poll{max-width:720px;background:var(--bg);border-radius:18px;padding:28px}
+.poll-choices{display:flex;flex-direction:column;gap:10px;border:0;margin-bottom:18px}
+.poll-choice{display:flex;align-items:center;gap:12px;background:var(--bg-white);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;cursor:pointer;font-size:15px}
+.poll-choice input{width:20px;height:20px;accent-color:var(--accent);flex-shrink:0}
+.poll-choice:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.poll-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.poll-link{background:none;border:0;color:var(--accent);font-size:14px;cursor:pointer;font-family:inherit;padding:0}
+.poll-status{font-size:14px;color:var(--muted);margin-top:14px;min-height:1.6em}
+.poll-status.err{color:var(--red)}
+.poll-results{display:none;flex-direction:column;gap:12px;margin-top:6px}
+.poll-results.show{display:flex}
+.pr-head{font-size:15px;font-weight:700}
+.pr-row{font-size:14px}
+.pr-top{display:flex;justify-content:space-between;gap:12px;margin-bottom:4px}
+.pr-top span:last-child{color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pr-bar{height:10px;border-radius:999px;background:#e3e8ef;overflow:hidden}
+.pr-bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.poll-note{font-size:12.5px;color:var(--muted);margin-top:18px;line-height:1.7}
+
+/* 注意 */
+.note-sec{background:var(--bg)}
+.notes{max-width:800px;display:flex;flex-direction:column;gap:12px}
+.notes p{font-size:14px;color:var(--muted);line-height:1.75}
+
+/* CTA */
+.cta-sec{background:linear-gradient(135deg,#0055b3 0%,#0071e3 100%);padding:80px 24px;text-align:center}
+.cta-sec h2{font-size:clamp(24px,3.5vw,40px);font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:12px}
+.cta-sec p{font-size:16px;color:rgba(255,255,255,0.8);margin-bottom:32px;line-height:1.6}
+.btn-white{background:#fff;color:var(--accent);font-size:15px;font-weight:700;padding:16px 36px;border-radius:980px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:filter .2s}
+.btn-white:hover{filter:brightness(.96)}
+
+/* FOOTER */
+footer{background:#1d1d1f;padding:36px 48px}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.fbrand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.fbrand img{width:22px;height:auto}
+.fbrand span{font-size:13px;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:2px}
+.fcopy{font-size:12px;color:rgba(255,255,255,0.3)}
+.flinks{display:flex;gap:20px}
+.flinks a{font-size:13px;color:rgba(255,255,255,0.4);text-decoration:none}
+.flinks a:hover{color:rgba(255,255,255,0.75)}
+
+@media(max-width:600px){
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  section{padding:64px 20px}
+  .poll{padding:20px}
+  .step{grid-template-columns:52px 1fr;gap:14px}
+  footer{padding:32px 24px}
+  .footer-inner{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="./index.html" class="nav-logo">
+      <img src="./logo.png" alt="mono labo">
+      <span>mono labo</span>
+      <span class="sep">/</span>
+      <strong>牽引ルート</strong>
+    </a>
+    <div class="nav-links">
+      <a href="#features">できること</a>
+      <a href="#join">募集</a>
+      <a href="#poll">欲しい機能</a>
+      <a href="https://ig.me/m/trailerjourney.style" target="_blank" rel="noopener" class="nav-cta">DM で申し込む</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge"><i class="ti ti-flask" aria-hidden="true"></i> 開発中・試してくれる人を募集中</div>
+  <h1>けん引した時の<br><span>本当の費用</span>を、<br>出発前に。</h1>
+  <p class="hero-sub">行き先を入れるだけで、キャンピングトレーラーをけん引した時の高速代・着く時刻・燃料代・坂を、ルートごとに出すツールです。</p>
+  <div class="hero-actions">
+    <a href="https://ig.me/m/trailerjourney.style" target="_blank" rel="noopener" class="btn-p"><i class="ti ti-brand-instagram" aria-hidden="true"></i>Instagram の DM で申し込む</a>
+    <a href="#poll" class="btn-s"><i class="ti ti-checkbox" aria-hidden="true"></i>欲しい機能に答える</a>
+  </div>
+</div>
+
+<!-- こんな事ありませんか？ -->
+<section class="pain-sec" id="features">
+  <div class="inner">
+    <div class="sec-eyebrow">Features</div>
+    <h2 class="sec-title">けん引してて、こんな事ありませんか？</h2>
+    <p class="sec-sub">牽引ルートは、けん引した時の値段と時間で計算します。</p>
+    <div class="pain-grid">
+      <div class="pain">
+        <div class="pain-num">1</div>
+        <div class="pain-q">高速代が、思ったより高い</div>
+        <p class="pain-a">1 軸のトレーラーを引くと、高速は<b>中型車の料金</b>になり、休日割引も効きません。牽引ルートは、中型車の料金で計算します。</p>
+      </div>
+      <div class="pain">
+        <div class="pain-num">2</div>
+        <div class="pain-q">ナビの時間より、着くのが遅れる</div>
+        <p class="pain-a">けん引中は、高速は <b>80km/h まで</b>。けん引した時の着く時刻を出します。</p>
+      </div>
+      <div class="pain">
+        <div class="pain-num">3</div>
+        <div class="pain-q">ガソリン代も、思ったよりかかる</div>
+        <p class="pain-a">燃料代は、<b>けん引中の燃費</b>で計算します。燃費は自分の車に合わせて入れられます。</p>
+      </div>
+      <div class="pain">
+        <div class="pain-num">4</div>
+        <div class="pain-q">峠の下り坂で、ブレーキが心配</div>
+        <p class="pain-a">長い下り坂や急な坂を、<b>図と数字で先に</b>知らせます。下り坂の少ない道も選べます。峠を越える道も、経由地を足して比べられます。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 画面 -->
+<section class="ss-sec">
+  <div class="inner">
+    <div class="sec-eyebrow">Screens</div>
+    <h2 class="sec-title">開発中の画面</h2>
+    <p class="sec-sub">決めたルートは、そのまま Google マップで案内できます。</p>
+    <div class="ss-grid">
+      <div><div class="ss-label">高速代は中型車の料金</div><img src="./ss_route_toll.jpg" alt="費用の内訳。高速代は中型車の料金で、休日割引が効かないことも書いてある画面" class="ss-img" loading="lazy"></div>
+      <div><div class="ss-label">けん引した時の着く時刻</div><img src="./ss_route_time.jpg" alt="着くまでの時間と、普通車ならの時間を並べた画面" class="ss-img" loading="lazy"></div>
+      <div><div class="ss-label">坂の上り下りの図</div><img src="./ss_route_slope.jpg" alt="ルートの標高の図。長い下り坂が色の帯で出ている画面" class="ss-img" loading="lazy"></div>
+      <div><div class="ss-label">下り坂の少ない道を選ぶ</div><img src="./ss_route_avoid.jpg" alt="3 本のルートを並べて、上りがいちばん少ないルートに印が付いた画面" class="ss-img" loading="lazy"></div>
+    </div>
+    <p class="credit">画面の例: 東京駅から道の駅白馬（1 月の土曜 朝 7 時）、埼玉から伊東（山中湖を通る道を足したもの）。<br>この画面の地図・道路・標高は国土地理院、ルートは OSRM（© OpenStreetMap contributors）、IC の位置は国土数値情報（国土交通省）を加工して作成したものを使っています。</p>
+  </div>
+</section>
+
+<!-- 募集 -->
+<section class="join-sec" id="join">
+  <div class="inner">
+    <div class="sec-eyebrow">Testers</div>
+    <h2 class="sec-title">試してくれる人を募集しています</h2>
+    <p class="sec-sub">先着 10 名です。埋まったら、このページと Instagram でお知らせします。</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num"><i class="ti ti-user-check" aria-hidden="true"></i></div>
+        <div>
+          <div class="step-title">対象</div>
+          <p class="step-desc">キャンピングトレーラーをけん引する方。いまの高速代は、1 軸のトレーラー（中型車の料金）で出しています。2 軸のトレーラー（大型車の料金）の方がいれば、対応を進めます。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"><i class="ti ti-calendar" aria-hidden="true"></i></div>
+        <div>
+          <div class="step-title">期間</div>
+          <p class="step-desc">2027 年 1 月 11 日（成人の日）まで。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"><i class="ti ti-message-2" aria-hidden="true"></i></div>
+        <div>
+          <div class="step-title">お願いしたいこと</div>
+          <p class="step-desc">試したあとに、使ってみた感想や評価、気になった点を教えてください。期間中に 1 回でも実際に走って、高速代や時間が合っていたかを教えてもらえると助かります。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"><i class="ti ti-brand-instagram" aria-hidden="true"></i></div>
+        <div>
+          <div class="step-title">申し込み</div>
+          <p class="step-desc">Instagram の DM で「試したい」と送ってください。スマホのブラウザで使えます。アプリを入れる必要はありません。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 欲しい機能（投票） -->
+<section class="poll-sec" id="poll">
+  <div class="inner">
+    <div class="sec-eyebrow">Your voice</div>
+    <h2 class="sec-title">こんな機能があったら嬉しい、を教えてください</h2>
+    <p class="sec-sub">当てはまるものを選んで「送る」を押してください。いくつでも選べます。いただいた声を見て、作るものを決めます。</p>
+    <form class="poll" id="poll-form">
+      <fieldset class="poll-choices">
+        <legend class="pr-head" style="margin-bottom:6px">牽引ルートに欲しい機能</legend>
+        <label class="poll-choice"><input type="checkbox" name="c" value="return-trip">帰り道もまとめて計算</label>
+        <label class="poll-choice"><input type="checkbox" name="c" value="narrow-roads">目的地の近くの細い道を知らせる</label>
+        <label class="poll-choice"><input type="checkbox" name="c" value="rest-areas">大きな車も止められる休憩場所を探す</label>
+        <label class="poll-choice"><input type="checkbox" name="c" value="fuel-stations">トレーラーごと入れるガソリンスタンドを探す</label>
+        <label class="poll-choice"><input type="checkbox" name="c" value="two-axle">2 軸のトレーラー（大型車の料金）に対応</label>
+      </fieldset>
+      <div class="poll-actions">
+        <button type="submit" class="btn-p" id="poll-send" disabled><i class="ti ti-send" aria-hidden="true"></i>送る</button>
+        <button type="button" class="poll-link" id="poll-peek">結果だけ見る</button>
+      </div>
+      <div class="poll-status" id="poll-status" role="status" aria-live="polite"></div>
+      <div class="poll-results" id="poll-results"></div>
+      <p class="poll-note">数えるのは、どれが選ばれたかだけです。名前や書き込みは受け取りません。同じ人が何度も答えないように、1 日 1 回までにしています。ほかの希望は、Instagram の DM かコメントで教えてください。</p>
+    </form>
+  </div>
+</section>
+
+<!-- 注意 -->
+<section class="note-sec">
+  <div class="inner">
+    <div class="sec-eyebrow">Notes</div>
+    <h2 class="sec-title">ご注意</h2>
+    <div class="notes">
+      <p>開発中のツールです。高速代・時間・坂は目安で、実際と違うことがあります。道の幅・高さ制限・重さ制限は見ていません。</p>
+      <p>試していただくページでは、場所の検索・ルート・地図に Google マップを使います。そのため、このページの画面とは、ルートや金額が変わることがあります。</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-sec">
+  <h2>試してくれる人を募集しています</h2>
+  <p>キャンピングトレーラーをけん引する方、<br>Instagram の DM で「試したい」と送ってください。</p>
+  <a href="https://ig.me/m/trailerjourney.style" target="_blank" rel="noopener" class="btn-white"><i class="ti ti-brand-instagram" aria-hidden="true"></i>DM で申し込む</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <a href="./index.html" class="fbrand">
+      <img src="./logo.png" alt="mono labo">
+      <span>mono labo</span>
+    </a>
+    <div class="fcopy">© 2025 mono labo. All rights reserved.</div>
+    <div class="flinks">
+      <a href="./index.html">ホーム</a>
+      <a href="https://note.com/mono_laborarory" target="_blank">note</a>
+      <a href="https://jp.mercari.com/user/profile/363820193" target="_blank">メルカリ</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// 欲しい機能の投票（2026-10-30）。答えを数える受け口は Cloudflare（公開リポジトリの外の monolabo-poll）。
+// 公開のページは Cloudflare の受け口、家の Wi-Fi の確認用サーバーで開いたときは PC の wrangler dev（8788）につなぐ
+(function () {
+  var API = location.hostname === 'easyautomate2024-cell.github.io'
+    ? 'https://monolabo-poll.tpg-ranking.workers.dev'
+    : 'http://' + location.hostname + ':8788';
+  var POLL = API + '/polls/route-scout-features';
+  var STORE = 'ml_poll_route_features';
+  var form = document.getElementById('poll-form');
+  var send = document.getElementById('poll-send');
+  var peek = document.getElementById('poll-peek');
+  var status = document.getElementById('poll-status');
+  var box = document.getElementById('poll-results');
+  var labels = {};
+  form.querySelectorAll('input[name=c]').forEach(function (input) {
+    labels[input.value] = input.parentElement.textContent.trim();
+  });
+
+  function today() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
+  function setStatus(text, isError) {
+    status.textContent = text || '';
+    status.classList.toggle('err', !!isError);
+  }
+  function picked() {
+    return Array.prototype.map.call(form.querySelectorAll('input[name=c]:checked'), function (i) { return i.value; });
+  }
+  function refreshButton() { send.disabled = picked().length === 0; }
+  form.addEventListener('change', refreshButton);
+
+  function showResults(data) {
+    box.innerHTML = '';
+    var voters = data.voters || 0;
+    var head = document.createElement('div');
+    head.className = 'pr-head';
+    head.textContent = 'いままでの結果（答えた人 ' + voters + ' 人）';
+    box.appendChild(head);
+    var rows = Object.keys(labels).map(function (id) { return { id: id, n: (data.counts && data.counts[id]) || 0 }; });
+    rows.sort(function (a, b) { return b.n - a.n; });
+    rows.forEach(function (r) {
+      var pct = voters ? Math.round((r.n / voters) * 100) : 0;
+      var row = document.createElement('div');
+      row.className = 'pr-row';
+      var top = document.createElement('div');
+      top.className = 'pr-top';
+      var name = document.createElement('span');
+      name.textContent = labels[r.id];
+      var num = document.createElement('span');
+      num.textContent = r.n + ' 人（' + pct + '%）';
+      top.appendChild(name);
+      top.appendChild(num);
+      var bar = document.createElement('div');
+      bar.className = 'pr-bar';
+      var fill = document.createElement('i');
+      fill.style.width = pct + '%';
+      bar.appendChild(fill);
+      row.appendChild(top);
+      row.appendChild(bar);
+      box.appendChild(row);
+    });
+    box.classList.add('show');
+  }
+
+  function load() {
+    return fetch(POLL).then(function (res) {
+      if (!res.ok) throw new Error('読み込めませんでした');
+      return res.json();
+    });
+  }
+
+  peek.addEventListener('click', function () {
+    setStatus('結果を読み込んでいます…');
+    load().then(function (data) { setStatus(''); showResults(data); })
+      .catch(function () { setStatus('いま結果を読み込めません。時間をおいてください', true); });
+  });
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var choices = picked();
+    if (!choices.length) return;
+    send.disabled = true;
+    setStatus('送っています…');
+    fetch(POLL + '/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ choices: choices }),
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (data) { return { res: res, data: data }; });
+    }).then(function (r) {
+      if (r.res.ok) {
+        setStatus('ありがとうございます。答えを受け付けました。');
+        try { localStorage.setItem(STORE, today()); } catch (e) {}
+        showResults(r.data);
+      } else if (r.res.status === 409 || r.res.status === 429) {
+        setStatus(r.data.error || '今日はもう受け付けられません', true);
+        if (r.data.counts) showResults(r.data);
+      } else {
+        setStatus(r.data.error || '送れませんでした。時間をおいてください', true);
+        refreshButton();
+      }
+    }).catch(function () {
+      setStatus('送れませんでした。電波のよい所で、もう一度押してください', true);
+      refreshButton();
+    });
+  });
+
+  // 今日もう答えた端末では、はじめから結果を出す
+  try {
+    if (localStorage.getItem(STORE) === today()) {
+      setStatus('今日はもう答えています。明日また答えられます。');
+      load().then(showResults).catch(function () {});
+    }
+  } catch (e) {}
+})();
+</script>
+
+</body>
+</html>
