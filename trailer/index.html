@@ -121,8 +121,7 @@ section{padding:64px 24px}
 .sel-box{margin-top:12px}
 .list-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 10px;font-size:14px;font-weight:700}
 .list-head span:last-child{color:var(--muted);font-weight:500;font-size:13px}
-.list-side{display:inline-flex;align-items:baseline;gap:10px}
-.list-narrow{font:inherit;font-size:13px;font-weight:700;color:var(--navy);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}   /* 止めた一覧を、地図に映っている所だけに絞る */
+.list-note{font-size:12.5px;color:var(--muted);line-height:1.6;margin:-4px 0 10px}
 .places{display:flex;flex-direction:column;gap:12px}
 /* 探す */
 .search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border2);border-radius:12px;padding:5px 5px 5px 12px}
@@ -193,7 +192,8 @@ html.map-big,html.map-big body{overflow:hidden}
 /* 場所のカード */
 .place{background:var(--bg-white);border:1px solid var(--border);border-radius:16px;padding:16px}
 .place.is-sel{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
-.places .place{cursor:pointer}   /* 一覧のカードを押すと、地図でその場所を見せる */
+.places .place{cursor:pointer;transition:opacity .2s}   /* 一覧のカードを押すと、地図でその場所を見せる */
+.places .place.off{opacity:.45}   /* いまの地図の外にある場所（押すと、地図がそこへ動く） */
 @media(max-width:979px){.places .place{scroll-margin-top:72px}}   /* 地図の印からカードまで動かすとき、上の帯に隠れないように */
 .sel-box .place{box-shadow:0 8px 24px rgba(0,0,0,0.08);border-color:var(--navy)}
 .place-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
@@ -448,7 +448,8 @@ footer{background:#1d1d1f;padding:36px 48px}
         <div class="sel-box" id="selBox" hidden></div>
       </div>
       <div class="list-col">
-        <div class="list-head"><span id="listTitle">場所の一覧</span><span class="list-side"><button type="button" class="list-narrow" id="listNarrow" data-act="narrow" hidden>地図の範囲に絞る</button><span id="listCount"></span></span></div>
+        <div class="list-head"><span id="listTitle">場所の一覧</span><span id="listCount"></span></div>
+        <p class="list-note" id="listNote" hidden>薄いカードは、いまの地図の外にある場所です。押すと、地図がそこへ動きます。</p>
         <div class="places" id="places"><div class="empty">読み込んでいます…</div></div>
       </div>
     </div>
@@ -838,13 +839,13 @@ footer{background:#1d1d1f;padding:36px 48px}
       (r.comment ? '<p class="rep-cmt">' + esc(r.comment) + '</p>' : '') +
       (by ? '<div class="rep-by">' + esc(by) + '</div>' : '') + '</li>';
   }
-  function placeHtml(x, boxed) {
+  function placeHtml(x, boxed, off) {
     var p = x.p, c = CAT[p.cat] || CAT.other;
     var latest = latestMonth(p);
     var meta = [c.label, '投稿 ' + p.reports.length + '件', latest ? '最新 ' + monthLabel(latest) : '', state.user ? 'ここから ' + fmtKm(km(state.user, p)) : ''].filter(Boolean).join(' ・ ');
     var reps = p.reports.slice().sort(function (a, b) { return (b.month || '').localeCompare(a.month || ''); });
     var gmaps = 'https://www.google.com/maps/search/?api=1&query=' + p.lat + ',' + p.lng;
-    return '<article class="place' + (!boxed && state.sel === p.id ? ' is-sel' : '') + '" data-id="' + esc(p.id) + '">' +
+    return '<article class="place' + (off ? ' off' : '') + (!boxed && state.sel === p.id ? ' is-sel' : '') + '" data-id="' + esc(p.id) + '">' +
       '<div class="place-top"><span class="pin ' + x.st + '">' + esc(c.glyph) + '</span>' +
       '<div><h3 class="place-name">' + esc(p.name) + '</h3><div class="place-meta">' + esc(meta) + '</div></div>' +
       (boxed ? '<button type="button" class="sel-close" data-act="close" aria-label="閉じる">×</button>' : '') + '</div>' +
@@ -873,36 +874,43 @@ footer{background:#1d1d1f;padding:36px 48px}
   function renderList() {
     var box = $('places');
     state.shownIds = [];
-    $('listNarrow').hidden = true;
+    $('listNote').hidden = true;
     if (state.loadError) { box.innerHTML = '<div class="empty">いま投稿を読み込めません。時間をおいて、開き直してください。</div>'; $('listCount').textContent = ''; return; }
     var xs = visible();
     var bounds = mapOk && map ? map.getBounds() : null;
+    // 一覧には、絞り込みに合う場所を全部出す。いまの地図に映っている場所はふつうの濃さ、地図の外の場所は薄く出す
+    var onMap = function (x) { return !bounds || bounds.contains({ lat: x.p.lat, lng: x.p.lng }); };
     var shown;
     if (state.listLock && state.lockIds) {
-      // 一覧のカードから地図を寄せたあとは、一覧の中身と順番をそのままにする（地図を自分で動かすまで）
+      // 一覧のカードから地図を寄せたあとは、並び順をそのままにする（地図を自分で動かすまで）。濃さだけ変わる
       var byid = {};
       xs.forEach(function (x) { byid[x.p.id] = x; });
       shown = state.lockIds.map(function (id) { return byid[id]; }).filter(Boolean);
     } else {
-      shown = bounds ? xs.filter(function (x) { return bounds.contains({ lat: x.p.lat, lng: x.p.lng }); }) : xs;
+      // 地図に映っている場所が先、地図の外があと。どちらも近い順（いまいる所か、地図の真ん中から）
       var origin = state.user || (mapOk && map && map.getCenter() ? { lat: map.getCenter().lat(), lng: map.getCenter().lng() } : null);
-      if (origin) shown.sort(function (a, b) { return km(origin, a.p) - km(origin, b.p); });
-      else shown.sort(function (a, b) { return latestMonth(b.p).localeCompare(latestMonth(a.p)); });
+      shown = xs.slice().sort(function (a, b) {
+        var d = (onMap(a) ? 0 : 1) - (onMap(b) ? 0 : 1);
+        if (d) return d;
+        return origin ? km(origin, a.p) - km(origin, b.p) : latestMonth(b.p).localeCompare(latestMonth(a.p));
+      });
     }
     state.shownIds = shown.map(function (x) { return x.p.id; });   // 地図の印からカードを探すときに使う
     var si = state.sel ? state.shownIds.indexOf(state.sel) : -1;
     if (si >= state.listMax) state.listMax = Math.ceil((si + 1) / LIST_STEP) * LIST_STEP;   // 選んだ場所のカードは「もっと見る」に隠さない
-    $('listTitle').textContent = bounds && !state.listLock ? '地図に映っている場所' : '場所の一覧';
-    $('listNarrow').hidden = !(bounds && state.listLock);   // 止めているあいだは、1 回で地図の範囲に絞れるように
-    $('listCount').textContent = shown.length + ' か所' + (state.user ? '・近い順' : '');
+    var nOn = bounds ? shown.filter(onMap).length : shown.length;
+    $('listTitle').textContent = '場所の一覧';
+    $('listCount').textContent = (bounds ? '地図に ' + nOn + ' か所・全 ' : '') + shown.length + ' か所' + (state.user ? '・近い順' : '');
     if (!shown.length) {
-      box.innerHTML = '<div class="empty">' + (xs.length && bounds
-        ? 'この範囲には、まだ載っている場所がありません。<br>地図を動かすか、縮めてみてください。'
-        : 'まだ載っている場所がありません。') + nearHelp(xs.length > 0) + '</div>';
+      box.innerHTML = '<div class="empty">まだ載っている場所がありません。' + nearHelp(false) + '</div>';
       return;
     }
+    $('listNote').hidden = !(bounds && nOn < shown.length);
     var rest = shown.length - state.listMax;
-    box.innerHTML = shown.slice(0, state.listMax).map(function (x) { return placeHtml(x, false); }).join('') +
+    box.innerHTML = (bounds && !nOn
+        ? '<div class="empty">この範囲には、まだ載っている場所がありません。<br>地図を動かすか、縮めてみてください。' + nearHelp(true) + '</div>'
+        : '') +
+      shown.slice(0, state.listMax).map(function (x) { return placeHtml(x, false, !onMap(x)); }).join('') +
       (rest > 0 ? '<button type="button" class="btn-sm more" data-act="more">もっと見る（あと ' + rest + ' か所）</button>' : '');
   }
 
@@ -932,8 +940,8 @@ footer{background:#1d1d1f;padding:36px 48px}
     el.scrollIntoView({ behavior: 'smooth', block: WIDE.matches ? 'nearest' : 'start' });
     return true;
   }
-  // 一覧を止める・戻す。一覧のカードから選んで地図を寄せたときは、一覧の中身と順番を止める（他のカードが消えないように）。
-  // 地図を自分で動かしたら（ドラッグ・拡大縮小）、また「地図に映っている場所」に戻す。
+  // 一覧の並びを止める・戻す。一覧のカードから選んで地図を寄せたときは、並び順を止める（押したカードが一番上へ飛ばないように。濃さは地図に合わせて変わる）。
+  // 地図を自分で動かしたら（ドラッグ・拡大縮小）、また「地図に映っている場所が先」の順に並べ直す。
   // quiet() のあいだのこちらからの地図の動き（カードから寄せる、大きさを変える、印をカードの上へずらす）では、止めたままにする
   function quiet() {
     state.quiet = true;
@@ -953,6 +961,7 @@ footer{background:#1d1d1f;padding:36px 48px}
     });
     Array.prototype.forEach.call(document.querySelectorAll('#places .place'), function (el) {
       el.classList.toggle('is-sel', el.getAttribute('data-id') === id);
+      if (from === 'card' && el.getAttribute('data-id') === id) el.classList.remove('off');   // 地図がそこへ動くので、すぐ濃くする
     });
     var p = byId(id);
     if (p && mapOk && (from === 'card' || from === 'list' || from === 'url')) {
@@ -1097,7 +1106,7 @@ footer{background:#1d1d1f;padding:36px 48px}
       showUser();
       showFoundMarker();
       map.addListener('idle', renderList);
-      // 地図を自分で動かしたら、止めていた一覧を「地図に映っている場所」に戻す（こちらから動かしたときは quiet() で除く）
+      // 地図を自分で動かしたら、止めていた並び順を戻す（こちらから動かしたときは quiet() で除く）
       map.addListener('dragstart', unlockList);
       map.addListener('center_changed', function () { if (!state.quiet) unlockList(); });
       map.addListener('zoom_changed', function () { if (!state.quiet) unlockList(); });
@@ -1502,7 +1511,6 @@ footer{background:#1d1d1f;padding:36px 48px}
     else if (act === 'copy' && id) copyLink(id, b);
     else if (act === 'close') unselect();
     else if (act === 'more') { state.listMax += LIST_STEP * 2; renderList(); }
-    else if (act === 'narrow') { state.listLock = false; state.listMax = LIST_STEP; renderList(); }
     else if (act === 'post-here' && id) {
       // リンクの行き先を、押したときに作る（開くのはブラウザ。種類・名前・位置・いつもの情報・今日の日付が入る）
       var p = byId(id);
