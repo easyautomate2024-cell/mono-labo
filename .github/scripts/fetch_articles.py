@@ -30,6 +30,9 @@ def extract_image(item):
         m = re.search(r'<img[^>]+src="([^"]+)"', text)
         if m:
             return m.group(1)
+    # note's RSS puts the eyecatch URL in the text of <media:thumbnail>, not in a url attribute
+    if thumb is not None and (thumb.text or "").strip().startswith("https://"):
+        return thumb.text.strip()
     return None
 
 
