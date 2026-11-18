@@ -760,7 +760,9 @@ footer{background:#1d1d1f;padding:36px 48px}
   }
 
   // 投稿フォームの URL。いつもの情報と今日の日付を、最初から入れておく。o があれば種類・名前・場所も入れる
-  // （場所は、o.link があればそのリンク、なければ o.lat・o.lng の位置のリンク）
+  // 場所は、o.link があればそのリンク。o.pin なら地図の十字で決めた位置（「地図の十字 緯度,経度」。人が決めた位置として届く）。
+  // なければ o.lat・o.lng の位置の Google マップのリンク（Google から得た位置として扱われ、場所の番号の座標にそろう）
+  var PIN_TEXT = '地図の十字';   // Apps Script の PIN_RE と同じ言葉（版 9）
   function postUrl(o) {
     var base = CONFIG.forms.stop;
     if (!base) return '';
@@ -770,12 +772,19 @@ footer{background:#1d1d1f;padding:36px 48px}
       if (o.cat && CAT[o.cat]) v.cat = CAT[o.cat].label;
       if (o.name) v.name = o.name;
       if (o.link) v.place = o.link;
-      else if (isFinite(o.lat) && isFinite(o.lng)) v.place = 'https://www.google.com/maps/search/?api=1&query=' + Number(o.lat).toFixed(6) + ',' + Number(o.lng).toFixed(6);
+      else if (isFinite(o.lat) && isFinite(o.lng)) {
+        var ll = Number(o.lat).toFixed(6) + ',' + Number(o.lng).toFixed(6);
+        v.place = o.pin ? PIN_TEXT + ' ' + ll : 'https://www.google.com/maps/search/?api=1&query=' + ll;
+      }
     }
     var q = Object.keys(CONFIG.formEntry).filter(function (k) { return v[k]; }).map(function (k) {
       return 'entry.' + CONFIG.formEntry[k] + '=' + encodeURIComponent(v[k]);
     });
     return base + '?usp=pp_url' + (q.length ? '&' + q.join('&') : '');
+  }
+  // 場所の番号（place_id）だけを渡す Google マップのリンク。フォームに入れる（Google の名前や座標をフォームに残さないため。版 9）
+  function pidLink(pid) {
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('場所') + '&query_place_id=' + encodeURIComponent(pid);
   }
 
   // ===== 色の決め方 =====
@@ -1169,13 +1178,14 @@ footer{background:#1d1d1f;padding:36px 48px}
 
   // ===== 地図の真ん中を投稿する（赤い十字を停めた所に合わせる） =====
   var PICK_MIN_ZOOM = 15;   // これより広く映しているときは、投稿させない（1 画素がおよそ 5m より大きくなる）
-  // info があれば（検索で選んだ場所から始めたとき）、その名前と種類もフォームに入れる
+  var PIN_SAME_M = 3;       // 検索で選んだ場所から、十字をこれより動かしていなければ「動かしていない」とみなす（m）
+  // info があれば（検索で選んだ場所から始めたとき）、種類をフォームに入れる。名前は Google の名前なので入れない（版 9）
   function pickStart(info) {
     if (!mapOk) return;
     state.pick = true;
     state.pickInfo = info && info.name ? info : null;
     $('pickMsg').textContent = state.pickInfo
-      ? '赤い十字を、停めた所に合わせてください（「' + state.pickInfo.name + '」として投稿します）。寄せるほど正確になります。'
+      ? '赤い十字を、「' + state.pickInfo.name + '」で停めた所に合わせてください。寄せるほど正確になります。名前はフォームで入れてください。'
       : '地図を動かして、赤い十字を停めた所に合わせてください。寄せるほど正確になります。';
     $('pickCross').hidden = false;
     $('pickBar').hidden = false;
@@ -1321,7 +1331,7 @@ footer{background:#1d1d1f;padding:36px 48px}
     if (/ENEOS|エネオス|出光|apollostation|アポロステーション|コスモ石油|シェル|宇佐美|キグナス|(^|[^A-Za-z])SS([^A-Za-z]|$)/i.test(s)) return 'gas';
     return '';
   }
-  var SAME_KM = 0.06, NEAR_KM = 0.3;   // 60m 以内の同じ種類は同じ場所とみなす。300m 以内は「近くの投稿」に出す
+  var NEAR_KM = 0.3;   // 300m 以内は「近くの投稿」に出す
   function goPlace(i) {
     var f = search.places && search.places[i];
     if (!f) return;
@@ -1330,8 +1340,9 @@ footer{background:#1d1d1f;padding:36px 48px}
     var cat = guessCat(f.name, f.type);
     var near = state.places.map(function (p) { return { p: p, d: km(f, p) }; })
       .filter(function (x) { return x.d <= NEAR_KM; }).sort(function (a, b) { return a.d - b.d; });
-    var same = near.filter(function (x) { return x.d <= SAME_KM && (!cat || x.p.cat === cat); })[0];
-    if (same) { goSearchPost(same.p.id, 17); return; }   // もう載っている場所なら、その投稿を出す
+    // もう載っている場所なら、その投稿を出す（場所の番号が同じもの。座標での見分けはしない。版 9）
+    var same = f.id ? state.places.filter(function (p) { return p.pid && p.pid === f.id; })[0] : null;
+    if (same) { goSearchPost(same.id, 17); return; }
     unselect();
     state.found = { id: f.id, name: f.name, addr: f.addr, lat: f.lat, lng: f.lng, cat: cat, near: near.slice(0, 3) };
     if (mapOk) {
@@ -1458,7 +1469,9 @@ footer{background:#1d1d1f;padding:36px 48px}
     return ((d && d.places) || []).filter(function (p) {
       return p && isFinite(p.lat) && isFinite(p.lng) && p.reports && p.reports.length;
     }).map(function (p) {
-      return { id: String(p.id), kind: p.kind || 'stop', cat: CAT[p.cat] ? p.cat : 'other', name: String(p.name || ''), lat: Number(p.lat), lng: Number(p.lng), reports: p.reports };
+      // pid: Google の場所の番号（投稿のリンクと、検索で「もう載っている場所」を見分けるのに使う。版 9）
+      return { id: String(p.id), kind: p.kind || 'stop', cat: CAT[p.cat] ? p.cat : 'other', name: String(p.name || ''), lat: Number(p.lat), lng: Number(p.lng),
+        pid: /^[A-Za-z0-9_-]{10,300}$/.test(String(p.pid || '')) ? String(p.pid) : '', reports: p.reports };
     });
   }
   function loadData() {
@@ -1514,9 +1527,10 @@ footer{background:#1d1d1f;padding:36px 48px}
     else if (act === 'close') unselect();
     else if (act === 'more') { state.listMax += LIST_STEP * 2; renderList(); }
     else if (act === 'post-here' && id) {
-      // リンクの行き先を、押したときに作る（開くのはブラウザ。種類・名前・位置・いつもの情報・今日の日付が入る）
+      // リンクの行き先を、押したときに作る（開くのはブラウザ。種類・名前・場所・いつもの情報・今日の日付が入る）。
+      // 場所は、場所の番号があれば、その番号のリンク（Google の座標をフォームに残さない。版 9）
       var p = byId(id);
-      b.href = p ? postUrl({ cat: p.cat, name: p.name, lat: p.lat, lng: p.lng }) : postUrl(null);
+      b.href = p ? postUrl(p.pid ? { cat: p.cat, name: p.name, link: pidLink(p.pid) } : { cat: p.cat, name: p.name, lat: p.lat, lng: p.lng }) : postUrl(null);
     } else if (act === 'pick-go') {
       if (!mapOk) { e.preventDefault(); return; }
       if (map.getZoom() < PICK_MIN_ZOOM) {
@@ -1526,17 +1540,21 @@ footer{background:#1d1d1f;padding:36px 48px}
         return;
       }
       var c = map.getCenter(), pi = state.pickInfo;
-      b.href = postUrl({ lat: c.lat(), lng: c.lng(), name: pi && pi.name, cat: pi && pi.cat });
+      var here = { lat: c.lat(), lng: c.lng() }, f0 = pi && pi.found;
+      // 検索で選んだ場所から十字を動かしていなければ、Google の場所として渡す（場所の番号のリンク。人が決めた位置ではないため。版 9）
+      if (f0 && f0.id && km(here, f0) * 1000 < PIN_SAME_M) b.href = postUrl({ cat: pi.cat, link: pidLink(f0.id) });
+      else b.href = postUrl({ pin: true, lat: here.lat, lng: here.lng, cat: pi && pi.cat });
       setTimeout(pickEnd, 0);
     } else if (act === 'pick-cancel') pickEnd();
     else if (act === 'found-sat') { setSat(!state.sat); ev('portal_action', { action: state.sat ? 'map_sat' : 'map_road' }); renderSel(); }
     else if (act === 'found-pick' && state.found) {
       var fp = state.found;
       if (mapOk) { map.setCenter({ lat: fp.lat, lng: fp.lng }); if (map.getZoom() < 17) map.setZoom(17); }
-      pickStart({ name: fp.name, cat: fp.cat });
+      pickStart({ name: fp.name, cat: fp.cat, found: fp });
     } else if (act === 'found-post' && state.found) {
-      // 地図を出せないときだけ。場所は Google マップのリンク（場所の ID つき）で渡す
-      b.href = postUrl({ cat: state.found.cat, name: state.found.name, link: foundLink(state.found) });
+      // 地図を出せないときだけ。場所は、場所の番号のリンクで渡す。名前は Google の名前なので入れない（版 9）
+      var sf = state.found;
+      b.href = postUrl(sf.id ? { cat: sf.cat, link: pidLink(sf.id) } : { cat: sf.cat, lat: sf.lat, lng: sf.lng });
     } else if (act === 'near') goSearchPost(b.getAttribute('data-near'), 17);
   });
 
