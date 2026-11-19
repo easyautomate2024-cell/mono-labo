@@ -169,6 +169,21 @@ html.map-big,html.map-big body{overflow:hidden}
 @media(max-width:979px){.map-col.big .sel-box{padding-bottom:calc(72px + env(safe-area-inset-bottom))}}   /* Google のロゴと著作権の表示、右下の地図のボタンを隠さない */
 .map-col.big.picking .sel-box{display:none}   /* 位置を選んでいるあいだは、重ねたカードで下の帯を隠さない */
 .map-col.big .sel-box .place{pointer-events:auto;max-width:560px;margin:0 auto;max-height:45vh;max-height:45dvh;overflow:auto;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+/* 大きい地図の上のカードは、地図をなるべく隠さないように詰める。たたむと名前の行だけになる（2026-11-19、ユーザーの iPhone の画面から） */
+.sel-mini{display:none;background:none;border:0;font-size:20px;color:var(--muted);cursor:pointer;line-height:1;padding:2px 6px}
+.map-col.big .sel-box .sel-mini{display:block;margin-left:auto}
+.map-col.big .sel-box .sel-mini + .sel-close{margin-left:0}
+.map-col.big .sel-box .place{padding:10px 12px;border-radius:14px}
+.map-col.big .sel-box .place-top{gap:10px;margin-bottom:6px}
+.map-col.big .sel-box .place-top .pin{width:28px;height:28px;font-size:12px}
+.map-col.big .sel-box .place-name{font-size:15px}
+.map-col.big .sel-box .reps{padding-top:8px;gap:8px}
+.map-col.big .sel-box .place-actions{flex-wrap:nowrap;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.map-col.big .sel-box .place-actions::-webkit-scrollbar{display:none}
+.map-col.big .sel-box .place-actions .btn-sm{flex:0 0 auto;white-space:nowrap;padding:6px 9px;font-size:12px}
+.map-col.big .sel-box .lbl-x{display:none}   /* 「Google マップで開く」を「Google マップ」に縮め、ボタン 3 つを 1 列に収める（幅 375px の iPhone でも） */
+.map-col.big .sel-box .place.mini .place-top{margin-bottom:0;cursor:pointer}
+.map-col.big .sel-box .place.mini > :not(.place-top){display:none}
 /* 検索で選んだ場所 */
 .fdw{position:relative;padding-bottom:7px}
 .fdw::after{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--navy)}
@@ -850,20 +865,25 @@ footer{background:#1d1d1f;padding:36px 48px}
       (r.comment ? '<p class="rep-cmt">' + esc(r.comment) + '</p>' : '') +
       (by ? '<div class="rep-by">' + esc(by) + '</div>' : '') + '</li>';
   }
+  // 大きい地図の上のカードを、たたむ・開くボタン（大きい地図のときだけ見える。たたむと名前の行だけになる）
+  function miniBtn() {
+    return '<button type="button" class="sel-mini" data-act="mini" aria-label="' + (state.selMini ? 'カードを開く' : 'カードをたたむ') + '" aria-expanded="' + (state.selMini ? 'false' : 'true') + '">' +
+      '<i class="ti ti-chevron-' + (state.selMini ? 'up' : 'down') + '" aria-hidden="true"></i></button>';
+  }
   function placeHtml(x, boxed, off) {
     var p = x.p, c = CAT[p.cat] || CAT.other;
     var latest = latestMonth(p);
     var meta = [c.label, '投稿 ' + p.reports.length + '件', latest ? '最新 ' + monthLabel(latest) : '', state.user ? 'ここから ' + fmtKm(km(state.user, p)) : ''].filter(Boolean).join(' ・ ');
     var reps = p.reports.slice().sort(function (a, b) { return (b.month || '').localeCompare(a.month || ''); });
     var gmaps = 'https://www.google.com/maps/search/?api=1&query=' + p.lat + ',' + p.lng;
-    return '<article class="place' + (off ? ' off' : '') + (!boxed && state.sel === p.id ? ' is-sel' : '') + '" data-id="' + esc(p.id) + '">' +
+    return '<article class="place' + (off ? ' off' : '') + (!boxed && state.sel === p.id ? ' is-sel' : '') + (boxed && state.selMini ? ' mini' : '') + '" data-id="' + esc(p.id) + '">' +
       '<div class="place-top"><span class="pin ' + x.st + '">' + esc(c.glyph) + '</span>' +
       '<div><h3 class="place-name">' + esc(p.name) + '</h3><div class="place-meta">' + esc(meta) + '</div></div>' +
-      (boxed ? '<button type="button" class="sel-close" data-act="close" aria-label="閉じる">×</button>' : '') + '</div>' +
+      (boxed ? miniBtn() + '<button type="button" class="sel-close" data-act="close" aria-label="閉じる">×</button>' : '') + '</div>' +
       '<ul class="reps">' + reps.map(reportHtml).join('') + '</ul>' +
       '<div class="place-actions">' +
       (!boxed && mapOk ? '<button type="button" class="btn-sm primary" data-act="show"><i class="ti ti-map-pin" aria-hidden="true"></i>地図で見る</button>' : '') +
-      '<a class="btn-sm" href="' + gmaps + '" target="_blank" rel="noopener" data-ev="gmaps_open"><i class="ti ti-brand-google-maps" aria-hidden="true"></i>Google マップで開く</a>' +
+      '<a class="btn-sm" href="' + gmaps + '" target="_blank" rel="noopener" data-ev="gmaps_open"><i class="ti ti-brand-google-maps" aria-hidden="true"></i>Google マップ<span class="lbl-x">で開く</span></a>' +
       '<button type="button" class="btn-sm" data-act="copy"><i class="ti ti-link" aria-hidden="true"></i>リンクをコピー</button>' +
       (CONFIG.forms.stop ? '<a class="btn-sm" href="#" target="_blank" rel="noopener" data-act="post-here" data-ev="post_place"><i class="ti ti-pencil-plus" aria-hidden="true"></i>この場所に投稿</a>' : '') +
       '</div></article>';
@@ -932,6 +952,9 @@ footer{background:#1d1d1f;padding:36px 48px}
   var WIDE = window.matchMedia ? window.matchMedia('(min-width:980px)') : { matches: false };   // 地図と一覧が横に並ぶ幅
   function renderSel() {
     var box = $('selBox');
+    // ほかの場所を選んだら、たたんだカードは開いて出す（同じ場所の描き直しでは、たたんだまま）
+    var key = (state.sel || '') + '|' + (state.found ? (state.found.id || state.found.name || '') : '');
+    if (key !== state.selKey) { state.selKey = key; state.selMini = false; }
     var p = state.sel && byId(state.sel);
     var x = p && evaluate(p);
     if (x && x.st && (state.big || state.selInBox)) { box.innerHTML = placeHtml(x, true); box.hidden = false; return; }
@@ -992,6 +1015,13 @@ footer{background:#1d1d1f;padding:36px 48px}
     if (!state.big || !mapOk || !m || !m.content || !card || $('selBox').hidden) return;
     var over = m.content.getBoundingClientRect().bottom - (card.getBoundingClientRect().top - 16);
     if (over > 0) { quiet(); map.panBy(0, Math.round(over)); }
+  }
+  // 大きい地図の上のカードを、たたむ・開く。開いたときに選んだ印がカードの後ろに隠れるなら、地図を少しずらす
+  function toggleMini() {
+    state.selMini = !state.selMini;
+    renderSel();
+    if (!state.selMini && state.sel) keepMarkerVisible(state.sel);
+    ev('portal_action', { action: state.selMini ? 'card_fold' : 'card_unfold' });
   }
   function unselect() {
     state.sel = null;
@@ -1104,6 +1134,8 @@ footer{background:#1d1d1f;padding:36px 48px}
         mapTypeId: state.sat ? 'hybrid' : 'roadmap',
         // 全画面は、Google のボタンの代わりに「地図を大きくする」を使う（検索や投稿のボタンが地図の上に残る。iPhone でも使える）
         mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
+        // 指で使う端末（スマホ・タブレット）では、キーで地図を動かす機能と、隅の「キーボード ショートカット」を出さない
+        keyboardShortcuts: !(window.matchMedia && matchMedia('(pointer: coarse)').matches),
         gestureHandling: state.big ? 'greedy' : 'cooperative'
       });
       mapOk = true;
@@ -1362,10 +1394,10 @@ footer{background:#1d1d1f;padding:36px 48px}
       return '<button type="button" class="sr-item" data-act="near" data-near="' + esc(x.p.id) + '"><span class="pin ' + st + '">' + esc(c.glyph) + '</span>' +
         '<span class="sr-t"><span>' + esc(x.p.name) + '</span><small>ここから ' + esc(fmtKm(x.d)) + '</small></span></button>';
     }).join('');
-    return '<article class="place found">' +
+    return '<article class="place found' + (state.selMini ? ' mini' : '') + '">' +
       '<div class="place-top"><span class="pin fd"><i class="ti ti-map-pin" aria-hidden="true"></i></span>' +
       '<div><h3 class="place-name">' + esc(f.name) + '</h3>' + (f.addr ? '<div class="place-meta">' + esc(f.addr) + '</div>' : '') + '</div>' +
-      '<button type="button" class="sel-close" data-act="close" aria-label="閉じる">×</button></div>' +
+      miniBtn() + '<button type="button" class="sel-close" data-act="close" aria-label="閉じる">×</button></div>' +
       '<p class="found-note">' + (near ? 'この場所の投稿は、まだありません。近くの投稿は次のとおりです。' : 'この場所の投稿は、まだありません。けん引して行ったことがあれば、教えてください。') + '</p>' +
       (near ? '<div class="found-near">' + near + '</div>' : '') +
       '<div class="place-actions">' +
@@ -1373,7 +1405,7 @@ footer{background:#1d1d1f;padding:36px 48px}
       (CONFIG.forms.stop ? (mapOk
         ? '<button type="button" class="btn-sm primary" data-act="found-pick"><i class="ti ti-map-pin-plus" aria-hidden="true"></i>ここを投稿</button>'
         : '<a class="btn-sm primary" href="#" target="_blank" rel="noopener" data-act="found-post" data-ev="post_found"><i class="ti ti-pencil-plus" aria-hidden="true"></i>この場所を投稿</a>') : '') +
-      '<a class="btn-sm" href="' + esc(foundLink(f)) + '" target="_blank" rel="noopener" data-ev="gmaps_found"><i class="ti ti-brand-google-maps" aria-hidden="true"></i>Google マップで開く</a>' +
+      '<a class="btn-sm" href="' + esc(foundLink(f)) + '" target="_blank" rel="noopener" data-ev="gmaps_found"><i class="ti ti-brand-google-maps" aria-hidden="true"></i>Google マップ<span class="lbl-x">で開く</span></a>' +
       '</div></article>';
   }
   function showFoundMarker() {
@@ -1517,6 +1549,8 @@ footer{background:#1d1d1f;padding:36px 48px}
       select(pc.getAttribute('data-id'), 'card');
       return;
     }
+    // たたんだカードは、名前の行を押しても開く
+    if (state.selMini && e.target.closest('#selBox .place.mini .place-top') && !e.target.closest('button,a')) { toggleMini(); return; }
     var b = e.target.closest('[data-act]');
     if (!b) return;
     var card = b.closest('[data-id]');
@@ -1525,6 +1559,7 @@ footer{background:#1d1d1f;padding:36px 48px}
     if (act === 'show' && id) select(id, 'card');
     else if (act === 'copy' && id) copyLink(id, b);
     else if (act === 'close') unselect();
+    else if (act === 'mini') toggleMini();
     else if (act === 'more') { state.listMax += LIST_STEP * 2; renderList(); }
     else if (act === 'post-here' && id) {
       // リンクの行き先を、押したときに作る（開くのはブラウザ。種類・名前・場所・いつもの情報・今日の日付が入る）。
